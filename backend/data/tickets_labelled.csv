@@ -1,221 +1,385 @@
-text,urgency_label,frustration_label,critical,intent
-Our production dashboard is DOWN. We will cancel if this is not fixed ASAP!,high,high,1,outage
-Production server is down and rejecting all user logins.,high,low,1,outage
-Emergency: Complete site outage. All transactions are failing immediately.,high,high,1,outage
-The database cluster is down and throwing 500 errors across all clients.,high,high,1,outage
-Production website has been down for 30 minutes. We are losing business!,high,high,1,outage
-"Our api platform is down right now, need urgent resolution.",high,low,1,outage
-Someone logged in to my account from another country. Was there a breach?,high,low,1,security
-Unauthorized access detected on our company admin dashboard.,high,high,1,security
-We suspect an account takeover. Stolen credentials and unauthorized changes.,high,high,1,security
-Phishing attack detected targeting our employee credentials.,high,low,1,security
-Our private security tokens have been compromised and breached.,high,high,1,security
-Our corporate counsel has advised legal action and a lawsuit regarding SLA breach.,high,high,1,legal
-Our attorney will sue you in court if our data is not exported today.,high,high,1,legal
-Notice of legal lawsuit regarding unauthorized billing charges.,high,high,1,legal
-We have engaged a lawyer and will report this to the federal regulator.,high,high,1,legal
-The power backup hardware started smoking and overheating. It is unsafe!,high,high,1,safety
-Electric shock hazard from the supplied power connector unit.,high,high,1,safety
-Worker injury due to defective equipment casing hazard.,high,high,1,safety
-I was charged twice this month. Please refund today.,medium,low,0,billing_dispute
-Double charge on our credit card statement. Need refund immediately.,medium,medium,0,billing_dispute
-"We were billed after cancelling. This is ridiculous, refund our money.",medium,high,0,billing_dispute
-Wrong charge on invoice #9021. Please review and credit account.,medium,low,0,billing_dispute
-Duplicate payment went through on our renewal invoice.,medium,low,0,billing_dispute
-Why was my account charged $199 instead of $99? Terrible service.,medium,high,0,billing_dispute
-How do I reset my password?,low,low,0,password_reset
-Forgot my password and recovery link is not arriving.,low,low,0,password_reset
-Where can I reset my account login password?,low,low,0,password_reset
-Need assistance with password reset on mobile app.,low,low,0,password_reset
-Where can I download my invoice for September?,low,low,0,invoice
-Need PDF receipt of our last payment for accounting records.,low,low,0,invoice
-How to access past billing history and VAT tax invoices?,low,low,0,invoice
-Please send the annual invoice receipt to our finance department.,low,low,0,invoice
-How do I invite additional team members to our workspace?,low,low,0,how_to
-Where do I find the setting to update my email address?,low,low,0,how_to
-How to configure two-factor authentication on mobile?,low,low,0,how_to
-Where can we export our workspace logs and activity history?,low,low,0,how_to
-How to change our company notification email preferences?,low,low,0,how_to
-The CSV export feature crashes whenever exporting more than 100 rows.,medium,low,0,bug
-Mobile app crashes on startup when opening the notification tab.,medium,low,0,bug
-We are getting unexpected 500 error when submitting the profile form.,medium,low,0,bug
-Search filters are broken and do not return any matching records.,medium,low,0,bug
-Slow performance on dashboard during peak European hours.,medium,medium,0,bug
-"This is the worst app, nothing works and nobody replies!!!",medium,high,0,bug
-Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable.,medium,high,0,complaint
-"Furious with this terrible tool, nothing works and I am fed up with the bugs.",medium,high,0,complaint
-"Unacceptable delays, ridiculous customer service, nobody helps us.",medium,high,0,complaint
-I want to cancel my subscription and close my account next month.,low,low,0,cancellation
-Please cancel my subscription and close my account. Switching to competitor.,medium,medium,0,cancellation
-We decided to cancel our pro plan and request confirmation.,low,low,0,cancellation
-Would be nice to have dark mode in the web app.,low,low,0,feature_request
-Feature request: please add custom logo uploads to PDF export reports.,low,low,0,feature_request
-Suggestion: would love keyboard shortcuts for navigating tickets.,low,low,0,feature_request
-Please add support for webhook event triggers on status update.,low,low,0,feature_request
-Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Thank you.,high,high,1,outage
-Production server is down and rejecting all user logins. Please assist.,high,low,1,outage
-Emergency: Complete site outage. All transactions are failing immediately. Thanks in advance.,high,high,1,outage
-The database cluster is down and throwing 500 errors across all clients. Need update ASAP.,high,high,1,outage
-Production website has been down for 30 minutes. We are losing business! Looking forward to your reply.,high,high,1,outage
-"Our api platform is down right now, need urgent resolution. Critical for our team.",high,low,1,outage
-Someone logged in to my account from another country. Was there a breach? Thank you.,high,low,1,security
-Unauthorized access detected on our company admin dashboard. Please assist.,high,high,1,security
-We suspect an account takeover. Stolen credentials and unauthorized changes. Thanks in advance.,high,high,1,security
-Phishing attack detected targeting our employee credentials. Need update ASAP.,high,low,1,security
-Our private security tokens have been compromised and breached. Looking forward to your reply.,high,high,1,security
-Our corporate counsel has advised legal action and a lawsuit regarding SLA breach. Critical for our team.,high,high,1,legal
-Our attorney will sue you in court if our data is not exported today. Thank you.,high,high,1,legal
-Notice of legal lawsuit regarding unauthorized billing charges. Please assist.,high,high,1,legal
-We have engaged a lawyer and will report this to the federal regulator. Thanks in advance.,high,high,1,legal
-The power backup hardware started smoking and overheating. It is unsafe! Need update ASAP.,high,high,1,safety
-Electric shock hazard from the supplied power connector unit. Looking forward to your reply.,high,high,1,safety
-Worker injury due to defective equipment casing hazard. Critical for our team.,high,high,1,safety
-I was charged twice this month. Please refund today. Thank you.,medium,low,0,billing_dispute
-Double charge on our credit card statement. Need refund immediately. Please assist.,medium,medium,0,billing_dispute
-"We were billed after cancelling. This is ridiculous, refund our money. Thanks in advance.",medium,high,0,billing_dispute
-Wrong charge on invoice #9021. Please review and credit account. Need update ASAP.,medium,low,0,billing_dispute
-Duplicate payment went through on our renewal invoice. Looking forward to your reply.,medium,low,0,billing_dispute
-Why was my account charged $199 instead of $99? Terrible service. Critical for our team.,medium,high,0,billing_dispute
-How do I reset my password? Thank you.,low,low,0,password_reset
-Forgot my password and recovery link is not arriving. Please assist.,low,low,0,password_reset
-Where can I reset my account login password? Thanks in advance.,low,low,0,password_reset
-Need assistance with password reset on mobile app. Need update ASAP.,low,low,0,password_reset
-Where can I download my invoice for September? Looking forward to your reply.,low,low,0,invoice
-Need PDF receipt of our last payment for accounting records. Critical for our team.,low,low,0,invoice
-How to access past billing history and VAT tax invoices? Thank you.,low,low,0,invoice
-Please send the annual invoice receipt to our finance department. Please assist.,low,low,0,invoice
-How do I invite additional team members to our workspace? Thanks in advance.,low,low,0,how_to
-Where do I find the setting to update my email address? Need update ASAP.,low,low,0,how_to
-How to configure two-factor authentication on mobile? Looking forward to your reply.,low,low,0,how_to
-Where can we export our workspace logs and activity history? Critical for our team.,low,low,0,how_to
-How to change our company notification email preferences? Thank you.,low,low,0,how_to
-The CSV export feature crashes whenever exporting more than 100 rows. Please assist.,medium,low,0,bug
-Mobile app crashes on startup when opening the notification tab. Thanks in advance.,medium,low,0,bug
-We are getting unexpected 500 error when submitting the profile form. Need update ASAP.,medium,low,0,bug
-Search filters are broken and do not return any matching records. Looking forward to your reply.,medium,low,0,bug
-Slow performance on dashboard during peak European hours. Critical for our team.,medium,medium,0,bug
-"This is the worst app, nothing works and nobody replies!!! Thank you.",medium,high,0,bug
-Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable. Please assist.,medium,high,0,complaint
-"Furious with this terrible tool, nothing works and I am fed up with the bugs. Thanks in advance.",medium,high,0,complaint
-"Unacceptable delays, ridiculous customer service, nobody helps us. Need update ASAP.",medium,high,0,complaint
-I want to cancel my subscription and close my account next month. Looking forward to your reply.,low,low,0,cancellation
-Please cancel my subscription and close my account. Switching to competitor. Critical for our team.,medium,medium,0,cancellation
-We decided to cancel our pro plan and request confirmation. Thank you.,low,low,0,cancellation
-Would be nice to have dark mode in the web app. Please assist.,low,low,0,feature_request
-Feature request: please add custom logo uploads to PDF export reports. Thanks in advance.,low,low,0,feature_request
-Suggestion: would love keyboard shortcuts for navigating tickets. Need update ASAP.,low,low,0,feature_request
-Please add support for webhook event triggers on status update. Looking forward to your reply.,low,low,0,feature_request
-Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Critical for our team.,high,high,1,outage
-Production server is down and rejecting all user logins. Thank you.,high,low,1,outage
-Emergency: Complete site outage. All transactions are failing immediately. Please assist.,high,high,1,outage
-The database cluster is down and throwing 500 errors across all clients. Thanks in advance.,high,high,1,outage
-Production website has been down for 30 minutes. We are losing business! Need update ASAP.,high,high,1,outage
-"Our api platform is down right now, need urgent resolution. Looking forward to your reply.",high,low,1,outage
-Someone logged in to my account from another country. Was there a breach? Critical for our team.,high,low,1,security
-Unauthorized access detected on our company admin dashboard. Thank you.,high,high,1,security
-We suspect an account takeover. Stolen credentials and unauthorized changes. Please assist.,high,high,1,security
-Phishing attack detected targeting our employee credentials. Thanks in advance.,high,low,1,security
-Our private security tokens have been compromised and breached. Need update ASAP.,high,high,1,security
-Our corporate counsel has advised legal action and a lawsuit regarding SLA breach. Looking forward to your reply.,high,high,1,legal
-Our attorney will sue you in court if our data is not exported today. Critical for our team.,high,high,1,legal
-Notice of legal lawsuit regarding unauthorized billing charges. Thank you.,high,high,1,legal
-We have engaged a lawyer and will report this to the federal regulator. Please assist.,high,high,1,legal
-The power backup hardware started smoking and overheating. It is unsafe! Thanks in advance.,high,high,1,safety
-Electric shock hazard from the supplied power connector unit. Need update ASAP.,high,high,1,safety
-Worker injury due to defective equipment casing hazard. Looking forward to your reply.,high,high,1,safety
-I was charged twice this month. Please refund today. Critical for our team.,medium,low,0,billing_dispute
-Double charge on our credit card statement. Need refund immediately. Thank you.,medium,medium,0,billing_dispute
-"We were billed after cancelling. This is ridiculous, refund our money. Please assist.",medium,high,0,billing_dispute
-Wrong charge on invoice #9021. Please review and credit account. Thanks in advance.,medium,low,0,billing_dispute
-Duplicate payment went through on our renewal invoice. Need update ASAP.,medium,low,0,billing_dispute
-Why was my account charged $199 instead of $99? Terrible service. Looking forward to your reply.,medium,high,0,billing_dispute
-How do I reset my password? Critical for our team.,low,low,0,password_reset
-Forgot my password and recovery link is not arriving. Thank you.,low,low,0,password_reset
-Where can I reset my account login password? Please assist.,low,low,0,password_reset
-Need assistance with password reset on mobile app. Thanks in advance.,low,low,0,password_reset
-Where can I download my invoice for September? Need update ASAP.,low,low,0,invoice
-Need PDF receipt of our last payment for accounting records. Looking forward to your reply.,low,low,0,invoice
-How to access past billing history and VAT tax invoices? Critical for our team.,low,low,0,invoice
-Please send the annual invoice receipt to our finance department. Thank you.,low,low,0,invoice
-How do I invite additional team members to our workspace? Please assist.,low,low,0,how_to
-Where do I find the setting to update my email address? Thanks in advance.,low,low,0,how_to
-How to configure two-factor authentication on mobile? Need update ASAP.,low,low,0,how_to
-Where can we export our workspace logs and activity history? Looking forward to your reply.,low,low,0,how_to
-How to change our company notification email preferences? Critical for our team.,low,low,0,how_to
-The CSV export feature crashes whenever exporting more than 100 rows. Thank you.,medium,low,0,bug
-Mobile app crashes on startup when opening the notification tab. Please assist.,medium,low,0,bug
-We are getting unexpected 500 error when submitting the profile form. Thanks in advance.,medium,low,0,bug
-Search filters are broken and do not return any matching records. Need update ASAP.,medium,low,0,bug
-Slow performance on dashboard during peak European hours. Looking forward to your reply.,medium,medium,0,bug
-"This is the worst app, nothing works and nobody replies!!! Critical for our team.",medium,high,0,bug
-Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable. Thank you.,medium,high,0,complaint
-"Furious with this terrible tool, nothing works and I am fed up with the bugs. Please assist.",medium,high,0,complaint
-"Unacceptable delays, ridiculous customer service, nobody helps us. Thanks in advance.",medium,high,0,complaint
-I want to cancel my subscription and close my account next month. Need update ASAP.,low,low,0,cancellation
-Please cancel my subscription and close my account. Switching to competitor. Looking forward to your reply.,medium,medium,0,cancellation
-We decided to cancel our pro plan and request confirmation. Critical for our team.,low,low,0,cancellation
-Would be nice to have dark mode in the web app. Thank you.,low,low,0,feature_request
-Feature request: please add custom logo uploads to PDF export reports. Please assist.,low,low,0,feature_request
-Suggestion: would love keyboard shortcuts for navigating tickets. Thanks in advance.,low,low,0,feature_request
-Please add support for webhook event triggers on status update. Need update ASAP.,low,low,0,feature_request
-Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Looking forward to your reply.,high,high,1,outage
-Production server is down and rejecting all user logins. Critical for our team.,high,low,1,outage
-Emergency: Complete site outage. All transactions are failing immediately. Thank you.,high,high,1,outage
-The database cluster is down and throwing 500 errors across all clients. Please assist.,high,high,1,outage
-Production website has been down for 30 minutes. We are losing business! Thanks in advance.,high,high,1,outage
-"Our api platform is down right now, need urgent resolution. Need update ASAP.",high,low,1,outage
-Someone logged in to my account from another country. Was there a breach? Looking forward to your reply.,high,low,1,security
-Unauthorized access detected on our company admin dashboard. Critical for our team.,high,high,1,security
-We suspect an account takeover. Stolen credentials and unauthorized changes. Thank you.,high,high,1,security
-Phishing attack detected targeting our employee credentials. Please assist.,high,low,1,security
-Our private security tokens have been compromised and breached. Thanks in advance.,high,high,1,security
-Our corporate counsel has advised legal action and a lawsuit regarding SLA breach. Need update ASAP.,high,high,1,legal
-Our attorney will sue you in court if our data is not exported today. Looking forward to your reply.,high,high,1,legal
-Notice of legal lawsuit regarding unauthorized billing charges. Critical for our team.,high,high,1,legal
-We have engaged a lawyer and will report this to the federal regulator. Thank you.,high,high,1,legal
-The power backup hardware started smoking and overheating. It is unsafe! Please assist.,high,high,1,safety
-Electric shock hazard from the supplied power connector unit. Thanks in advance.,high,high,1,safety
-Worker injury due to defective equipment casing hazard. Need update ASAP.,high,high,1,safety
-I was charged twice this month. Please refund today. Looking forward to your reply.,medium,low,0,billing_dispute
-Double charge on our credit card statement. Need refund immediately. Critical for our team.,medium,medium,0,billing_dispute
-"We were billed after cancelling. This is ridiculous, refund our money. Thank you.",medium,high,0,billing_dispute
-Wrong charge on invoice #9021. Please review and credit account. Please assist.,medium,low,0,billing_dispute
-Duplicate payment went through on our renewal invoice. Thanks in advance.,medium,low,0,billing_dispute
-Why was my account charged $199 instead of $99? Terrible service. Need update ASAP.,medium,high,0,billing_dispute
-How do I reset my password? Looking forward to your reply.,low,low,0,password_reset
-Forgot my password and recovery link is not arriving. Critical for our team.,low,low,0,password_reset
-Where can I reset my account login password? Thank you.,low,low,0,password_reset
-Need assistance with password reset on mobile app. Please assist.,low,low,0,password_reset
-Where can I download my invoice for September? Thanks in advance.,low,low,0,invoice
-Need PDF receipt of our last payment for accounting records. Need update ASAP.,low,low,0,invoice
-How to access past billing history and VAT tax invoices? Looking forward to your reply.,low,low,0,invoice
-Please send the annual invoice receipt to our finance department. Critical for our team.,low,low,0,invoice
-How do I invite additional team members to our workspace? Thank you.,low,low,0,how_to
-Where do I find the setting to update my email address? Please assist.,low,low,0,how_to
-How to configure two-factor authentication on mobile? Thanks in advance.,low,low,0,how_to
-Where can we export our workspace logs and activity history? Need update ASAP.,low,low,0,how_to
-How to change our company notification email preferences? Looking forward to your reply.,low,low,0,how_to
-The CSV export feature crashes whenever exporting more than 100 rows. Critical for our team.,medium,low,0,bug
-Mobile app crashes on startup when opening the notification tab. Thank you.,medium,low,0,bug
-We are getting unexpected 500 error when submitting the profile form. Please assist.,medium,low,0,bug
-Search filters are broken and do not return any matching records. Thanks in advance.,medium,low,0,bug
-Slow performance on dashboard during peak European hours. Need update ASAP.,medium,medium,0,bug
-"This is the worst app, nothing works and nobody replies!!! Looking forward to your reply.",medium,high,0,bug
-Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable. Critical for our team.,medium,high,0,complaint
-"Furious with this terrible tool, nothing works and I am fed up with the bugs. Thank you.",medium,high,0,complaint
-"Unacceptable delays, ridiculous customer service, nobody helps us. Please assist.",medium,high,0,complaint
-I want to cancel my subscription and close my account next month. Thanks in advance.,low,low,0,cancellation
-Please cancel my subscription and close my account. Switching to competitor. Need update ASAP.,medium,medium,0,cancellation
-We decided to cancel our pro plan and request confirmation. Looking forward to your reply.,low,low,0,cancellation
-Would be nice to have dark mode in the web app. Critical for our team.,low,low,0,feature_request
-Feature request: please add custom logo uploads to PDF export reports. Thank you.,low,low,0,feature_request
-Suggestion: would love keyboard shortcuts for navigating tickets. Please assist.,low,low,0,feature_request
-Please add support for webhook event triggers on status update. Thanks in advance.,low,low,0,feature_request
-Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Need update ASAP.,high,high,1,outage
-Production server is down and rejecting all user logins. Looking forward to your reply.,high,low,1,outage
-Emergency: Complete site outage. All transactions are failing immediately. Critical for our team.,high,high,1,outage
-The database cluster is down and throwing 500 errors across all clients. Thank you.,high,high,1,outage
-Production website has been down for 30 minutes. We are losing business! Please assist.,high,high,1,outage
-"Our api platform is down right now, need urgent resolution. Thanks in advance.",high,low,1,outage
-Someone logged in to my account from another country. Was there a breach? Need update ASAP.,high,low,1,security
-Unauthorized access detected on our company admin dashboard. Looking forward to your reply.,high,high,1,security
+text,urgency_label,frustration_label,critical,intent,language,tone,template_id,split
+Our dashboard is down and none of our users can log in. Appreciate your support.,high,low,1,outage,en,polite,T00-00,train
+"Our platform is down and none of our users can log in. Bravo, truly outstanding service.",high,high,1,outage,en,sarcastic,T00-00,train
+Our website is down and none of our users can log in. We are losing money every hour. This is getting frustrating.,high,medium,1,outage,en,frustrated,T00-00,train
+Our portal is down and none of our users can log in. We are losing money every hour. Please advise.,high,low,1,outage,en,neutral,T00-00,train
+"The app has been down for 30 minutes and every request times out. Bravo, truly outstanding service.",high,high,1,outage,en,sarcastic,T00-01,train
+The portal has been down for an hour and every request times out. We are losing money every hour. We still haven't heard back from anyone.,high,medium,1,outage,en,frustrated,T00-01,train
+The dashboard has been down for 30 minutes and every request times out. We need this fixed today. This is UNACCEPTABLE!!!,high,high,1,outage,en,angry,T00-01,train
+The app has been down for two hours and every request times out. Let me know.,high,low,1,outage,en,neutral,T00-01,train
+"Complete outage on our side, the website is offline. Details are above.",high,low,1,outage,en,neutral,T00-02,train
+"Complete outage on our side, the production server is offline. We are losing money every hour. Thanks in advance!",high,low,1,outage,en,polite,T00-02,train
+"Complete outage on our side, the dashboard is offline. I'm done with you people, never again.",high,high,1,outage,en,angry,T00-02,train
+"Complete outage on our side, the portal is offline. We still haven't heard back from anyone.",high,medium,1,outage,en,frustrated,T00-02,train
+"The production server is unreachable from all our offices since this morning. Yeah right, 'world class support'.",high,high,1,outage,en,sarcastic,T00-03,test
+The production server is unreachable from all our offices since this morning. Kind regards.,high,low,1,outage,en,polite,T00-03,test
+The portal is unreachable from all our offices since this morning. Not happy about this at all.,high,medium,1,outage,en,frustrated,T00-03,test
+The dashboard is unreachable from all our offices since this morning. This is critical for a client demo this afternoon. Pathetic. I'll be leaving a one star review.,high,high,1,outage,en,angry,T00-03,test
+We have an outage: checkout is down and orders are failing. If this isn't sorted we are switching to a competitor!!,high,high,1,outage,en,angry,T00-04,test
+We have an outage: checkout is down and orders are failing. Ticket ref INV-2291.,high,low,1,outage,en,neutral,T00-04,test
+"Good morning, We have an outage: checkout is down and orders are failing. This is critical for a client demo this afternoon. Kind regards.",high,low,1,outage,en,polite,T00-04,test
+"We have an outage: checkout is down and orders are failing. Oh wonderful, another 'quick fix' that broke everything.",high,high,1,outage,en,sarcastic,T00-04,test
+"The API is down, all our integrations return 503. Details are above.",high,low,1,outage,en,neutral,T00-05,train
+"The API is down, all our integrations return 503. We need this fixed today. I am furious, this is the worst service ever!",high,high,1,outage,en,angry,T00-05,train
+"The API is down, all our integrations return 503. We still haven't heard back from anyone.",high,medium,1,outage,en,frustrated,T00-05,train
+"The API is down, all our integrations return 503. Bravo, truly outstanding service.",high,high,1,outage,en,sarcastic,T00-05,train
+Production is down. Nothing loads for any customer. This has happened before and it's annoying.,high,medium,1,outage,en,frustrated,T00-06,train
+"Production is down. Nothing loads for any customer. Bravo, truly outstanding service.",high,high,1,outage,en,sarcastic,T00-06,train
+Production is down. Nothing loads for any customer. We are losing money every hour. Absolutely ridiculous. I'm fed up with you.,high,high,1,outage,en,angry,T00-06,train
+Production is down. Nothing loads for any customer. Please respond immediately. Many thanks for looking into it.,high,low,1,outage,en,polite,T00-06,train
+"Nothing loads for any of our customers since 9am, the whole service is unavailable. We are losing money every hour. Details are above.",high,low,1,outage,en,neutral,T00-07,train
+"Nothing loads for any of our customers since 9am, the whole service is unavailable. We still haven't heard back from anyone.",high,medium,1,outage,en,frustrated,T00-07,train
+"Nothing loads for any of our customers since 9am, the whole service is unavailable. Appreciate your support.",high,low,1,outage,en,polite,T00-07,train
+"Nothing loads for any of our customers since 9am, the whole service is unavailable. I'm done with you people, never again.",high,high,1,outage,en,angry,T00-07,train
+Someone logged into my account from another country last night. This is critical for a client demo this afternoon. Not happy about this at all.,high,medium,1,security,en,frustrated,T01-00,test
+Someone logged into my account from another country last night. Pathetic. I'll be leaving a one star review.,high,high,1,security,en,angry,T01-00,test
+Someone logged into my account from another country last night. Our team is completely blocked. Ticket ref #77310.,high,low,1,security,en,neutral,T01-00,test
+"Someone logged into my account from another country last night. This is urgent. Oh wonderful, another 'quick fix' that broke everything.",high,high,1,security,en,sarcastic,T01-00,test
+We noticed unauthorized changes to our admin settings. Please handle this ASAP. Absolutely ridiculous. I'm fed up with you.,high,high,1,security,en,angry,T01-01,train
+We noticed unauthorized changes to our admin settings. Thanks in advance!,high,low,1,security,en,polite,T01-01,train
+We noticed unauthorized changes to our admin settings. This is getting frustrating.,high,medium,1,security,en,frustrated,T01-01,train
+We noticed unauthorized changes to our admin settings. Love how I pay for this and it never works.,high,high,1,security,en,sarcastic,T01-01,train
+"Hi team, I think my account was hacked, my email address was changed. Thanks in advance!",high,low,1,security,en,polite,T01-02,train
+"I think my account was hacked, my email address was changed. Love how I pay for this and it never works.",high,high,1,security,en,sarcastic,T01-02,train
+"I think my account was hacked, my email address was changed. We still haven't heard back from anyone.",high,medium,1,security,en,frustrated,T01-02,train
+"I think my account was hacked, my email address was changed. Absolutely ridiculous. I'm fed up with you.",high,high,1,security,en,angry,T01-02,train
+"There are charges I did not make, this looks like fraud. Bravo, truly outstanding service.",high,high,1,security,en,sarcastic,T01-03,train
+"There are charges I did not make, this looks like fraud. Appreciate your support.",high,low,1,security,en,polite,T01-03,train
+"There are charges I did not make, this looks like fraud. This has happened before and it's annoying.",high,medium,1,security,en,frustrated,T01-03,train
+"There are charges I did not make, this looks like fraud. I'm done with you people, never again.",high,high,1,security,en,angry,T01-03,train
+Our API keys were compromised and used by someone else. Please handle this ASAP. Details are above.,high,low,1,security,en,neutral,T01-04,train
+Our API keys were compromised and used by someone else. Appreciate your support.,high,low,1,security,en,polite,T01-04,train
+Our API keys were compromised and used by someone else. We need this fixed today. This has happened before and it's annoying.,high,medium,1,security,en,frustrated,T01-04,train
+"Our API keys were compromised and used by someone else. We are losing money every hour. I am furious, this is the worst service ever!",high,high,1,security,en,angry,T01-04,train
+"I got a phishing email pretending to be from you and I clicked the link. Please handle this ASAP. I am furious, this is the worst service ever!",high,high,1,security,en,angry,T01-05,train
+I got a phishing email pretending to be from you and I clicked the link. We need this fixed today. This is getting frustrating.,high,medium,1,security,en,frustrated,T01-05,train
+"Good morning, I got a phishing email pretending to be from you and I clicked the link. Appreciate your support.",high,low,1,security,en,polite,T01-05,train
+"I got a phishing email pretending to be from you and I clicked the link. Great, just great. Thanks for nothing.",high,high,1,security,en,sarcastic,T01-05,train
+My password was changed without my permission. WHAT IS GOING ON?? Sort it out!,high,high,1,security,en,angry,T01-06,test
+My password was changed without my permission. Kind regards.,high,low,1,security,en,polite,T01-06,test
+My password was changed without my permission. We have a deadline tomorrow. Please check.,high,low,1,security,en,neutral,T01-06,test
+"My password was changed without my permission. This is urgent. I'm quite disappointed, to be honest.",high,medium,1,security,en,frustrated,T01-06,test
+There is a login from a device I don't recognise on my account. Absolutely ridiculous. I'm fed up with you.,high,high,1,security,en,angry,T01-07,train
+"There is a login from a device I don't recognise on my account. Bravo, truly outstanding service.",high,high,1,security,en,sarcastic,T01-07,train
+There is a login from a device I don't recognise on my account. Please respond immediately. Details are above.,high,low,1,security,en,neutral,T01-07,train
+"Good morning, There is a login from a device I don't recognise on my account. Thanks in advance!",high,low,1,security,en,polite,T01-07,train
+Our lawyer will contact you about the breach of our contract. Love how I pay for this and it never works.,high,high,1,legal,en,sarcastic,T02-00,train
+Our lawyer will contact you about the breach of our contract. We still haven't heard back from anyone.,high,medium,1,legal,en,frustrated,T02-00,train
+Our lawyer will contact you about the breach of our contract. This is UNACCEPTABLE!!!,high,high,1,legal,en,angry,T02-00,train
+Our lawyer will contact you about the breach of our contract. Please advise.,high,low,1,legal,en,neutral,T02-00,train
+"If this is not resolved we will take legal action. Please handle this ASAP. Great, just great. Thanks for nothing.",high,high,1,legal,en,sarcastic,T02-01,train
+If this is not resolved we will take legal action. Many thanks for looking into it.,high,low,1,legal,en,polite,T02-01,train
+If this is not resolved we will take legal action. Please respond immediately. This has happened before and it's annoying.,high,medium,1,legal,en,frustrated,T02-01,train
+If this is not resolved we will take legal action. Let me know.,high,low,1,legal,en,neutral,T02-01,train
+We are filing a complaint with the consumer regulator. Please check.,high,low,1,legal,en,neutral,T02-02,test
+We are filing a complaint with the consumer regulator. Thank you for your help.,high,low,1,legal,en,polite,T02-02,test
+"We are filing a complaint with the consumer regulator. Yeah right, 'world class support'.",high,high,1,legal,en,sarcastic,T02-02,test
+We are filing a complaint with the consumer regulator. Honestly this is a bit of a mess.,high,medium,1,legal,en,frustrated,T02-02,test
+Our attorney has advised us to sue for the lost revenue. Please advise.,high,low,1,legal,en,neutral,T02-03,train
+Our attorney has advised us to sue for the lost revenue. Thanks in advance!,high,low,1,legal,en,polite,T02-03,train
+Our attorney has advised us to sue for the lost revenue. This is UNACCEPTABLE!!!,high,high,1,legal,en,angry,T02-03,train
+Our attorney has advised us to sue for the lost revenue. Please respond immediately. This has happened before and it's annoying.,high,medium,1,legal,en,frustrated,T02-03,train
+Please treat this message as a formal legal notice about our data. Appreciate your support.,high,low,1,legal,en,polite,T02-04,train
+Please treat this message as a formal legal notice about our data. Love how I pay for this and it never works.,high,high,1,legal,en,sarcastic,T02-04,train
+Please treat this message as a formal legal notice about our data. This has happened before and it's annoying.,high,medium,1,legal,en,frustrated,T02-04,train
+"Please treat this message as a formal legal notice about our data. We are losing money every hour. I am furious, this is the worst service ever!",high,high,1,legal,en,angry,T02-04,train
+We will see you in court if our data is not returned. Not happy about this at all.,high,medium,1,legal,en,frustrated,T02-05,test
+"Hi team, We will see you in court if our data is not returned. Kind regards.",high,low,1,legal,en,polite,T02-05,test
+"We will see you in court if our data is not returned. Yeah right, 'world class support'.",high,high,1,legal,en,sarcastic,T02-05,test
+We will see you in court if our data is not returned. Our team is completely blocked. Pathetic. I'll be leaving a one star review.,high,high,1,legal,en,angry,T02-05,test
+The charger you shipped started smoking under my desk. Appreciate your support.,high,low,1,safety,en,polite,T03-00,train
+The charger you shipped started smoking under my desk. Details are above.,high,low,1,safety,en,neutral,T03-00,train
+"The charger you shipped started smoking under my desk. I'm done with you people, never again.",high,high,1,safety,en,angry,T03-00,train
+The charger you shipped started smoking under my desk. This has happened before and it's annoying.,high,medium,1,safety,en,frustrated,T03-00,train
+The device is overheating and smells of burning plastic. Not happy about this at all.,high,medium,1,safety,en,frustrated,T03-01,test
+The device is overheating and smells of burning plastic. This is critical for a client demo this afternoon. Please check.,high,low,1,safety,en,neutral,T03-01,test
+The device is overheating and smells of burning plastic. Pathetic. I'll be leaving a one star review.,high,high,1,safety,en,angry,T03-01,test
+"The device is overheating and smells of burning plastic. Oh wonderful, another 'quick fix' that broke everything.",high,high,1,safety,en,sarcastic,T03-01,test
+One of our staff got an electric shock from the docking station. Please respond immediately. Many thanks for looking into it.,high,low,1,safety,en,polite,T03-02,train
+One of our staff got an electric shock from the docking station. This is getting frustrating.,high,medium,1,safety,en,frustrated,T03-02,train
+One of our staff got an electric shock from the docking station. We are losing money every hour. This is UNACCEPTABLE!!!,high,high,1,safety,en,angry,T03-02,train
+"One of our staff got an electric shock from the docking station. Bravo, truly outstanding service.",high,high,1,safety,en,sarcastic,T03-02,train
+"Hello, The battery pack is swelling and looks like a fire hazard. Please respond immediately. Many thanks for looking into it.",high,low,1,safety,en,polite,T03-03,train
+The battery pack is swelling and looks like a fire hazard. Details are above.,high,low,1,safety,en,neutral,T03-03,train
+The battery pack is swelling and looks like a fire hazard. This is getting frustrating.,high,medium,1,safety,en,frustrated,T03-03,train
+"The battery pack is swelling and looks like a fire hazard. I'm done with you people, never again.",high,high,1,safety,en,angry,T03-03,train
+A worker was injured by the sharp edge of the casing. Kind regards.,high,low,1,safety,en,polite,T03-04,test
+A worker was injured by the sharp edge of the casing. We have a deadline tomorrow.,high,low,1,safety,en,neutral,T03-04,test
+"A worker was injured by the sharp edge of the casing. I'm quite disappointed, to be honest.",high,medium,1,safety,en,frustrated,T03-04,test
+A worker was injured by the sharp edge of the casing. If this isn't sorted we are switching to a competitor!!,high,high,1,safety,en,angry,T03-04,test
+Sparks came out of the power adapter when I plugged it in. Please respond immediately. Absolutely ridiculous. I'm fed up with you.,high,high,1,safety,en,angry,T03-05,train
+Sparks came out of the power adapter when I plugged it in. Love how I pay for this and it never works.,high,high,1,safety,en,sarcastic,T03-05,train
+"Hello, Sparks came out of the power adapter when I plugged it in. Many thanks for looking into it.",high,low,1,safety,en,polite,T03-05,train
+Sparks came out of the power adapter when I plugged it in. Let me know.,high,low,1,safety,en,neutral,T03-05,train
+I was charged twice for my subscription this month. This is UNACCEPTABLE!!!,medium,high,0,billing_dispute,en,angry,T04-00,train
+"I was charged twice for my subscription this month. Great, just great. Thanks for nothing.",medium,high,0,billing_dispute,en,sarcastic,T04-00,train
+I was charged twice for my subscription this month. We still haven't heard back from anyone.,medium,medium,0,billing_dispute,en,frustrated,T04-00,train
+I was charged twice for my subscription this month. Please handle this ASAP. Details are above.,high,low,0,billing_dispute,en,neutral,T04-00,train
+There is a double charge on our card statement for invoice #9021. Kind regards.,medium,low,0,billing_dispute,en,polite,T04-01,test
+There is a double charge on our card statement for invoice INV-2291. Our team is completely blocked.,high,low,0,billing_dispute,en,neutral,T04-01,test
+"There is a double charge on our card statement for invoice #10442. Our team is completely blocked. Yeah right, 'world class support'.",high,high,0,billing_dispute,en,sarcastic,T04-01,test
+"There is a double charge on our card statement for invoice INV-2291. I'm quite disappointed, to be honest.",medium,medium,0,billing_dispute,en,frustrated,T04-01,test
+"We were billed after we cancelled the plan. I'm done with you people, never again.",medium,high,0,billing_dispute,en,angry,T04-02,train
+We were billed after we cancelled the plan. Please handle this ASAP. Love how I pay for this and it never works.,high,high,0,billing_dispute,en,sarcastic,T04-02,train
+We were billed after we cancelled the plan. We need this fixed today. Appreciate your support.,high,low,0,billing_dispute,en,polite,T04-02,train
+We were billed after we cancelled the plan. Please respond immediately. Details are above.,high,low,0,billing_dispute,en,neutral,T04-02,train
+"Good morning, You charged us $199 instead of $99. Appreciate your support.",medium,low,0,billing_dispute,en,polite,T04-03,train
+You charged us $199 instead of $99. Please handle this ASAP. Details are above.,high,low,0,billing_dispute,en,neutral,T04-03,train
+"You charged us $199 instead of $240. We are losing money every hour. Great, just great. Thanks for nothing.",high,high,0,billing_dispute,en,sarcastic,T04-03,train
+"You charged us $480 instead of $240. I am furious, this is the worst service ever!",medium,high,0,billing_dispute,en,angry,T04-03,train
+A duplicate payment went through for our renewal. This is UNACCEPTABLE!!!,medium,high,0,billing_dispute,en,angry,T04-04,train
+A duplicate payment went through for our renewal. Details are above.,medium,low,0,billing_dispute,en,neutral,T04-04,train
+A duplicate payment went through for our renewal. Love how I pay for this and it never works.,medium,high,0,billing_dispute,en,sarcastic,T04-04,train
+"Hello, A duplicate payment went through for our renewal. Appreciate your support.",medium,low,0,billing_dispute,en,polite,T04-04,train
+My payment failed but the money was still deducted from my account. We need this fixed today. Appreciate your support.,high,low,0,billing_dispute,en,polite,T04-05,train
+"My payment failed but the money was still deducted from my account. Great, just great. Thanks for nothing.",medium,high,0,billing_dispute,en,sarcastic,T04-05,train
+"My payment failed but the money was still deducted from my account. I am furious, this is the worst service ever!",medium,high,0,billing_dispute,en,angry,T04-05,train
+My payment failed but the money was still deducted from my account. Please respond immediately. Let me know.,high,low,0,billing_dispute,en,neutral,T04-05,train
+I need a refund for the extra seats you billed by mistake. Please check.,medium,low,0,billing_dispute,en,neutral,T04-06,test
+I need a refund for the extra seats you billed by mistake. So much for your 99.9% uptime promise.,medium,high,0,billing_dispute,en,sarcastic,T04-06,test
+I need a refund for the extra seats you billed by mistake. Honestly this is a bit of a mess.,medium,medium,0,billing_dispute,en,frustrated,T04-06,test
+I need a refund for the extra seats you billed by mistake. This is critical for a client demo this afternoon. WHAT IS GOING ON?? Sort it out!,high,high,0,billing_dispute,en,angry,T04-06,test
+The amount on my bank statement does not match my plan price. Thanks in advance!,medium,low,0,billing_dispute,en,polite,T04-07,train
+The amount on my bank statement does not match my plan price. We still haven't heard back from anyone.,medium,medium,0,billing_dispute,en,frustrated,T04-07,train
+The amount on my bank statement does not match my plan price. Please respond immediately. Let me know.,high,low,0,billing_dispute,en,neutral,T04-07,train
+The amount on my bank statement does not match my plan price. Please respond immediately. This is UNACCEPTABLE!!!,high,high,0,billing_dispute,en,angry,T04-07,train
+"I am locked out of my account after the update. We need this fixed today. I am furious, this is the worst service ever!",high,high,0,access,en,angry,T05-00,train
+"I am locked out of my account after the update. Bravo, truly outstanding service.",medium,high,0,access,en,sarcastic,T05-00,train
+"Hi team, I am locked out of my account after the update. We need this fixed today. Thanks in advance!",high,low,0,access,en,polite,T05-00,train
+I am locked out of my account after the update. Please handle this ASAP. This is getting frustrating.,high,medium,0,access,en,frustrated,T05-00,train
+"I can't log in, it keeps saying my credentials are invalid. Please respond immediately. I am furious, this is the worst service ever!",high,high,0,access,en,angry,T05-01,train
+"I can't log in, it keeps saying my credentials are invalid. Please handle this ASAP. Details are above.",high,low,0,access,en,neutral,T05-01,train
+"I can't log in, it keeps saying my credentials are invalid. Appreciate your support.",medium,low,0,access,en,polite,T05-01,train
+"I can't log in, it keeps saying my credentials are invalid. Bravo, truly outstanding service.",medium,high,0,access,en,sarcastic,T05-01,train
+My account is suspended and I don't know why. Please handle this ASAP. Absolutely ridiculous. I'm fed up with you.,high,high,0,access,en,angry,T05-02,train
+"Hi team, My account is suspended and I don't know why. Appreciate your support.",medium,low,0,access,en,polite,T05-02,train
+"My account is suspended and I don't know why. Please respond immediately. Great, just great. Thanks for nothing.",high,high,0,access,en,sarcastic,T05-02,train
+My account is suspended and I don't know why. We need this fixed today. We still haven't heard back from anyone.,high,medium,0,access,en,frustrated,T05-02,train
+"Login is not working on the mobile app. This is urgent. Oh wonderful, another 'quick fix' that broke everything.",high,high,0,access,en,sarcastic,T05-03,test
+Login is not working on the mobile app. Pathetic. I'll be leaving a one star review.,medium,high,0,access,en,angry,T05-03,test
+Login is not working on the mobile app. Kind regards.,medium,low,0,access,en,polite,T05-03,test
+Login is not working on the mobile app.,medium,low,0,access,en,neutral,T05-03,test
+"Hi team, The sign in page just reloads and never lets me in. This is urgent. Cheers, and thanks.",high,low,0,access,en,polite,T05-04,test
+The sign in page just reloads and never lets me in. Honestly this is a bit of a mess.,medium,medium,0,access,en,frustrated,T05-04,test
+The sign in page just reloads and never lets me in. This is critical for a client demo this afternoon. Pathetic. I'll be leaving a one star review.,high,high,0,access,en,angry,T05-04,test
+The sign in page just reloads and never lets me in. Please check.,medium,low,0,access,en,neutral,T05-04,test
+"I am unable to sign in since you changed the login page. Bravo, truly outstanding service.",medium,high,0,access,en,sarcastic,T05-05,train
+I am unable to sign in since you changed the login page. Thanks in advance!,medium,low,0,access,en,polite,T05-05,train
+I am unable to sign in since you changed the login page. Please handle this ASAP. Absolutely ridiculous. I'm fed up with you.,high,high,0,access,en,angry,T05-05,train
+I am unable to sign in since you changed the login page. Details are above.,medium,low,0,access,en,neutral,T05-05,train
+Please cancel our subscription at the end of the month. Pathetic. I'll be leaving a one star review.,medium,high,0,cancellation,en,angry,T06-00,test
+"Please cancel our subscription at the end of the month. Cheers, and thanks.",medium,low,0,cancellation,en,polite,T06-00,test
+Please cancel our subscription at the end of the month.,medium,low,0,cancellation,en,neutral,T06-00,test
+"Please cancel our subscription at the end of the month. I'm quite disappointed, to be honest.",medium,medium,0,cancellation,en,frustrated,T06-00,test
+We want to close our account. Fix this NOW or we cancel!,medium,high,0,cancellation,en,angry,T06-01,test
+"We want to close our account. I'm quite disappointed, to be honest.",medium,medium,0,cancellation,en,frustrated,T06-01,test
+"We want to close our account. Yeah right, 'world class support'.",medium,high,0,cancellation,en,sarcastic,T06-01,test
+"We want to close our account. Cheers, and thanks.",medium,low,0,cancellation,en,polite,T06-01,test
+We have decided not to renew our contract. We need this fixed today. This is UNACCEPTABLE!!!,high,high,0,cancellation,en,angry,T06-02,train
+We have decided not to renew our contract. We need this fixed today. Details are above.,high,low,0,cancellation,en,neutral,T06-02,train
+"Hello, We have decided not to renew our contract. We need this fixed today. Thanks in advance!",high,low,0,cancellation,en,polite,T06-02,train
+We have decided not to renew our contract. This is getting frustrating.,medium,medium,0,cancellation,en,frustrated,T06-02,train
+We are switching to another provider next quarter. We are losing money every hour. This is UNACCEPTABLE!!!,high,high,0,cancellation,en,angry,T06-03,train
+We are switching to another provider next quarter. Please advise.,medium,low,0,cancellation,en,neutral,T06-03,train
+We are switching to another provider next quarter. This has happened before and it's annoying.,medium,medium,0,cancellation,en,frustrated,T06-03,train
+"We are switching to another provider next quarter. Please respond immediately. Bravo, truly outstanding service.",high,high,0,cancellation,en,sarcastic,T06-03,train
+Please stop the automatic renewal and downgrade us to free. Please respond immediately. This is getting frustrating.,high,medium,0,cancellation,en,frustrated,T06-04,train
+"Please stop the automatic renewal and downgrade us to free. Great, just great. Thanks for nothing.",medium,high,0,cancellation,en,sarcastic,T06-04,train
+Please stop the automatic renewal and downgrade us to free. We are losing money every hour. Absolutely ridiculous. I'm fed up with you.,high,high,0,cancellation,en,angry,T06-04,train
+Please stop the automatic renewal and downgrade us to free. Many thanks for looking into it.,medium,low,0,cancellation,en,polite,T06-04,train
+"The CSV export is not working, it gives an error. This has happened before and it's annoying.",medium,medium,0,bug,en,frustrated,T07-00,train
+"The CSV export is not working, it gives an error. Please handle this ASAP. Details are above.",high,low,0,bug,en,neutral,T07-00,train
+"The CSV export is not working, it gives an error. We are losing money every hour. Love how I pay for this and it never works.",high,high,0,bug,en,sarcastic,T07-00,train
+"Hi team, The CSV export is not working, it gives an error. Please handle this ASAP. Many thanks for looking into it.",high,low,0,bug,en,polite,T07-00,train
+The app crashes every time I open the reports page. We need this fixed today. This is getting frustrating.,high,medium,0,bug,en,frustrated,T07-01,train
+"The app crashes every time I open the reports page. We need this fixed today. I am furious, this is the worst service ever!",high,high,0,bug,en,angry,T07-01,train
+"Hello, The app crashes every time I open the reports page. Many thanks for looking into it.",medium,low,0,bug,en,polite,T07-01,train
+The app crashes every time I open the reports page. Please handle this ASAP. Let me know.,high,low,0,bug,en,neutral,T07-01,train
+"Search stopped working after yesterday's update. I am furious, this is the worst service ever!",medium,high,0,bug,en,angry,T07-02,train
+Search stopped working after yesterday's update. We need this fixed today. Thanks in advance!,high,low,0,bug,en,polite,T07-02,train
+Search stopped working after yesterday's update. Let me know.,medium,low,0,bug,en,neutral,T07-02,train
+"Search stopped working after yesterday's update. Bravo, truly outstanding service.",medium,high,0,bug,en,sarcastic,T07-02,train
+Uploading files fails with an error message. Please handle this ASAP. Let me know.,high,low,0,bug,en,neutral,T07-03,train
+Uploading files fails with an error message. We are losing money every hour. This is getting frustrating.,high,medium,0,bug,en,frustrated,T07-03,train
+"Hi team, Uploading files fails with an error message. Thanks in advance!",medium,low,0,bug,en,polite,T07-03,train
+"Uploading files fails with an error message. Great, just great. Thanks for nothing.",medium,high,0,bug,en,sarcastic,T07-03,train
+The dashboard charts are broken and show no data. Please advise.,medium,low,0,bug,en,neutral,T07-04,train
+The dashboard charts are broken and show no data. Please handle this ASAP. Thanks in advance!,high,low,0,bug,en,polite,T07-04,train
+The dashboard charts are broken and show no data. We still haven't heard back from anyone.,medium,medium,0,bug,en,frustrated,T07-04,train
+"The dashboard charts are broken and show no data. I'm done with you people, never again.",medium,high,0,bug,en,angry,T07-04,train
+Email notifications stopped arriving for new tickets. Not happy about this at all.,medium,medium,0,bug,en,frustrated,T07-05,test
+Email notifications stopped arriving for new tickets. WHAT IS GOING ON?? Sort it out!,medium,high,0,bug,en,angry,T07-05,test
+Email notifications stopped arriving for new tickets. This is critical for a client demo this afternoon. Please check.,high,low,0,bug,en,neutral,T07-05,test
+Email notifications stopped arriving for new tickets. Thank you for your help.,medium,low,0,bug,en,polite,T07-05,test
+The calendar sync shows the wrong times for all events. Appreciate your support.,medium,low,0,bug,en,polite,T07-06,train
+"The calendar sync shows the wrong times for all events. Great, just great. Thanks for nothing.",medium,high,0,bug,en,sarcastic,T07-06,train
+The calendar sync shows the wrong times for all events. This is getting frustrating.,medium,medium,0,bug,en,frustrated,T07-06,train
+The calendar sync shows the wrong times for all events. Details are above.,medium,low,0,bug,en,neutral,T07-06,train
+The mobile app freezes on the home screen. This is critical for a client demo this afternoon. Pathetic. I'll be leaving a one star review.,high,high,0,bug,en,angry,T07-07,test
+The mobile app freezes on the home screen. Not happy about this at all.,medium,medium,0,bug,en,frustrated,T07-07,test
+The mobile app freezes on the home screen. So much for your 99.9% uptime promise.,medium,high,0,bug,en,sarcastic,T07-07,test
+The mobile app freezes on the home screen.,medium,low,0,bug,en,neutral,T07-07,test
+Nobody has answered my ticket for three days. This has happened before and it's annoying.,medium,medium,0,complaint,en,frustrated,T08-00,train
+"Nobody has answered my ticket for three days. We are losing money every hour. Bravo, truly outstanding service.",high,high,0,complaint,en,sarcastic,T08-00,train
+Nobody has answered my ticket for three days. Please advise.,medium,medium,0,complaint,en,neutral,T08-00,train
+"Nobody has answered my ticket for three days. We are losing money every hour. I'm done with you people, never again.",high,high,0,complaint,en,angry,T08-00,train
+This is the third time I am writing about the same problem. Pathetic. I'll be leaving a one star review.,medium,high,0,complaint,en,angry,T08-01,test
+"This is the third time I am writing about the same problem. I'm quite disappointed, to be honest.",medium,medium,0,complaint,en,frustrated,T08-01,test
+This is the third time I am writing about the same problem. So much for your 99.9% uptime promise.,medium,high,0,complaint,en,sarcastic,T08-01,test
+This is the third time I am writing about the same problem. This is urgent. Ticket ref #77310.,high,medium,0,complaint,en,neutral,T08-01,test
+Your support has been very slow and unhelpful lately. This is UNACCEPTABLE!!!,medium,high,0,complaint,en,angry,T08-02,train
+Your support has been very slow and unhelpful lately. Let me know.,medium,medium,0,complaint,en,neutral,T08-02,train
+Your support has been very slow and unhelpful lately. Love how I pay for this and it never works.,medium,high,0,complaint,en,sarcastic,T08-02,train
+Your support has been very slow and unhelpful lately. We still haven't heard back from anyone.,medium,medium,0,complaint,en,frustrated,T08-02,train
+I have been waiting for a week for a simple answer. We still haven't heard back from anyone.,medium,medium,0,complaint,en,frustrated,T08-03,train
+"I have been waiting for a week for a simple answer. Please respond immediately. I am furious, this is the worst service ever!",high,high,0,complaint,en,angry,T08-03,train
+"I have been waiting for a week for a simple answer. We need this fixed today. Great, just great. Thanks for nothing.",high,high,0,complaint,en,sarcastic,T08-03,train
+"Hi team, I have been waiting for a week for a simple answer. Please handle this ASAP. Many thanks for looking into it.",high,medium,0,complaint,en,polite,T08-03,train
+"Hi team, Every agent tells me something different and nothing gets fixed. Thank you for your help.",medium,medium,0,complaint,en,polite,T08-04,test
+Every agent tells me something different and nothing gets fixed. Honestly this is a bit of a mess.,medium,medium,0,complaint,en,frustrated,T08-04,test
+"Every agent tells me something different and nothing gets fixed. Yeah right, 'world class support'.",medium,high,0,complaint,en,sarcastic,T08-04,test
+Every agent tells me something different and nothing gets fixed. We have a deadline tomorrow. If this isn't sorted we are switching to a competitor!!,high,high,0,complaint,en,angry,T08-04,test
+"Hello, How do I export my data to CSV? Many thanks for looking into it.",low,low,0,how_to,en,polite,T09-00,train
+How do I export my data to CSV? Love how I pay for this and it never works.,low,high,0,how_to,en,sarcastic,T09-00,train
+How do I export my data to CSV? Please advise.,low,low,0,how_to,en,neutral,T09-00,train
+How do I export my data to CSV? This is getting frustrating.,low,medium,0,how_to,en,frustrated,T09-00,train
+Where can I change my notification settings? We are losing money every hour. Details are above.,low,low,0,how_to,en,neutral,T09-01,train
+Where can I change my notification settings? We still haven't heard back from anyone.,low,medium,0,how_to,en,frustrated,T09-01,train
+Where can I change my notification settings? We are losing money every hour. Appreciate your support.,low,low,0,how_to,en,polite,T09-01,train
+Where can I change my notification settings? Love how I pay for this and it never works.,low,high,0,how_to,en,sarcastic,T09-01,train
+How can I invite a colleague to my workspace? This is getting frustrating.,low,medium,0,how_to,en,frustrated,T09-02,train
+"How can I invite a colleague to my workspace? Please handle this ASAP. Great, just great. Thanks for nothing.",low,high,0,how_to,en,sarcastic,T09-02,train
+How can I invite a colleague to my workspace? Please handle this ASAP. Please advise.,low,low,0,how_to,en,neutral,T09-02,train
+How can I invite a colleague to my workspace? Appreciate your support.,low,low,0,how_to,en,polite,T09-02,train
+How do I connect Slack to my account? Thank you for your help.,low,low,0,how_to,en,polite,T09-03,test
+How do I connect Slack to my account? If this isn't sorted we are switching to a competitor!!,low,high,0,how_to,en,angry,T09-03,test
+How do I connect Slack to my account? Honestly this is a bit of a mess.,low,medium,0,how_to,en,frustrated,T09-03,test
+"How do I connect Slack to my account? Yeah right, 'world class support'.",low,high,0,how_to,en,sarcastic,T09-03,test
+"Can I change the time zone shown on tickets? We need this fixed today. Bravo, truly outstanding service.",low,high,0,how_to,en,sarcastic,T09-04,train
+Can I change the time zone shown on tickets? Thanks in advance!,low,low,0,how_to,en,polite,T09-04,train
+Can I change the time zone shown on tickets? Absolutely ridiculous. I'm fed up with you.,low,high,0,how_to,en,angry,T09-04,train
+Can I change the time zone shown on tickets? Please respond immediately. Details are above.,low,low,0,how_to,en,neutral,T09-04,train
+How do I enable two-factor authentication? We are losing money every hour. Let me know.,low,low,0,how_to,en,neutral,T09-05,train
+How do I enable two-factor authentication? Thanks in advance!,low,low,0,how_to,en,polite,T09-05,train
+How do I enable two-factor authentication? Please respond immediately. This is getting frustrating.,low,medium,0,how_to,en,frustrated,T09-05,train
+"How do I enable two-factor authentication? I'm done with you people, never again.",low,high,0,how_to,en,angry,T09-05,train
+Where do I find my API key? Thank you for your help.,low,low,0,how_to,en,polite,T09-06,test
+Where do I find my API key? If this isn't sorted we are switching to a competitor!!,low,high,0,how_to,en,angry,T09-06,test
+Where do I find my API key? This is urgent. Ticket ref INV-2291.,low,low,0,how_to,en,neutral,T09-06,test
+"Where do I find my API key? Yeah right, 'world class support'.",low,high,0,how_to,en,sarcastic,T09-06,test
+How do I update my credit card? This is getting frustrating.,low,medium,0,how_to,en,frustrated,T09-07,train
+"How do I update my credit card? Bravo, truly outstanding service.",low,high,0,how_to,en,sarcastic,T09-07,train
+How do I update my credit card? Details are above.,low,low,0,how_to,en,neutral,T09-07,train
+How do I update my credit card? We are losing money every hour. Absolutely ridiculous. I'm fed up with you.,low,high,0,how_to,en,angry,T09-07,train
+What are your support hours? Pathetic. I'll be leaving a one star review.,low,high,0,how_to,en,angry,T09-08,test
+What are your support hours? This is urgent. Please check.,low,low,0,how_to,en,neutral,T09-08,test
+What are your support hours? This is critical for a client demo this afternoon. So much for your 99.9% uptime promise.,low,high,0,how_to,en,sarcastic,T09-08,test
+"Good morning, What are your support hours? Kind regards.",low,low,0,how_to,en,polite,T09-08,test
+How do I reset my password? Honestly this is a bit of a mess.,low,medium,0,password_reset,en,frustrated,T10-00,test
+"Hi team, How do I reset my password? Cheers, and thanks.",low,low,0,password_reset,en,polite,T10-00,test
+How do I reset my password? Ticket ref #77310.,low,low,0,password_reset,en,neutral,T10-00,test
+How do I reset my password? So much for your 99.9% uptime promise.,low,high,0,password_reset,en,sarcastic,T10-00,test
+"I forgot my password, what should I do? Fix this NOW or we cancel!",low,high,0,password_reset,en,angry,T10-01,test
+"I forgot my password, what should I do? Yeah right, 'world class support'.",low,high,0,password_reset,en,sarcastic,T10-01,test
+"I forgot my password, what should I do? Honestly this is a bit of a mess.",low,medium,0,password_reset,en,frustrated,T10-01,test
+"I forgot my password, what should I do? Ticket ref #9021.",low,low,0,password_reset,en,neutral,T10-01,test
+"The password reset email never arrived. I'm done with you people, never again.",low,high,0,password_reset,en,angry,T10-02,train
+"Hello, The password reset email never arrived. Please respond immediately. Many thanks for looking into it.",low,low,0,password_reset,en,polite,T10-02,train
+"The password reset email never arrived. Great, just great. Thanks for nothing.",low,high,0,password_reset,en,sarcastic,T10-02,train
+The password reset email never arrived. Let me know.,low,low,0,password_reset,en,neutral,T10-02,train
+"Can I change my password from the app? Bravo, truly outstanding service.",low,high,0,password_reset,en,sarcastic,T10-03,train
+"Can I change my password from the app? I'm done with you people, never again.",low,high,0,password_reset,en,angry,T10-03,train
+Can I change my password from the app? This has happened before and it's annoying.,low,medium,0,password_reset,en,frustrated,T10-03,train
+Can I change my password from the app? We are losing money every hour. Many thanks for looking into it.,low,low,0,password_reset,en,polite,T10-03,train
+Where is the forgot password link? We still haven't heard back from anyone.,low,medium,0,password_reset,en,frustrated,T10-04,train
+Where is the forgot password link? Love how I pay for this and it never works.,low,high,0,password_reset,en,sarcastic,T10-04,train
+Where is the forgot password link? Let me know.,low,low,0,password_reset,en,neutral,T10-04,train
+"Hi team, Where is the forgot password link? Thanks in advance!",low,low,0,password_reset,en,polite,T10-04,train
+Where can I download my invoices? Not happy about this at all.,low,medium,0,invoice,en,frustrated,T11-00,test
+Where can I download my invoices?,low,low,0,invoice,en,neutral,T11-00,test
+Where can I download my invoices? WHAT IS GOING ON?? Sort it out!,low,high,0,invoice,en,angry,T11-00,test
+"Hello, Where can I download my invoices? Kind regards.",low,low,0,invoice,en,polite,T11-00,test
+"I need a receipt for last month's payment. I am furious, this is the worst service ever!",low,high,0,invoice,en,angry,T11-01,train
+"Good morning, I need a receipt for last month's payment. Thanks in advance!",low,low,0,invoice,en,polite,T11-01,train
+I need a receipt for last month's payment. Let me know.,low,low,0,invoice,en,neutral,T11-01,train
+I need a receipt for last month's payment. This has happened before and it's annoying.,low,medium,0,invoice,en,frustrated,T11-01,train
+Can you send me a copy of invoice #10442? If this isn't sorted we are switching to a competitor!!,low,high,0,invoice,en,angry,T11-02,test
+Can you send me a copy of invoice #9021? Ticket ref #77310.,low,low,0,invoice,en,neutral,T11-02,test
+Can you send me a copy of invoice #77310? Not happy about this at all.,low,medium,0,invoice,en,frustrated,T11-02,test
+Can you send me a copy of invoice #10442? Thank you for your help.,low,low,0,invoice,en,polite,T11-02,test
+"I need to update the GST number on our invoices. I'm done with you people, never again.",low,high,0,invoice,en,angry,T11-03,train
+I need to update the GST number on our invoices. This has happened before and it's annoying.,low,medium,0,invoice,en,frustrated,T11-03,train
+I need to update the GST number on our invoices. Details are above.,low,low,0,invoice,en,neutral,T11-03,train
+"I need to update the GST number on our invoices. Bravo, truly outstanding service.",low,high,0,invoice,en,sarcastic,T11-03,train
+Where can I see my billing history? We still haven't heard back from anyone.,low,medium,0,invoice,en,frustrated,T11-04,train
+"Where can I see my billing history? I'm done with you people, never again.",low,high,0,invoice,en,angry,T11-04,train
+"Where can I see my billing history? Bravo, truly outstanding service.",low,high,0,invoice,en,sarcastic,T11-04,train
+Where can I see my billing history? Thanks in advance!,low,low,0,invoice,en,polite,T11-04,train
+Would be nice to have dark mode. This has happened before and it's annoying.,low,medium,0,feature_request,en,frustrated,T12-00,train
+"Good morning, Would be nice to have dark mode. Thanks in advance!",low,low,0,feature_request,en,polite,T12-00,train
+Would be nice to have dark mode. Absolutely ridiculous. I'm fed up with you.,low,high,0,feature_request,en,angry,T12-00,train
+Would be nice to have dark mode. Please handle this ASAP. Love how I pay for this and it never works.,low,high,0,feature_request,en,sarcastic,T12-00,train
+Please add an export to Google Sheets. WHAT IS GOING ON?? Sort it out!,low,high,0,feature_request,en,angry,T12-01,test
+"Hello, Please add an export to Google Sheets. Kind regards.",low,low,0,feature_request,en,polite,T12-01,test
+"Please add an export to Google Sheets. Oh wonderful, another 'quick fix' that broke everything.",low,high,0,feature_request,en,sarcastic,T12-01,test
+Please add an export to Google Sheets.,low,low,0,feature_request,en,neutral,T12-01,test
+It would be great if the app supported keyboard shortcuts. This is getting frustrating.,low,medium,0,feature_request,en,frustrated,T12-02,train
+It would be great if the app supported keyboard shortcuts. Love how I pay for this and it never works.,low,high,0,feature_request,en,sarcastic,T12-02,train
+It would be great if the app supported keyboard shortcuts. This is UNACCEPTABLE!!!,low,high,0,feature_request,en,angry,T12-02,train
+It would be great if the app supported keyboard shortcuts. We need this fixed today. Many thanks for looking into it.,low,low,0,feature_request,en,polite,T12-02,train
+Feature request: let us schedule reports by email. Love how I pay for this and it never works.,low,high,0,feature_request,en,sarcastic,T12-03,train
+Feature request: let us schedule reports by email. Please handle this ASAP. Please advise.,low,low,0,feature_request,en,neutral,T12-03,train
+Feature request: let us schedule reports by email. Many thanks for looking into it.,low,low,0,feature_request,en,polite,T12-03,train
+Feature request: let us schedule reports by email. This is getting frustrating.,low,medium,0,feature_request,en,frustrated,T12-03,train
+Could you add a Hindi language option? Let me know.,low,low,0,feature_request,en,neutral,T12-04,train
+Could you add a Hindi language option? Love how I pay for this and it never works.,low,high,0,feature_request,en,sarcastic,T12-04,train
+"Hello, Could you add a Hindi language option? Appreciate your support.",low,low,0,feature_request,en,polite,T12-04,train
+Could you add a Hindi language option? We still haven't heard back from anyone.,low,medium,0,feature_request,en,frustrated,T12-04,train
+I wish there was a way to tag tickets by colour. This is critical for a client demo this afternoon.,low,low,0,feature_request,en,neutral,T12-05,test
+"I wish there was a way to tag tickets by colour. Oh wonderful, another 'quick fix' that broke everything.",low,high,0,feature_request,en,sarcastic,T12-05,test
+"I wish there was a way to tag tickets by colour. I'm quite disappointed, to be honest.",low,medium,0,feature_request,en,frustrated,T12-05,test
+I wish there was a way to tag tickets by colour. Pathetic. I'll be leaving a one star review.,low,high,0,feature_request,en,angry,T12-05,test
+"Mera payment fail ho gaya par paisa kat gaya, refund chahiye. Aaj hi chahiye. Kya pagal bana rahe ho?? Abhi theek karo!",high,high,0,billing_dispute,hi-en,angry,T13-00,train
+"Mera payment fail ho gaya par paisa kat gaya, refund chahiye. Kuch toh karo yaar.",medium,medium,0,billing_dispute,hi-en,frustrated,T13-00,train
+"Mera payment fail ho gaya par paisa kat gaya, refund chahiye. Bahut badhiya, har hafte yahi drama.",medium,high,0,billing_dispute,hi-en,sarcastic,T13-00,train
+"Hello team, Mera payment fail ho gaya par paisa kat gaya, refund chahiye. Thanks bhai, please check karo.",medium,low,0,billing_dispute,hi-en,polite,T13-00,train
+Is mahine paise do baar kat gaye hain. Bakwas service hai! Turant fix karo!!!,medium,high,0,billing_dispute,hi-en,angry,T13-01,train
+Is mahine paise do baar kat gaye hain. Kal tak theek hona chahiye. Kuch toh karo yaar.,high,medium,0,billing_dispute,hi-en,frustrated,T13-01,train
+"Is mahine paise do baar kat gaye hain. Wah, kya service hai. Thanks for nothing.",medium,high,0,billing_dispute,hi-en,sarcastic,T13-01,train
+"Namaste, Is mahine paise do baar kat gaye hain. Thanks bhai, please check karo.",medium,low,0,billing_dispute,hi-en,polite,T13-01,train
+"Payment fail hua lekin bank se paisa deducted dikha raha hai. Faltu service, ab switch kar rahe hain!!",medium,high,0,billing_dispute,hi-en,angry,T13-02,test
+Payment fail hua lekin bank se paisa deducted dikha raha hai. Turant dekho. Ab tak koi jawab nahi aaya.,high,medium,0,billing_dispute,hi-en,frustrated,T13-02,test
+Payment fail hua lekin bank se paisa deducted dikha raha hai. Batao kya karna hai.,medium,low,0,billing_dispute,hi-en,neutral,T13-02,test
+"Payment fail hua lekin bank se paisa deducted dikha raha hai. Turant dekho. Great, phir se kharab ho gaya.",high,high,0,billing_dispute,hi-en,sarcastic,T13-02,test
+"Hello team, Site band ho gaya hai, koi bhi login nahi kar pa raha. Turant dekho. Shukriya.",high,low,1,outage,hi-en,polite,T14-00,test
+"Site band ho gaya hai, koi bhi login nahi kar pa raha. Faltu service, ab switch kar rahe hain!!",high,high,1,outage,hi-en,angry,T14-00,test
+"Site band ho gaya hai, koi bhi login nahi kar pa raha. Batao kya karna hai.",high,low,1,outage,hi-en,neutral,T14-00,test
+"Site band ho gaya hai, koi bhi login nahi kar pa raha. Yeh baar baar ho raha hai.",high,medium,1,outage,hi-en,frustrated,T14-00,test
+"Hello team, Hamara dashboard down hai subah se, kuch bhi load nahi ho raha. Please help kijiye, thank you.",high,low,1,outage,hi-en,polite,T14-01,train
+"Hamara dashboard down hai subah se, kuch bhi load nahi ho raha. Bahut badhiya, har hafte yahi drama.",high,high,1,outage,hi-en,sarcastic,T14-01,train
+"Hamara dashboard down hai subah se, kuch bhi load nahi ho raha. Bakwas service hai! Turant fix karo!!!",high,high,1,outage,hi-en,angry,T14-01,train
+"Hamara dashboard down hai subah se, kuch bhi load nahi ho raha. Kuch toh karo yaar.",high,medium,1,outage,hi-en,frustrated,T14-01,train
+"App kaam nahi kar raha, export pe error aa raha hai. Kal tak theek hona chahiye. Bahut badhiya, har hafte yahi drama.",high,high,0,bug,hi-en,sarcastic,T15-00,train
+"App kaam nahi kar raha, export pe error aa raha hai. Bahut pareshan ho gaye hain.",medium,medium,0,bug,hi-en,frustrated,T15-00,train
+"App kaam nahi kar raha, export pe error aa raha hai. Please help kijiye, thank you.",medium,low,0,bug,hi-en,polite,T15-00,train
+"App kaam nahi kar raha, export pe error aa raha hai. Kya pagal bana rahe ho?? Abhi theek karo!",medium,high,0,bug,hi-en,angry,T15-00,train
+Reports page khulte hi app crash ho jata hai. Turant dekho. Yeh baar baar ho raha hai.,high,medium,0,bug,hi-en,frustrated,T15-01,test
+"Hello team, Reports page khulte hi app crash ho jata hai. Shukriya.",medium,low,0,bug,hi-en,polite,T15-01,test
+"Reports page khulte hi app crash ho jata hai. Great, phir se kharab ho gaya.",medium,high,0,bug,hi-en,sarcastic,T15-01,test
+Reports page khulte hi app crash ho jata hai. Jaldi karo please.,high,low,0,bug,hi-en,neutral,T15-01,test
+"Password bhool gaya, reset kaise kare? Turant dekho. Ghatiya support, hum cancel kar denge!",low,high,0,password_reset,hi-en,angry,T16-00,test
+"Password bhool gaya, reset kaise kare? Jaldi karo please.",low,low,0,password_reset,hi-en,neutral,T16-00,test
+"Password bhool gaya, reset kaise kare? Jaldi karo please. Yeah right, best support ever.",low,high,0,password_reset,hi-en,sarcastic,T16-00,test
+"Password bhool gaya, reset kaise kare? Turant dekho. Shukriya.",low,low,0,password_reset,hi-en,polite,T16-00,test
+"Mera password reset karna hai, link kahan hai? Kuch toh karo yaar.",low,medium,0,password_reset,hi-en,frustrated,T16-01,train
+"Mera password reset karna hai, link kahan hai? Thanks bhai, please check karo.",low,low,0,password_reset,hi-en,polite,T16-01,train
+"Mera password reset karna hai, link kahan hai? Aaj hi chahiye. Details upar hai.",low,low,0,password_reset,hi-en,neutral,T16-01,train
+"Mera password reset karna hai, link kahan hai? Kya pagal bana rahe ho?? Abhi theek karo!",low,high,0,password_reset,hi-en,angry,T16-01,train
+"Login nahi ho raha, account lock ho gaya hai. Turant dekho. Yeah right, best support ever.",high,high,0,access,hi-en,sarcastic,T17-00,test
+"Login nahi ho raha, account lock ho gaya hai.",medium,low,0,access,hi-en,neutral,T17-00,test
+"Login nahi ho raha, account lock ho gaya hai. Yeh baar baar ho raha hai.",medium,medium,0,access,hi-en,frustrated,T17-00,test
+"Login nahi ho raha, account lock ho gaya hai. Ghatiya support, hum cancel kar denge!",medium,high,0,access,hi-en,angry,T17-00,test
+"Teen din se koi reply nahi aaya, bahut bura service hai. Yeah right, best support ever.",medium,high,0,complaint,hi-en,sarcastic,T18-00,test
+"Teen din se koi reply nahi aaya, bahut bura service hai. Dhanyavaad.",medium,medium,0,complaint,hi-en,polite,T18-00,test
+"Teen din se koi reply nahi aaya, bahut bura service hai.",medium,medium,0,complaint,hi-en,neutral,T18-00,test
+"Teen din se koi reply nahi aaya, bahut bura service hai. Turant dekho. Yeh baar baar ho raha hai.",high,medium,0,complaint,hi-en,frustrated,T18-00,test

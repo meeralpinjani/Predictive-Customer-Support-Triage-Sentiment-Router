@@ -16,7 +16,10 @@ class Customer(Base):
     segment: Mapped[str] = mapped_column(String)  # enterprise | pro | basic | free
     plan: Mapped[str] = mapped_column(String, default="")
     sla_minutes: Mapped[int] = mapped_column(Integer, default=240)
-    renewal_days: Mapped[int] = mapped_column(Integer, default=365)
+    renewal_days: Mapped[int | None] = mapped_column(Integer, nullable=True)  # None = no renewal (free)
+    ltv: Mapped[float] = mapped_column(Float, default=0.0)
+    churn_risk: Mapped[float] = mapped_column(Float, default=0.0)
+    language: Mapped[str] = mapped_column(String, default="en")
 
 
 class Agent(Base):
@@ -44,13 +47,17 @@ class Ticket(Base):
     body: Mapped[str] = mapped_column(Text)
     channel: Mapped[str] = mapped_column(String, default="web")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    status: Mapped[str] = mapped_column(String, default="new")
+    status: Mapped[str] = mapped_column(String, default="new")  # queued | in_progress | kb_handled | resolved
     frustration: Mapped[float] = mapped_column(Float, default=0.0)
     urgency: Mapped[float] = mapped_column(Float, default=0.0)
     value: Mapped[float] = mapped_column(Float, default=0.0)
+    sla_minutes: Mapped[int] = mapped_column(Integer, default=240)
     intent: Mapped[str] = mapped_column(String, default="other")
+    language: Mapped[str] = mapped_column(String, default="en")
     critical_flags: Mapped[str] = mapped_column(String, default="")  # comma separated
+    manager_flag: Mapped[bool] = mapped_column(Boolean, default=False)
     priority: Mapped[int] = mapped_column(Integer, default=0)
+    priority_locked: Mapped[bool] = mapped_column(Boolean, default=False)
     route: Mapped[str] = mapped_column(String, default="tier1")
     route_reason: Mapped[str] = mapped_column(String, default="")
     route_locked: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -58,8 +65,11 @@ class Ticket(Base):
     kb_article_id: Mapped[str | None] = mapped_column(String, nullable=True)
     kb_confidence: Mapped[float] = mapped_column(Float, default=0.0)
     kb_action: Mapped[str] = mapped_column(String, default="none")  # none | suggest | auto_reply
+    kb_rated: Mapped[bool] = mapped_column(Boolean, default=False)
     analysis_mode: Mapped[str] = mapped_column(String, default="rules")
+    analysis_confidence: Mapped[float] = mapped_column(Float, default=0.5)
     assigned_agent_id: Mapped[int | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Feedback(Base):

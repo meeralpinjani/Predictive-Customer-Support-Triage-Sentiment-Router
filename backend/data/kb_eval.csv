@@ -1,0 +1,72 @@
+text,expected_article,split
+how can I set a new password for my login,kb_pass_01,val
+I don't remember my password anymore,kb_pass_01,test
+where do I reset my password,kb_pass_01,val
+password reset kaise karte hain,kb_pass_01,test
+where do I get a copy of my invoice,kb_inv_02,val
+I need last quarter's receipts for accounting,kb_inv_02,test
+download all my old invoices,kb_inv_02,val
+how to change the email address I log in with,kb_email_03,test
+I want to use a different email for my account,kb_email_03,val
+how do I move from basic to pro,kb_plan_04,test
+change my plan to annual,kb_plan_04,val
+what is the refund policy,kb_refund_05,test
+how many days do refunds take,kb_refund_05,val
+how do I turn on two factor,kb_2fa_06,test
+set up an authenticator app for my login,kb_2fa_06,val
+how can I get a backup of everything in my workspace,kb_export_07,test
+export records as json,kb_export_07,val
+where is my package,kb_ship_08,test
+my hardware order has not arrived yet,kb_ship_08,val
+"I get too many emails from you, how to stop them",kb_notify_09,test
+turn off push notifications,kb_notify_09,val
+can I use a dark theme,kb_theme_10,test
+how do I enable night mode,kb_theme_10,val
+how do I delete my account forever,kb_delete_11,test
+erase all my personal data,kb_delete_11,val
+where do I create an api key,kb_api_12,test
+rotate my developer token,kb_api_12,val
+how to set up okta single sign on,kb_sso_13,test
+configure saml for our company,kb_sso_13,val
+change the billing address on my invoices,kb_address_14,test
+update our vat number,kb_address_14,val
+log me out from my other laptop,kb_session_15,test
+show all devices where I'm signed in,kb_session_15,val
+my account got locked after wrong attempts,kb_login_16,test
+it says invalid credentials when I log in,kb_login_16,val
+"my credit card expired, how to add new card",kb_card_17,test
+change the card you charge,kb_card_17,val
+how do I add a new user to our team,kb_team_18,test
+invite my coworker,kb_team_18,val
+I got a new phone and my authenticator codes are gone,kb_2fareset_19,test
+lost my 2fa device,kb_2fareset_19,val
+do you have an iphone app,kb_mobile_20,test
+is there an android version,kb_mobile_20,val
+connect to slack,kb_integr_21,test
+how to set up webhooks,kb_integr_21,val
+what is the storage limit on free plan,kb_limits_22,test
+how many api requests per day,kb_limits_22,val
+when is your support team available,kb_hours_23,test
+how fast do you reply to tickets,kb_hours_23,val
+where are your servers located for gdpr,kb_privacy_24,test
+I want a copy of my personal data,kb_privacy_24,val
+change the interface language,kb_lang_25,test
+tickets show the wrong time zone,kb_lang_25,val
+do you offer a nonprofit discount,kb_pricing_26,test
+how much is the pro plan,kb_pricing_26,val
+Our production dashboard is down for every user,none,test
+Someone hacked my account and changed the email,none,val
+I was charged twice and need my money back today,none,test
+Is the company cafeteria serving vegan pizza on Thursdays?,none,val
+Can you recommend a good laptop for video editing?,none,test
+The export button crashes the whole app,none,val
+Your support is terrible and nobody replies,none,test
+We will take legal action if this continues,none,val
+What is the weather in Stockholm tomorrow?,none,test
+My order was delivered damaged and smoking,none,val
+Who won the football match yesterday?,none,test
+The reports page shows a 500 error since the update,none,val
+Our team is locked out and losing money every hour,none,test
+Please write me a poem about support tickets,none,val
+The app freezes when I upload large files,none,test
+We want to cancel because the product keeps breaking,none,val

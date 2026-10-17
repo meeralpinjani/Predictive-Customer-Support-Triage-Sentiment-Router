@@ -14,7 +14,7 @@ backend/.venv*/
 node_modules/
 
 # Eval artefacts
-backend/eval/nlp_mistakes.csv
+backend/eval/nlp_mistakes*.csv
 
 # Model caches
 .hf_cache/

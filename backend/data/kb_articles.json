@@ -7,7 +7,12 @@
       "Forgot my password what should I do?",
       "Can I change my login password?",
       "Where is the password reset link?",
-      "How to recover lost account password"
+      "How to recover lost account password",
+      "I can't remember my password",
+      "reset password link",
+      "password reset email not received",
+      "change my password",
+      "password bhool gaya, reset kaise kare"
     ],
     "answer": "To reset your password, visit the login page and click 'Forgot Password'. Enter your registered email address and click 'Send Recovery Link'. Check your inbox for the reset link, which expires after 30 minutes.",
     "source": "Help Center - Account Security"
@@ -20,7 +25,12 @@
       "Where do I find my past receipts?",
       "Need VAT tax invoice for accounting",
       "How to access billing history and invoices",
-      "Can I get a PDF receipt for my payment?"
+      "Can I get a PDF receipt for my payment?",
+      "Where can I download invoices?",
+      "send me a copy of last month's invoice",
+      "I need an invoice for my company records",
+      "download receipt",
+      "invoice kahan milega"
     ],
     "answer": "Navigate to Settings > Billing & Invoices. Scroll down to the 'Payment History' table where you can view and download all past invoices and tax receipts in PDF format.",
     "source": "Help Center - Billing"
@@ -32,7 +42,10 @@
       "How do I update my registered email?",
       "Change email address on account",
       "Can I transfer my login email?",
-      "Where to update my contact email"
+      "Where to update my contact email",
+      "change the email on my profile",
+      "update login email address",
+      "my email changed, how do I update it"
     ],
     "answer": "Go to Profile > Account Details. Click 'Edit' next to your email address, enter your new email, and submit. You will receive verification emails at both old and new addresses to confirm the change.",
     "source": "Help Center - Account Settings"
@@ -45,7 +58,11 @@
       "Can I downgrade from Pro to Basic?",
       "Change subscription tier",
       "Switch to annual billing plan",
-      "How do I change my subscription?"
+      "How do I change my subscription?",
+      "upgrade to pro",
+      "move to enterprise plan",
+      "change from monthly to yearly billing",
+      "what plans do you offer"
     ],
     "answer": "Go to Settings > Subscription. Choose your desired plan (Basic, Pro, or Enterprise) and select monthly or annual billing. Upgrades take effect immediately with prorated billing.",
     "source": "Help Center - Billing"
@@ -57,7 +74,10 @@
       "What is your refund policy?",
       "How do I request a refund?",
       "Can I get money back for accidental charge?",
-      "Refund dispute timeline"
+      "Refund dispute timeline",
+      "refund request",
+      "how long does a refund take",
+      "money back guarantee"
     ],
     "answer": "We offer a full 14-day money-back guarantee for initial subscription purchases. For accidental duplicate charges or billing disputes, submit a ticket under Billing and our finance team will process eligible refunds within 3-5 business days.",
     "source": "Help Center - Billing & Legal"
@@ -69,7 +89,10 @@
       "How do I enable two-factor authentication?",
       "Set up 2FA or multi-factor login",
       "How to use authenticator app",
-      "Add two step verification to my account"
+      "Add two step verification to my account",
+      "turn on 2FA",
+      "enable MFA",
+      "how do I secure my account with an authenticator"
     ],
     "answer": "Go to Settings > Security > Two-Factor Authentication. Toggle 2FA ON, scan the QR code using Google Authenticator or Authy, and enter the 6-digit confirmation code. Save your backup recovery codes securely.",
     "source": "Help Center - Security"
@@ -81,7 +104,10 @@
       "How do I export my data?",
       "Can I download all customer records?",
       "Export CSV or JSON backup",
-      "Where to find data export options"
+      "Where to find data export options",
+      "export my data to CSV",
+      "download a backup of my workspace",
+      "export all records"
     ],
     "answer": "Administrators can navigate to Workspace Settings > Data Management > Export. Select either CSV or JSON format and click 'Generate Archive'. An encrypted download link will be emailed within 10 minutes.",
     "source": "Help Center - Data & Privacy"
@@ -93,7 +119,10 @@
       "Where is my shipment?",
       "How do I track my package delivery?",
       "Tracking number not updating",
-      "When will my security key or hardware arrive?"
+      "When will my security key or hardware arrive?",
+      "track my order",
+      "my delivery is late",
+      "where is my hardware order"
     ],
     "answer": "Check your dispatch confirmation email for the courier tracking code and carrier URL. Deliveries usually take 3-5 business days domestically. If tracking shows no scans for over 48 hours, contact logistics support.",
     "source": "Help Center - Logistics"
@@ -105,7 +134,10 @@
       "How do I turn off email notifications?",
       "Change notification settings",
       "Too many alert emails",
-      "Mute ticket updates"
+      "Mute ticket updates",
+      "stop email alerts",
+      "unsubscribe from notifications",
+      "change email notification frequency"
     ],
     "answer": "Visit Preferences > Notifications. Customize your alerts for email, browser push notifications, and daily summaries by toggling the relevant switches.",
     "source": "Help Center - General"
@@ -117,7 +149,10 @@
       "How do I enable dark mode?",
       "Where is the light mode switch?",
       "Can I change the dashboard theme?",
-      "Would be nice to have dark mode"
+      "Would be nice to have dark mode",
+      "dark theme",
+      "switch to dark mode",
+      "change the colour theme"
     ],
     "answer": "Click your user avatar in the top right corner and toggle 'Dark Mode' or select 'System Default' to sync with your operating system preferences.",
     "source": "Help Center - Interface"
@@ -129,7 +164,10 @@
       "How do I close my account?",
       "Delete my personal profile and data",
       "Cancel account permanently",
-      "GDPR erasure request"
+      "GDPR erasure request",
+      "delete my account",
+      "remove all my data",
+      "how to permanently delete my profile"
     ],
     "answer": "Go to Settings > Account > Danger Zone. Click 'Delete Account' and enter your password. Account deletion is permanent after a 14-day grace period.",
     "source": "Help Center - Privacy"
@@ -141,7 +179,10 @@
       "How do I generate an API key?",
       "Where can I find my secret developer token?",
       "Rotate API credentials",
-      "API key rate limits"
+      "API key rate limits",
+      "create an API token",
+      "where do I get API credentials",
+      "new API key"
     ],
     "answer": "Developers can visit Settings > Developer > API Keys. Click 'Create New Secret Key', name the key, assign permissions, and copy the key immediately as it will not be displayed again.",
     "source": "Help Center - Developer Platform"
@@ -153,7 +194,10 @@
       "How to configure SAML SSO?",
       "Set up Okta or Azure AD Single Sign On",
       "Enterprise SSO integration guide",
-      "Where do I enter Identity Provider metadata?"
+      "Where do I enter Identity Provider metadata?",
+      "set up single sign-on",
+      "configure Okta SSO",
+      "SAML setup"
     ],
     "answer": "Enterprise workspace owners can navigate to Security > SAML SSO. Paste your IdP Entity ID, SSO URL, and x.509 certificate. Test authentication with the provided simulation button before enforcing SSO.",
     "source": "Help Center - Enterprise Security"
@@ -165,7 +209,10 @@
       "How to change billing address?",
       "Update company VAT registration number",
       "Edit payment method address",
-      "Incorrect address on invoice"
+      "Incorrect address on invoice",
+      "change company address on invoices",
+      "update GST number",
+      "update tax ID"
     ],
     "answer": "Go to Billing > Payment Methods > Edit Billing Address. Update company name, street, postal code, and tax/VAT ID. Changes apply to all future generated invoices.",
     "source": "Help Center - Billing"
@@ -177,9 +224,147 @@
       "How do I log out of other devices?",
       "Revoke active web sessions",
       "Remote logout",
-      "Someone else logged into my device session"
+      "Someone else logged into my device session",
+      "sign out everywhere",
+      "log out of all devices",
+      "see where I am logged in"
     ],
     "answer": "Under Security > Active Sessions, review all current devices, IP addresses, and login times. Click 'Sign Out All Other Devices' to invalidate any unauthorized active sessions immediately.",
     "source": "Help Center - Account Security"
+  },
+  {
+    "id": "kb_login_16",
+    "title": "Can't Log In or Account Locked",
+    "questions": [
+      "I can't log in to my account",
+      "my account is locked",
+      "too many login attempts",
+      "login page keeps saying invalid credentials",
+      "how do I unlock my account"
+    ],
+    "answer": "After 5 failed attempts accounts lock for 15 minutes. Wait, then use 'Forgot Password' to set a new one. If you still cannot sign in, check that SSO is not enforced for your workspace (Settings > Security) or contact support with your workspace name.",
+    "source": "Help Center - Account Security"
+  },
+  {
+    "id": "kb_card_17",
+    "title": "Updating Your Payment Method",
+    "questions": [
+      "how do I update my credit card",
+      "change payment card",
+      "my card expired, how do I add a new one",
+      "add a different payment method",
+      "update card details"
+    ],
+    "answer": "Go to Billing > Payment Methods > Add Card. Enter the new card, set it as default, and remove the old one. Future renewals will be charged to the default card.",
+    "source": "Help Center - Billing"
+  },
+  {
+    "id": "kb_team_18",
+    "title": "Inviting Team Members and Managing Seats",
+    "questions": [
+      "how do I add a user",
+      "invite a colleague to my workspace",
+      "add more seats",
+      "remove a team member",
+      "change a user's role"
+    ],
+    "answer": "Workspace admins can open Settings > Members > Invite. Enter email addresses and pick a role (Admin, Member, Viewer). Extra seats are billed pro rata from the next invoice.",
+    "source": "Help Center - Workspace"
+  },
+  {
+    "id": "kb_2fareset_19",
+    "title": "Lost Access to Your 2FA Device",
+    "questions": [
+      "I lost my phone with the authenticator",
+      "2FA codes not working",
+      "new phone, how do I move my authenticator",
+      "lost backup codes"
+    ],
+    "answer": "Sign in with one of your backup recovery codes, then go to Settings > Security > Two-Factor Authentication to re-register your new device. Without backup codes, contact support for an identity-verified reset (takes up to 24 hours).",
+    "source": "Help Center - Account Security"
+  },
+  {
+    "id": "kb_mobile_20",
+    "title": "Using the Mobile App",
+    "questions": [
+      "is there a mobile app",
+      "download the app for iPhone",
+      "android app",
+      "how do I use the app on my phone"
+    ],
+    "answer": "Our apps are free on the App Store and Google Play: search 'Triage Router'. Sign in with the same account; enable push notifications in the app settings.",
+    "source": "Help Center - Apps"
+  },
+  {
+    "id": "kb_integr_21",
+    "title": "Connecting Slack and Other Integrations",
+    "questions": [
+      "how do I connect slack",
+      "integrate with microsoft teams",
+      "set up a webhook",
+      "zapier integration"
+    ],
+    "answer": "Open Settings > Integrations, choose Slack, Teams or Webhooks and click Connect. Pick the channel and the events to forward. Webhooks need an HTTPS endpoint.",
+    "source": "Help Center - Integrations"
+  },
+  {
+    "id": "kb_limits_22",
+    "title": "Usage Limits and Quotas",
+    "questions": [
+      "what are the usage limits",
+      "I hit my storage quota",
+      "how many API calls can I make",
+      "increase my limit"
+    ],
+    "answer": "Free: 1 GB storage and 1,000 API calls/day. Basic: 10 GB, 10k calls. Pro: 100 GB, 100k calls. Enterprise limits are custom. See live usage under Settings > Usage; upgrade the plan to raise limits.",
+    "source": "Help Center - Billing"
+  },
+  {
+    "id": "kb_hours_23",
+    "title": "Support Hours and Response Times",
+    "questions": [
+      "what are your support hours",
+      "when will someone reply",
+      "how long until support responds",
+      "do you have phone support"
+    ],
+    "answer": "Support is staffed 24/7 for Enterprise and 08:00-20:00 CET on weekdays for other plans. Target first-response times: Enterprise 1h, Pro 2h, Basic 4h, Free 8h.",
+    "source": "Help Center - General"
+  },
+  {
+    "id": "kb_privacy_24",
+    "title": "Data Privacy and GDPR Requests",
+    "questions": [
+      "where is my data stored",
+      "GDPR data request",
+      "request a copy of my personal data",
+      "data processing agreement"
+    ],
+    "answer": "Data is stored in EU data centres (Frankfurt, Stockholm). Request a copy of your personal data or a DPA from Settings > Privacy > Requests; we respond within 30 days.",
+    "source": "Help Center - Data & Privacy"
+  },
+  {
+    "id": "kb_lang_25",
+    "title": "Changing Language and Time Zone",
+    "questions": [
+      "change the language",
+      "set my time zone",
+      "switch the app to hindi",
+      "wrong time shown on tickets"
+    ],
+    "answer": "Go to Profile > Preferences to set language (English, Hindi, Swedish, German) and time zone. Times across the app update immediately.",
+    "source": "Help Center - Interface"
+  },
+  {
+    "id": "kb_pricing_26",
+    "title": "Pricing, Discounts and Trials",
+    "questions": [
+      "how much does pro cost",
+      "do you have student or nonprofit discounts",
+      "extend my free trial",
+      "annual discount"
+    ],
+    "answer": "Pro is $29/user/month (or $24 billed yearly). Nonprofits and education get 40% off via the discount form. Trials last 14 days and can be extended once by sales.",
+    "source": "Help Center - Billing"
   }
 ]

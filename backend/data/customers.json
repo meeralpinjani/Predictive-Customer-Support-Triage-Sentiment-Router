@@ -1,98 +1,22 @@
 [
-  {
-    "id": "c1",
-    "name": "Northwind Logistics",
-    "segment": "enterprise",
-    "plan": "Enterprise Platinum",
-    "sla_minutes": 60,
-    "renewal_days": 45
-  },
-  {
-    "id": "c2",
-    "name": "Apex Cloud Systems",
-    "segment": "enterprise",
-    "plan": "Enterprise Global",
-    "sla_minutes": 60,
-    "renewal_days": 180
-  },
-  {
-    "id": "c3",
-    "name": "BrightScale Media",
-    "segment": "pro",
-    "plan": "Pro Team 50",
-    "sla_minutes": 120,
-    "renewal_days": 90
-  },
-  {
-    "id": "c4",
-    "name": "Delta FinTech",
-    "segment": "pro",
-    "plan": "Pro Developer",
-    "sla_minutes": 120,
-    "renewal_days": 210
-  },
-  {
-    "id": "c5",
-    "name": "Studio Nord Design",
-    "segment": "pro",
-    "plan": "Pro Individual",
-    "sla_minutes": 120,
-    "renewal_days": 15
-  },
-  {
-    "id": "c6",
-    "name": "Echo Labs",
-    "segment": "basic",
-    "plan": "Basic Starter",
-    "sla_minutes": 240,
-    "renewal_days": 300
-  },
-  {
-    "id": "c7",
-    "name": "Krona Workshop",
-    "segment": "basic",
-    "plan": "Basic Solo",
-    "sla_minutes": 240,
-    "renewal_days": 60
-  },
-  {
-    "id": "c8",
-    "name": "Fjord Analytics",
-    "segment": "basic",
-    "plan": "Basic Team",
-    "sla_minutes": 240,
-    "renewal_days": 120
-  },
-  {
-    "id": "c9",
-    "name": "Elena Rostova",
-    "segment": "free",
-    "plan": "Free Community",
-    "sla_minutes": 480,
-    "renewal_days": 365
-  },
-  {
-    "id": "c10",
-    "name": "Lukas Lindqvist",
-    "segment": "free",
-    "plan": "Free Hobby",
-    "sla_minutes": 480,
-    "renewal_days": 365
-  },
-  {
-    "id": "c11",
-    "name": "Maya Patel",
-    "segment": "free",
-    "plan": "Free Sandbox",
-    "sla_minutes": 480,
-    "renewal_days": 365
-  },
-  {
-    "id": "c12",
-    "name": "Kasper Thorne",
-    "segment": "free",
-    "plan": "Free Trial",
-    "sla_minutes": 480,
-    "renewal_days": 14
-  }
+  {"id": "c1",  "name": "Northwind Logistics",  "segment": "enterprise", "plan": "Enterprise Platinum", "sla_minutes": 60,  "renewal_days": 30,   "ltv": 92000, "churn_risk": 0.55, "language": "en"},
+  {"id": "c2",  "name": "Apex Cloud Systems",   "segment": "enterprise", "plan": "Enterprise Global",   "sla_minutes": 60,  "renewal_days": 10,   "ltv": 140000, "churn_risk": 0.30, "language": "en"},
+  {"id": "c3",  "name": "BrightScale Media",    "segment": "pro",        "plan": "Pro Team 50",         "sla_minutes": 120, "renewal_days": 90,   "ltv": 6400,  "churn_risk": 0.35, "language": "en"},
+  {"id": "c4",  "name": "Delta FinTech",        "segment": "pro",        "plan": "Pro Developer",       "sla_minutes": 120, "renewal_days": 150,  "ltv": 21000, "churn_risk": 0.20, "language": "en"},
+  {"id": "c5",  "name": "Studio Nord Design",   "segment": "pro",        "plan": "Pro Team 10",         "sla_minutes": 120, "renewal_days": 200,  "ltv": 18500, "churn_risk": 0.20, "language": "en"},
+  {"id": "c6",  "name": "Echo Labs",            "segment": "basic",      "plan": "Basic Monthly",       "sla_minutes": 240, "renewal_days": 25,   "ltv": 1800,  "churn_risk": 0.45, "language": "en"},
+  {"id": "c7",  "name": "Krona Workshop",       "segment": "basic",      "plan": "Basic Annual",        "sla_minutes": 240, "renewal_days": 300,  "ltv": 2400,  "churn_risk": 0.15, "language": "en"},
+  {"id": "c8",  "name": "Fjord Analytics",      "segment": "basic",      "plan": "Basic Monthly",       "sla_minutes": 240, "renewal_days": 60,   "ltv": 1200,  "churn_risk": 0.30, "language": "en"},
+  {"id": "c9",  "name": "Elena Rostova",        "segment": "free",       "plan": "Free",                "sla_minutes": 480, "renewal_days": null, "ltv": 0,     "churn_risk": 0.40, "language": "en"},
+  {"id": "c10", "name": "Lukas Lindqvist",      "segment": "free",       "plan": "Free",                "sla_minutes": 480, "renewal_days": null, "ltv": 0,     "churn_risk": 0.40, "language": "en"},
+  {"id": "c11", "name": "Maya Patel",           "segment": "free",       "plan": "Free",                "sla_minutes": 480, "renewal_days": null, "ltv": 0,     "churn_risk": 0.25, "language": "en"},
+  {"id": "c12", "name": "Kasper Thorne",        "segment": "free",       "plan": "Free",                "sla_minutes": 480, "renewal_days": null, "ltv": 0,     "churn_risk": 0.20, "language": "en"},
+  {"id": "c13", "name": "Bluebird Studio",      "segment": "pro",        "plan": "Pro Team 25",         "sla_minutes": 120, "renewal_days": 200,  "ltv": 18500, "churn_risk": 0.20, "language": "en"},
+  {"id": "c14", "name": "Priya Sharma",         "segment": "pro",        "plan": "Pro Individual",      "sla_minutes": 120, "renewal_days": 90,   "ltv": 6400,  "churn_risk": 0.35, "language": "en"},
+  {"id": "c15", "name": "Daniel Okafor",        "segment": "free",       "plan": "Free",                "sla_minutes": 480, "renewal_days": null, "ltv": 0,     "churn_risk": 0.40, "language": "en"},
+  {"id": "c16", "name": "Ravi Traders",         "segment": "basic",      "plan": "Basic Monthly",       "sla_minutes": 240, "renewal_days": 20,   "ltv": 2100,  "churn_risk": 0.60, "language": "hi-en"},
+  {"id": "c17", "name": "Aurora Health Group",  "segment": "enterprise", "plan": "Enterprise Care",     "sla_minutes": 60,  "renewal_days": 120,  "ltv": 75000, "churn_risk": 0.15, "language": "en"},
+  {"id": "c18", "name": "Lingon Retail",        "segment": "pro",        "plan": "Pro Commerce",        "sla_minutes": 120, "renewal_days": 12,   "ltv": 32000, "churn_risk": 0.50, "language": "en"},
+  {"id": "c19", "name": "Meher Exports",        "segment": "basic",      "plan": "Basic Annual",        "sla_minutes": 240, "renewal_days": 180,  "ltv": 3000,  "churn_risk": 0.25, "language": "hi-en"},
+  {"id": "c20", "name": "Sofia Berg",           "segment": "free",       "plan": "Free",                "sla_minutes": 480, "renewal_days": null, "ltv": 0,     "churn_risk": 0.10, "language": "en"}
 ]

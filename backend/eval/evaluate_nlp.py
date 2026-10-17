@@ -1,101 +1,104 @@
-import csv
+"""Classifier metrics on the held-out TEST split (playbook 13.1-13.2).
+
+    python -m eval.evaluate_nlp
+"""
 from pathlib import Path
+
+import numpy as np
 import pandas as pd
-from app.nlp.analyzer import analyse
+from sklearn.metrics import classification_report, f1_score, precision_recall_fscore_support
+
+from app.config import settings
+from app.nlp import frustration_model
+from app.nlp.rules import INTENT_META
+from app.services.priority import compute_priority
+from app.services.router import decide
+from eval.common import analyse_all, kb_for, labelled
+
+ROUTINE_INTENTS = {"password_reset", "invoice", "how_to", "feature_request"}
+MID_VALUE = 0.35          # a typical basic/pro customer, so escalation reflects the text alone
 
 
-def evaluate_nlp(csv_path: Path | None = None) -> dict:
-    if csv_path is None:
-        csv_path = Path(__file__).resolve().parent.parent / "data" / "tickets_labelled.csv"
+def to_level(u: float) -> str:
+    return "high" if u >= 0.65 else "medium" if u >= 0.35 else "low"
 
-    df = pd.read_csv(csv_path)
 
-    # Ground truth
-    df["true_urgent"] = (df["urgency_label"] == "high") | (df["critical"] == 1)
-    df["true_frustrated"] = (df["frustration_label"] == "high")
+def _prf(y_true, y_pred) -> dict:
+    p, r, f, _ = precision_recall_fscore_support(y_true, y_pred, average="binary", zero_division=0)
+    return {"precision": round(float(p), 3), "recall": round(float(r), 3), "f1": round(float(f), 3)}
 
-    # Run predictions
-    pred_urgent = []
-    pred_frustrated = []
-    analyses = []
 
-    for text in df["text"]:
-        a = analyse(str(text))
-        analyses.append(a)
-        is_urg = bool(a.critical_flags) or (a.urgency >= 0.65)
-        is_frust = a.frustration >= 0.75
-        pred_urgent.append(is_urg)
-        pred_frustrated.append(is_frust)
+def evaluate(mode: str, split: str = "test") -> dict:
+    df = labelled(split)
+    analyses, ms = analyse_all(df["text"].tolist(), mode)
+    # Same cut-off the router uses for "High frustration" escalation (fitted on train only).
+    FRUSTRATED_AT = frustration_model.threshold(analyses[0].mode if analyses else mode)
+    kb = kb_for(mode)
+    thresholds = settings.kb_thresholds(mode)
 
-    df["pred_urgent"] = pred_urgent
-    df["pred_frustrated"] = pred_frustrated
+    df["pred_urgency"] = [to_level(a.urgency) for a in analyses]
+    df["pred_frustration"] = [a.frustration for a in analyses]
+    df["pred_intent"] = [a.intent for a in analyses]
+    df["pred_critical"] = [int(bool(a.critical_flags)) for a in analyses]
 
-    # Metrics computation function
-    def compute_prf(tp, fp, fn, tn):
-        prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-        rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-        f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) > 0 else 0.0
-        return round(prec, 4), round(rec, 4), round(f1, 4)
+    routes = []
+    for text, a in zip(df["text"], analyses):
+        kb_conf = kb.match(text).confidence
+        pr = compute_priority(a.urgency, a.frustration, MID_VALUE, 0, 240)
+        d = decide(pr.route_score, a.frustration, a.intent, a.critical_flags, kb_conf,
+                   value=MID_VALUE, confidence=a.confidence, kb_thresholds=thresholds, mode=a.mode)
+        routes.append(d.route)
+    df["pred_route"] = routes
 
-    # 1. Urgency evaluation
-    tp_u = int(((df["pred_urgent"] == True) & (df["true_urgent"] == True)).sum())
-    fp_u = int(((df["pred_urgent"] == True) & (df["true_urgent"] == False)).sum())
-    fn_u = int(((df["pred_urgent"] == False) & (df["true_urgent"] == True)).sum())
-    tn_u = int(((df["pred_urgent"] == False) & (df["true_urgent"] == False)).sum())
-    prec_u, rec_u, f1_u = compute_prf(tp_u, fp_u, fn_u, tn_u)
+    true_urgent = (df["urgency_label"] == "high") | (df["critical"] == 1)
+    true_frustrated = df["frustration_label"] == "high"
+    should_escalate = true_urgent | true_frustrated
+    sent_senior = df["pred_route"] == "senior"
+    auto = df["pred_route"] == "auto_kb"
+    safe_auto = df["intent"].isin(ROUTINE_INTENTS) & (df["frustration_label"] != "high")
 
-    # 2. Frustration evaluation (at 0.75 threshold)
-    tp_f = int(((df["pred_frustrated"] == True) & (df["true_frustrated"] == True)).sum())
-    fp_f = int(((df["pred_frustrated"] == True) & (df["true_frustrated"] == False)).sum())
-    fn_f = int(((df["pred_frustrated"] == False) & (df["true_frustrated"] == True)).sum())
-    tn_f = int(((df["pred_frustrated"] == False) & (df["true_frustrated"] == False)).sum())
-    prec_f, rec_f, f1_f = compute_prf(tp_f, fp_f, fn_f, tn_f)
-
-    # Save false negatives / mistakes
-    mistakes = df[(df["pred_urgent"] != df["true_urgent"]) | (df["pred_frustrated"] != df["true_frustrated"])].copy()
-    mistakes_path = Path(__file__).resolve().parent / "nlp_mistakes.csv"
-    mistakes.to_csv(mistakes_path, index=False)
-
-    return {
-        "total_evaluated": len(df),
+    report = classification_report(df["urgency_label"], df["pred_urgency"], labels=["high", "medium", "low"],
+                                   output_dict=True, zero_division=0)
+    res = {
+        "mode": analyses[0].mode if analyses else mode,
+        "split": split,
+        "n": int(len(df)),
         "urgency": {
-            "precision": prec_u,
-            "recall": rec_u,
-            "f1": f1_u,
-            "confusion_matrix": {"TP": tp_u, "FP": fp_u, "FN": fn_u, "TN": tn_u},
-            "missed_urgent_count": fn_u,
+            "macro_f1": round(float(f1_score(df["urgency_label"], df["pred_urgency"], average="macro")), 3),
+            "accuracy": round(float((df["urgency_label"] == df["pred_urgency"]).mean()), 3),
+            "per_class": {k: {m: round(float(v[m]), 3) for m in ("precision", "recall", "f1-score")}
+                          for k, v in report.items() if k in ("high", "medium", "low")},
+            "urgent_binary": _prf(true_urgent, df["pred_urgency"] == "high"),
         },
-        "frustration": {
-            "precision": prec_f,
-            "recall": rec_f,
-            "f1": f1_f,
-            "confusion_matrix": {"TP": tp_f, "FP": fp_f, "FN": fn_f, "TN": tn_f},
+        "critical": _prf(df["critical"] == 1, df["pred_critical"] == 1),
+        "frustration": {**_prf(true_frustrated, df["pred_frustration"] >= FRUSTRATED_AT), "threshold": FRUSTRATED_AT},
+        "intent_accuracy": round(float((df["intent"] == df["pred_intent"]).mean()), 3),
+        "escalation": {
+            "precision": round(float(should_escalate[sent_senior].mean()), 3) if sent_senior.any() else 0.0,
+            "recall": round(float(sent_senior[should_escalate].mean()), 3) if should_escalate.any() else 0.0,
+            "sent_to_senior": int(sent_senior.sum()),
         },
-        "mistakes_file": str(mistakes_path),
-        "false_negatives": df[df["pred_urgent"] == False & (df["true_urgent"] == True)][["text"]].to_dict(orient="records"),
+        "auto_answer": {
+            "count": int(auto.sum()),
+            "safe_precision": round(float(safe_auto[auto].mean()), 3) if auto.any() else 0.0,
+            "deflection_rate": round(float(auto.mean()), 3),
+            "routine_coverage": round(float(auto[safe_auto].mean()), 3) if safe_auto.any() else 0.0,
+        },
+        "hinglish": {
+            "n": int((df["language"] == "hi-en").sum()),
+            "urgency_accuracy": round(float((df.loc[df["language"] == "hi-en", "urgency_label"]
+                                             == df.loc[df["language"] == "hi-en", "pred_urgency"]).mean()), 3)
+            if (df["language"] == "hi-en").any() else None,
+        },
+        "latency_ms": {"mean": round(float(np.mean(ms)), 1), "p95": round(float(np.percentile(ms, 95)), 1)},
     }
+
+    mistakes = df[(df["urgency_label"] != df["pred_urgency"]) | (true_frustrated != (df["pred_frustration"] >= FRUSTRATED_AT))]
+    mistakes.to_csv(Path(__file__).resolve().parent / f"nlp_mistakes_{mode}.csv", index=False)
+    return res
 
 
 if __name__ == "__main__":
-    results = evaluate_nlp()
-    print("=" * 60)
-    print("NLP EVALUATION METRICS (Rule-Based Triage Baseline)")
-    print("=" * 60)
-    print(f"Total labelled tickets evaluated: {results['total_evaluated']}")
-    print("\n[URGENCY & CRITICAL DETECTION]")
-    u = results["urgency"]
-    print(f"  - Precision: {u['precision']:.3f}")
-    print(f"  - Recall:    {u['recall']:.3f} (Target: >= 0.85)")
-    print(f"  - F1 Score:  {u['f1']:.3f}")
-    print(f"  - Confusion Matrix: TP={u['confusion_matrix']['TP']}, FP={u['confusion_matrix']['FP']}, FN={u['confusion_matrix']['FN']}, TN={u['confusion_matrix']['TN']}")
-    print(f"  - Missed urgent tickets (False Negatives): {u['missed_urgent_count']}")
-
-    print("\n[FRUSTRATION DETECTION (Threshold >= 0.75)]")
-    f = results["frustration"]
-    print(f"  - Precision: {f['precision']:.3f}")
-    print(f"  - Recall:    {f['recall']:.3f}")
-    print(f"  - F1 Score:  {f['f1']:.3f}")
-    print(f"  - Confusion Matrix: TP={f['confusion_matrix']['TP']}, FP={f['confusion_matrix']['FP']}, FN={f['confusion_matrix']['FN']}, TN={f['confusion_matrix']['TN']}")
-
-    print(f"\nMistakes exported for review: {results['mistakes_file']}")
-    print("=" * 60)
+    import json
+    for mode in ("rules", "hf"):
+        print(json.dumps(evaluate(mode), indent=2))

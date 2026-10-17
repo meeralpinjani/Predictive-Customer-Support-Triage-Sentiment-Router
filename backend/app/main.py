@@ -14,15 +14,19 @@ from app.services.rescore import rescore_open
 log = logging.getLogger("app.main")
 
 
+def _rescore_once() -> None:
+    db = SessionLocal()
+    try:
+        rescore_open(db)
+    finally:
+        db.close()
+
+
 async def background_rescore_worker() -> None:
     while True:
         try:
             await asyncio.sleep(settings.rescore_interval_sec)
-            db = SessionLocal()
-            try:
-                rescore_open(db)
-            finally:
-                db.close()
+            await asyncio.to_thread(_rescore_once)
         except asyncio.CancelledError:
             break
         except Exception as exc:
@@ -32,6 +36,9 @@ async def background_rescore_worker() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Base.metadata.create_all(bind=engine)
+    if settings.nlp_mode == "hf":
+        from app.nlp import hf
+        hf.warmup(background=True)   # API serves with rules until the models are loaded
     worker_task = asyncio.create_task(background_rescore_worker())
     try:
         yield
@@ -46,21 +53,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title="Predictive Customer Support Triage & Sentiment Router",
     description="Context-aware ticket triage and sentiment router API (AlgoAmigos)",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
-# Configure CORS
-origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins or ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins or ["http://localhost:5173"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
-# Include routers
 app.include_router(misc_router)
 app.include_router(tickets_router)
 

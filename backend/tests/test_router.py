@@ -1,59 +1,69 @@
 from app.config import settings
-from app.services.router import decide
+from app.services.router import decide, frustration_threshold
+
+KB = (0.43, 0.66)
 
 
 def test_critical_flag_routes_to_senior_regardless_of_score_or_value():
-    # Low score (20), no frustration, free user, but critical flag present
-    d = decide(score=20, frustration=0.1, intent="security", flags=["security"], kb_conf=0.9)
+    d = decide(score=20, frustration=0.1, intent="security", flags=["security"], kb_conf=0.9, kb_thresholds=KB)
     assert d.route == "senior"
     assert "Critical rule" in d.reason
     assert d.kb_action == "none"
 
 
+def test_legal_flag_notifies_manager():
+    d = decide(score=20, frustration=0.1, intent="legal", flags=["legal"], kb_conf=0.0, kb_thresholds=KB)
+    assert d.route == "senior" and "manager notified" in d.reason
+
+
 def test_high_frustration_routes_to_senior():
-    # Score 30 (< 35), but frustration 0.80 >= 0.75
-    d = decide(score=30, frustration=0.80, intent="bug", flags=[], kb_conf=0.0)
+    d = decide(score=30, frustration=max(0.8, frustration_threshold()), intent="bug", flags=[], kb_conf=0.0,
+               kb_thresholds=KB)
     assert d.route == "senior"
     assert d.reason == "High frustration"
-    assert d.kb_action == "none"
+
+
+def test_high_value_customer_escalates():
+    d = decide(score=55, frustration=0.1, intent="other", flags=[], kb_conf=0.0, value=0.85, kb_thresholds=KB)
+    assert d.route == "senior" and d.reason == "High-value customer"
+    # Same ticket from an average customer stays in Tier 2.
+    d2 = decide(score=55, frustration=0.1, intent="other", flags=[], kb_conf=0.0, value=0.4, kb_thresholds=KB)
+    assert d2.route == "tier2"
 
 
 def test_auto_kb_resolution():
-    # Routine intent, low frustration (< 0.4), low score (< 35), high KB confidence (>= 0.75)
-    d = decide(score=10, frustration=0.05, intent="password_reset", flags=[], kb_conf=0.85)
+    d = decide(score=10, frustration=0.05, intent="password_reset", flags=[], kb_conf=0.85, kb_thresholds=KB)
     assert d.route == "auto_kb"
     assert d.kb_action == "auto_reply"
 
 
+def test_low_confidence_never_auto_answers():
+    d = decide(score=10, frustration=0.05, intent="password_reset", flags=[], kb_conf=0.85,
+               confidence=settings.min_auto_confidence - 0.1, kb_thresholds=KB)
+    assert d.route == "tier1" and d.kb_action == "suggest"
+
+
 def test_score_thresholds():
-    # Score 60 -> Senior
-    d60 = decide(score=60, frustration=0.2, intent="bug", flags=[], kb_conf=0.1)
-    assert d60.route == "senior"
-    assert d60.reason == "High priority score"
+    def route(score):
+        return decide(score=score, frustration=0.1, intent="other", flags=[], kb_conf=0.1, kb_thresholds=KB)
+    assert route(settings.senior_score).route == "senior"
+    assert route(settings.senior_score - 1).route == "tier2"
+    assert route(settings.tier2_score).route == "tier2"
+    assert route(settings.tier2_score - 1).route == "tier1"
 
-    # Score 59 -> Tier 2
-    d59 = decide(score=59, frustration=0.2, intent="bug", flags=[], kb_conf=0.1)
-    assert d59.route == "tier2"
-    assert d59.reason == "Moderate priority score"
 
-    # Score 35 -> Tier 2
-    d35 = decide(score=35, frustration=0.2, intent="bug", flags=[], kb_conf=0.1)
-    assert d35.route == "tier2"
-    assert d35.reason == "Moderate priority score"
-
-    # Score 34 -> Tier 1
-    d34 = decide(score=34, frustration=0.2, intent="bug", flags=[], kb_conf=0.1)
-    assert d34.route == "tier1"
-    assert d34.reason == "Routine request"
+def test_specialist_issues_go_to_tier2_even_with_low_score():
+    d = decide(score=20, frustration=0.1, intent="billing_dispute", flags=[], kb_conf=0.0, kb_thresholds=KB)
+    assert d.route == "tier2" and d.reason == "Needs a billing specialist"
 
 
 def test_kb_suggestion_gating_and_abstention():
-    # KB confidence >= 0.55 triggers suggestion for Tier 1
-    d_suggest = decide(score=20, frustration=0.1, intent="how_to", flags=[], kb_conf=0.60)
-    assert d_suggest.route == "tier1"
-    assert d_suggest.kb_action == "suggest"
-
-    # KB confidence < 0.55 abstains
-    d_abstain = decide(score=20, frustration=0.1, intent="how_to", flags=[], kb_conf=0.45)
-    assert d_abstain.route == "tier1"
+    d_suggest = decide(score=20, frustration=0.1, intent="other", flags=[], kb_conf=0.50, kb_thresholds=KB)
+    assert d_suggest.route == "tier1" and d_suggest.kb_action == "suggest"
+    d_abstain = decide(score=20, frustration=0.1, intent="other", flags=[], kb_conf=0.40, kb_thresholds=KB)
     assert d_abstain.kb_action == "none"
+
+
+def test_what_if_threshold_overrides():
+    d = decide(score=50, frustration=0.1, intent="other", flags=[], kb_conf=0.0, kb_thresholds=KB, senior_score=45)
+    assert d.route == "senior"

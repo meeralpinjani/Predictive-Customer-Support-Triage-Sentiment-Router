@@ -1,20 +1,12 @@
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
-
-
-def test_health_endpoint():
-    response = client.get("/api/health")
-    assert response.status_code == 200
-    data = response.json()
+def test_health_endpoint(client):
+    data = client.get("/api/health").json()
     assert data["status"] == "ok"
     assert data["db"] == "ok"
-    assert "nlp_mode" in data
-    assert data["kb_size"] >= 15
+    assert data["nlp_mode"] == "rules"
+    assert data["kb_size"] >= 26
 
 
-def test_docs_endpoint():
+def test_docs_endpoint(client):
     response = client.get("/docs")
     assert response.status_code == 200
     assert "swagger" in response.text.lower() or "openapi" in response.text.lower()

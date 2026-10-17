@@ -1,0 +1,345 @@
+{
+  "generated_at": "2026-10-17T10:55:07+00:00",
+  "primary_mode": "hf",
+  "dataset": {
+    "tickets": 384,
+    "train": 252,
+    "test": 132,
+    "hinglish": 44,
+    "split": "by template (test sentences unseen during tuning)"
+  },
+  "frustration_model": {
+    "rules": {
+      "kind": "logistic",
+      "threshold": 0.41,
+      "cv_f2": 1.0,
+      "intercept": -2.5081,
+      "coef": {
+        "neg": 0.8713,
+        "anger": 5.6286,
+        "style": 1.4097,
+        "churn": 3.4991
+      },
+      "train_size": 252,
+      "train_accuracy": 1.0
+    },
+    "hf": {
+      "kind": "logistic",
+      "threshold": 0.42,
+      "cv_f2": 1.0,
+      "intercept": -2.8681,
+      "coef": {
+        "neg_model": 0.5818,
+        "anger_model": 0.1124,
+        "neg_rules": 0.6044,
+        "anger_rules": 5.6705,
+        "style": 1.3603,
+        "churn": 3.3789
+      },
+      "train_size": 252,
+      "train_accuracy": 1.0
+    }
+  },
+  "nlp": {
+    "rules": {
+      "mode": "rules",
+      "split": "test",
+      "n": 132,
+      "urgency": {
+        "macro_f1": 0.781,
+        "accuracy": 0.788,
+        "per_class": {
+          "high": {
+            "precision": 1.0,
+            "recall": 0.827,
+            "f1-score": 0.905
+          },
+          "medium": {
+            "precision": 0.65,
+            "recall": 0.65,
+            "f1-score": 0.65
+          },
+          "low": {
+            "precision": 0.714,
+            "recall": 0.875,
+            "f1-score": 0.787
+          }
+        },
+        "urgent_binary": {
+          "precision": 1.0,
+          "recall": 0.827,
+          "f1": 0.905
+        }
+      },
+      "critical": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "frustration": {
+        "precision": 0.936,
+        "recall": 0.83,
+        "f1": 0.88,
+        "threshold": 0.41
+      },
+      "intent_accuracy": 0.788,
+      "escalation": {
+        "precision": 0.972,
+        "recall": 0.831,
+        "sent_to_senior": 71
+      },
+      "auto_answer": {
+        "count": 18,
+        "safe_precision": 0.944,
+        "deflection_rate": 0.136,
+        "routine_coverage": 0.739
+      },
+      "hinglish": {
+        "n": 24,
+        "urgency_accuracy": 0.708
+      },
+      "latency_ms": {
+        "mean": 2.9,
+        "p95": 4.7
+      }
+    },
+    "hf": {
+      "mode": "hf",
+      "split": "test",
+      "n": 132,
+      "urgency": {
+        "macro_f1": 0.838,
+        "accuracy": 0.841,
+        "per_class": {
+          "high": {
+            "precision": 1.0,
+            "recall": 0.827,
+            "f1-score": 0.905
+          },
+          "medium": {
+            "precision": 0.721,
+            "recall": 0.775,
+            "f1-score": 0.747
+          },
+          "low": {
+            "precision": 0.804,
+            "recall": 0.925,
+            "f1-score": 0.86
+          }
+        },
+        "urgent_binary": {
+          "precision": 1.0,
+          "recall": 0.827,
+          "f1": 0.905
+        }
+      },
+      "critical": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "frustration": {
+        "precision": 0.936,
+        "recall": 0.83,
+        "f1": 0.88,
+        "threshold": 0.42
+      },
+      "intent_accuracy": 0.848,
+      "escalation": {
+        "precision": 0.972,
+        "recall": 0.831,
+        "sent_to_senior": 71
+      },
+      "auto_answer": {
+        "count": 19,
+        "safe_precision": 0.947,
+        "deflection_rate": 0.144,
+        "routine_coverage": 0.783
+      },
+      "hinglish": {
+        "n": 24,
+        "urgency_accuracy": 0.833
+      },
+      "latency_ms": {
+        "mean": 150.8,
+        "p95": 187.3
+      }
+    }
+  },
+  "kb": {
+    "rules": {
+      "matcher": "tfidf",
+      "suggest_threshold": 0.43,
+      "auto_threshold": 0.66,
+      "validation": {
+        "auto_answers": 9,
+        "auto_accuracy": 1.0,
+        "auto_coverage": 0.321,
+        "out_of_scope_auto": 0,
+        "suggest_precision": 0.875,
+        "suggest_recall": 0.75,
+        "top1_accuracy_in_scope": 0.821
+      },
+      "test": {
+        "auto_answers": 12,
+        "auto_accuracy": 1.0,
+        "auto_coverage": 0.444,
+        "out_of_scope_auto": 0,
+        "suggest_precision": 0.826,
+        "suggest_recall": 0.704,
+        "top1_accuracy_in_scope": 0.926
+      },
+      "n_val": 36,
+      "n_test": 35
+    },
+    "hf": {
+      "matcher": "minilm",
+      "suggest_threshold": 0.46,
+      "auto_threshold": 0.69,
+      "validation": {
+        "auto_answers": 24,
+        "auto_accuracy": 1.0,
+        "auto_coverage": 0.857,
+        "out_of_scope_auto": 0,
+        "suggest_precision": 0.933,
+        "suggest_recall": 1.0,
+        "top1_accuracy_in_scope": 1.0
+      },
+      "test": {
+        "auto_answers": 22,
+        "auto_accuracy": 0.955,
+        "auto_coverage": 0.778,
+        "out_of_scope_auto": 1,
+        "suggest_precision": 0.9,
+        "suggest_recall": 1.0,
+        "top1_accuracy_in_scope": 1.0
+      },
+      "n_val": 36,
+      "n_test": 35
+    }
+  },
+  "simulation": {
+    "setup": {
+      "seed": 7,
+      "agents": 3,
+      "tickets": 120,
+      "window_min": 480,
+      "service_min": [
+        5,
+        25
+      ],
+      "load": 1.29,
+      "nlp_mode": "hf",
+      "sla": "per customer (60-480 min)"
+    },
+    "policies": {
+      "fcfs": {
+        "urgent_avg": 62.5,
+        "urgent_p95": 115.5,
+        "high_value_avg": 55.3,
+        "non_urgent_avg": 63.8,
+        "overall_avg": 63.2,
+        "max_wait_overall": 132.0,
+        "sla_breaches": 11,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      },
+      "sentiment_only": {
+        "urgent_avg": 51.0,
+        "urgent_p95": 340.1,
+        "high_value_avg": 78.0,
+        "non_urgent_avg": 94.1,
+        "overall_avg": 72.9,
+        "max_wait_overall": 558.6,
+        "sla_breaches": 21,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      },
+      "plus_urgency": {
+        "urgent_avg": 7.4,
+        "urgent_p95": 17.6,
+        "high_value_avg": 92.6,
+        "non_urgent_avg": 129.0,
+        "overall_avg": 69.2,
+        "max_wait_overall": 592.0,
+        "sla_breaches": 20,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      },
+      "plus_value": {
+        "urgent_avg": 16.0,
+        "urgent_p95": 92.6,
+        "high_value_avg": 29.3,
+        "non_urgent_avg": 116.4,
+        "overall_avg": 67.0,
+        "max_wait_overall": 598.4,
+        "sla_breaches": 16,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      },
+      "router": {
+        "urgent_avg": 32.3,
+        "urgent_p95": 193.5,
+        "high_value_avg": 16.7,
+        "non_urgent_avg": 92.6,
+        "overall_avg": 62.9,
+        "max_wait_overall": 446.1,
+        "sla_breaches": 3,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      }
+    },
+    "labels": {
+      "fcfs": "FCFS (arrival order)",
+      "sentiment_only": "Sentiment only",
+      "plus_urgency": "+ Urgency",
+      "plus_value": "+ Customer value",
+      "router": "+ SLA ageing (full router)"
+    },
+    "results": {
+      "fcfs": {
+        "urgent_avg": 62.5,
+        "urgent_p95": 115.5,
+        "high_value_avg": 55.3,
+        "non_urgent_avg": 63.8,
+        "overall_avg": 63.2,
+        "max_wait_overall": 132.0,
+        "sla_breaches": 11,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      },
+      "priority": {
+        "urgent_avg": 32.3,
+        "urgent_p95": 193.5,
+        "high_value_avg": 16.7,
+        "non_urgent_avg": 92.6,
+        "overall_avg": 62.9,
+        "max_wait_overall": 446.1,
+        "sla_breaches": 3,
+        "total_simulated": 120,
+        "urgent_count": 59,
+        "non_urgent_count": 61,
+        "high_value_count": 21
+      }
+    }
+  },
+  "targets": {
+    "urgency_macro_f1": 0.75,
+    "frustration_recall": 0.8,
+    "escalation_precision": 0.8,
+    "kb_auto_accuracy": 0.9,
+    "latency_ms": 2000
+  }
+}

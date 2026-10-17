@@ -21,7 +21,7 @@ def test_ageing_increases_score_and_upgrades_route():
             frustration=0.20,
             value=0.60,
             intent="invoice",
-            priority=32,  # Starts in Tier 1 (< 35)
+            priority=32,  # Starts in Tier 1 (< 40)
             route="tier1",
             route_reason="Routine request",
             route_locked=False,
@@ -40,9 +40,10 @@ def test_ageing_increases_score_and_upgrades_route():
 
         # Priority must strictly increase
         assert ticket.priority > initial_score
-        # Route should upgrade to Tier 2 (since new score exceeds 35)
+        # Route should upgrade to Tier 2 (since new score exceeds 40)
         assert ticket.route == "tier2"
         assert ticket.route_reason == "Ageing upgrade"
+        assert ticket.assigned_agent_id is not None  # re-assigned to a Tier 2 agent
 
         # Verify anti-starvation: running with past time never downgrades priority or route
         past_time = now - timedelta(minutes=60)

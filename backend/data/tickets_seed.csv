@@ -1,31 +1,23 @@
-customer_id,subject,body
-c1,Emergency: Dashboard is down,"Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! All regional warehouses are blocked."
-c9,Password reset issue,"How do I reset my password? I tried the login screen but cannot find the reset button."
-c3,Duplicate payment dispute,"I was charged twice this month. Please refund today. See attached invoice #99281."
-c10,Total frustration with platform,"This is the worst app, nothing works and nobody replies!!! Fix this immediately or I am reporting you."
-c9,Account security alert,"Someone logged in from another country to my account without my permission. Was there a breach?"
-c11,Dark mode request,"Would be nice to have dark mode in the customer portal. It strains my eyes at night."
-c2,Critical production database sync failing,"Our production sync server is down and throwing 500 errors across all clients. This is causing critical financial losses!"
-c4,Invoice download request,"Where can I download my invoice for September? Our accountant needs it before audit deadline."
-c5,How to invite team members,"How do I invite additional team members to our Pro workspace? Can we assign admin privileges?"
-c6,Bug in CSV export,"The CSV export feature crashes whenever exporting more than 100 rows. It shows an unhandled exception."
-c12,Cancellation inquiry,"I want to cancel my subscription and close my account next month. What happens to our stored data?"
-c1,Legal inquiry regarding contract breach,"Our corporate counsel has advised legal action if the data processing agreement SLA is not rectified this week."
-c7,Question regarding two-factor authentication,"How do I enable two-factor authentication on my mobile authenticator app?"
-c8,Feature suggestion for PDF reports,"Please add custom company logos to the weekly executive summary reports."
-c3,API rate limiting error 429,"We are hitting an unexpected 429 error on the v2 endpoints despite staying within our Pro plan limits."
-c4,Unexplained surcharge on credit card,"There is an extra $49 charge on our corporate Amex statement. Please explain what this is for."
-c10,Cannot upload avatar photo,"Whenever I try to upload my profile picture JPG file, the modal freezes and nothing happens."
-c1,Security breach warning,"We detected unauthorized access and phishing attempts targeting our administrator tokens."
-c2,SSO SAML configuration assistance,"We need assistance configuring Okta SAML Single Sign-On for our upcoming company-wide rollout."
-c9,Missing email confirmation,"I signed up yesterday but never received my account confirmation email. Can you resend it?"
-c5,App crashes on iOS 17,"The iOS mobile application crashes immediately on startup when opening the notifications tab."
-c6,Update company billing address,"Please update our company legal billing address and European VAT ID on the upcoming invoice."
-c7,Export data for compliance audit,"How can we export all workspace activity logs into JSON format for our external ISO compliance review?"
-c8,Notification alert spam,"We are getting 200 email notifications an hour for minor state changes. How do I mute them?"
-c11,Where is the API documentation,"Where can I find the API documentation and OpenAPI spec for integrating custom webhooks?"
-c12,Unsatisfied with support responsiveness,"Nobody answered our ticket from 3 days ago. This service is utterly useless and unacceptable."
-c3,Slow query performance during peak hours,"Our dashboard queries take over 15 seconds during European business hours. Is there a regional cache issue?"
-c4,Hardware token delivery tracking,"Where is the hardware security key package we ordered last week? The tracking link has expired."
-c10,Refund request after trial auto-renew,"My trial renewed automatically yesterday. Can I please get a refund as I haven't used the account?"
-c2,Data center hazard alert,"Our on-premise hardware node in Frankfurt started smoking and overheated. We had to shut it down immediately."
+customer_id,minutes_ago,subject,body
+c7,205,Export question,The CSV export is not working since yesterday. Can you check?
+c12,190,Suggestion,Would be nice to be able to tag tickets by colour.
+c8,176,Report emails,How do I schedule the weekly report to be emailed to my team?
+c6,262,Invoice address,I need to update the GST number on our invoices before month end.
+c11,150,Theme,Is there a way to switch the dashboard to dark mode?
+c4,142,API limits,How many API calls per day are included in the Pro plan?
+c19,131,Payment issue,"Mera payment fail ho gaya par paisa kat gaya, refund chahiye. Kal tak chahiye."
+c14,118,Duplicate charge,I was charged twice this month. Please refund today.
+c3,104,Reports crash,The app crashes every time I open the reports page. Our team is blocked.
+c20,96,Login,I can't log in. It keeps saying my credentials are invalid.
+c15,88,Unhappy,"This is the worst app, nothing works and nobody replies!!!"
+c5,75,Feature,It would be great if the app supported keyboard shortcuts.
+c13,64,Invoices,Where can I download invoices? Thanks!
+c18,57,Renewal,"Honestly disappointed. The sync has been broken for a week and our renewal is next week."
+c16,49,Payment fail,"Mera payment fail ho gaya, kal tak chahiye."
+c10,41,Security,Someone logged into my account from another country.
+c17,33,Data request,Please send a copy of all personal data you hold about our staff.
+c2,26,Legal,Our lawyer has advised legal action if the SLA credits are not paid this week.
+c9,18,Password,How do I reset my password?
+c1,12,Production dashboard down,Our production dashboard has been DOWN for an hour. We will cancel if this is not fixed ASAP!
+c14,7,Still charged twice,"This is the third time I am writing about the duplicate charge. Nobody has replied."
+c13,3,Charger,The charger you shipped started smoking under my desk.

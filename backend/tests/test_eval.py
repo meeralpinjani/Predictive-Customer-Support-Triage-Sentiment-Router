@@ -1,23 +1,29 @@
-from eval.evaluate_nlp import evaluate_nlp
+"""Guards the reported numbers: the rules engine on the held-out test split, and the simulation."""
+from eval import evaluate_kb, evaluate_nlp
 from eval.simulate import run_simulation
 
 
-def test_evaluate_nlp_metrics():
-    res = evaluate_nlp()
-    assert res["total_evaluated"] >= 200
-    u = res["urgency"]
-    # Urgent recall must meet or exceed target 0.85
-    assert u["recall"] >= 0.85
-    assert u["precision"] >= 0.80
-    assert u["f1"] >= 0.80
+def test_rules_engine_meets_targets_on_held_out_tickets():
+    res = evaluate_nlp.evaluate("rules")
+    assert res["n"] >= 100
+    assert res["urgency"]["macro_f1"] >= 0.75
+    assert res["critical"]["recall"] >= 0.9
+    assert res["frustration"]["precision"] >= 0.85
+    assert res["frustration"]["recall"] >= 0.75
+    assert res["escalation"]["precision"] >= 0.80
+    assert res["auto_answer"]["safe_precision"] >= 0.85
+    assert res["latency_ms"]["mean"] < 2000
 
 
-def test_simulate_priority_improves_urgent_wait():
-    res = run_simulation()
-    fcfs_urgent_wait = res["fcfs"]["urgent_avg"]
-    prio_urgent_wait = res["priority"]["urgent_avg"]
+def test_kb_auto_answers_are_accurate():
+    res = evaluate_kb.evaluate("rules")
+    assert res["test"]["auto_accuracy"] >= 0.90
+    assert res["test"]["out_of_scope_auto"] == 0
 
-    # Priority queue must significantly reduce urgent waiting time compared to FCFS
-    assert prio_urgent_wait < fcfs_urgent_wait
-    reduction_pct = ((fcfs_urgent_wait - prio_urgent_wait) / fcfs_urgent_wait) * 100
-    assert reduction_pct > 50.0  # At least 50% improvement
+
+def test_router_beats_fcfs_without_starving_anyone():
+    sim = run_simulation("rules")
+    fcfs, router = sim["policies"]["fcfs"], sim["policies"]["router"]
+    assert router["urgent_avg"] < 0.7 * fcfs["urgent_avg"]
+    assert router["high_value_avg"] < 0.5 * fcfs["high_value_avg"]
+    assert router["sla_breaches"] < fcfs["sla_breaches"]

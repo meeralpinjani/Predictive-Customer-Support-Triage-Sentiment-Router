@@ -1,86 +1,65 @@
 import json
 from pathlib import Path
-from fastapi.testclient import TestClient
 
 from app.config import settings
-from app.main import app
 from app.nlp.kb import TfidfKb
 
-client = TestClient(app)
+SUGGEST, AUTO = settings.kb_thresholds("rules")
 
 
-def get_seed_articles():
+def seed_articles():
     path = Path(__file__).resolve().parent.parent / "data" / "kb_articles.json"
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def test_tfidf_matcher_relevant_and_unrelated():
-    articles = get_seed_articles()
-    kb = TfidfKb(articles)
-
-    # 1. Relevant query
+    kb = TfidfKb(seed_articles())
     match = kb.match("How do I reset my password?")
-    assert match is not None
     assert match.article_id == "kb_pass_01"
-    assert "Resetting Your Account Password" in match.title
-    assert match.confidence >= settings.kb_suggest_threshold
-
-    # 2. Unrelated text gives low confidence / abstention
-    unrelated = kb.match("Where can I buy fresh organic apples?")
-    assert unrelated is not None
-    assert unrelated.confidence < settings.kb_suggest_threshold
+    assert match.confidence >= AUTO
+    assert kb.match("Where can I buy fresh organic apples?").confidence < SUGGEST
 
 
-def test_api_kb_suggestion_above_suggest_threshold():
-    # Query with moderate confidence (suggestion shown)
-    payload = {
-        "customer_id": "c9",
-        "subject": "Need my past invoice",
+def test_paraphrase_matches_through_single_questions():
+    kb = TfidfKb(seed_articles())
+    assert kb.match("my credit card expired, how do I add a new one").article_id == "kb_card_17"
+
+
+def test_api_kb_suggestion(client):
+    data = client.post("/api/tickets", json={
+        "customer_id": "c9", "subject": "Need my past invoice",
         "body": "Where do I find my past receipts and tax invoices?",
-        "channel": "web",
-    }
-    response = client.post("/api/tickets", json=payload)
-    assert response.status_code == 201
-    data = response.json()
-    assert data["kb"]["confidence"] >= settings.kb_suggest_threshold
+    }).json()
+    assert data["kb"]["confidence"] >= SUGGEST
     assert data["kb"]["action"] in ("suggest", "auto_reply")
     assert data["kb"]["article_id"] == "kb_inv_02"
-    assert data["kb"]["title"] is not None
-    assert data["kb"]["source"] is not None
+    assert data["kb"]["title"] and data["kb"]["answer"]
 
 
-def test_api_kb_abstention_below_threshold():
-    # Ticket where KB has no relevant content
-    payload = {
-        "customer_id": "c11",
-        "subject": "Question about office cafeteria",
+def test_api_kb_abstention_below_threshold(client):
+    data = client.post("/api/tickets", json={
+        "customer_id": "c11", "subject": "Question about office cafeteria",
         "body": "Is the company cafeteria serving vegan pizza on Thursdays?",
-        "channel": "web",
-    }
-    response = client.post("/api/tickets", json=payload)
-    assert response.status_code == 201
-    data = response.json()
-    assert data["kb"]["confidence"] < settings.kb_suggest_threshold
+    }).json()
+    assert data["kb"]["confidence"] < SUGGEST
     assert data["kb"]["action"] == "none"
     assert data["kb"]["article_id"] is None
-    assert data["kb"]["title"] is None
 
 
-def test_api_kb_auto_reply_flow():
-    # Ticket with high confidence, routine intent, free tier, low frustration
-    payload = {
-        "customer_id": "c9",
-        "subject": "Resetting Your Account Password",
+def test_api_kb_auto_reply_flow(client):
+    data = client.post("/api/tickets", json={
+        "customer_id": "c9", "subject": "Resetting Your Account Password",
         "body": "How do I reset my password? Forgot my password what should I do?",
-        "channel": "web",
-    }
-    response = client.post("/api/tickets", json=payload)
-    assert response.status_code == 201
-    data = response.json()
-    assert data["kb"]["confidence"] >= settings.kb_auto_threshold
-    assert data["route"] == "auto_kb"
-    assert data["status"] == "kb_handled"
-    assert data["kb"]["action"] == "auto_reply"
-    assert data["auto_reply"] is not None
+    }).json()
+    assert data["kb"]["confidence"] >= AUTO
+    assert data["route"] == "auto_kb" and data["status"] == "kb_handled"
+    assert data["assigned_agent"] is None
     assert "Did this help" in data["auto_reply"]
+
+
+def test_frustrated_customer_is_not_auto_answered(client):
+    data = client.post("/api/tickets", json={
+        "customer_id": "c9",
+        "body": "How do I reset my password?? This is RIDICULOUS, third time asking, I am furious!!!",
+    }).json()
+    assert data["route"] != "auto_kb"
