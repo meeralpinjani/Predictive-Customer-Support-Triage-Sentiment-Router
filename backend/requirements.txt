@@ -1,10 +1,9 @@
-fastapi
-uvicorn[standard]
-sqlalchemy>=2.0
-pydantic>=2
-pydantic-settings
-scikit-learn
-pandas
-numpy
-pytest
-httpx
+# API + rules engine (tested on Python 3.12-3.14)
+fastapi==0.143.3
+uvicorn[standard]==0.54.0
+SQLAlchemy==2.1.5
+pydantic==2.14.1
+pydantic-settings==2.16.0
+scikit-learn==1.9.1
+pandas==3.0.6
+numpy==2.5.4

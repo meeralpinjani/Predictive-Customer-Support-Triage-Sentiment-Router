@@ -1,3 +1,5 @@
-transformers
-torch
-sentence-transformers
+# Transformer models (NLP_MODE=hf). CPU wheels:
+#   pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1
+transformers==5.20.1
+sentence-transformers==6.1.0
