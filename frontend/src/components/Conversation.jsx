@@ -1,23 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { Loader2, MessageSquare, Phone, PhoneCall, Send } from "lucide-react";
+import { Loader2, MessageSquare, Phone, PhoneCall, Send, Sparkles } from "lucide-react";
 import { api } from "../api.js";
 import { useEventListener, useLiveData } from "../lib/events.jsx";
 import { timeAgo } from "../lib/meta.js";
 import { ErrorNote, SkeletonLines, Tile, useToast } from "./ui.jsx";
+import { AttachButton, AttachmentList, PendingFiles } from "./Attachments.jsx";
 
-/** Live conversation on a ticket: messages, system notes and typing indicators. */
-export function Conversation({ ticketId, live = false, canReply = true, placeholder, className, onSent }) {
+/** Live conversation on a ticket: messages, attachments, system notes and typing indicators.
+ *  Agents get a "Suggest reply" button that drafts a reply they can edit before sending. */
+export function Conversation({ ticketId, live = false, canReply = true, placeholder, className, onSent, suggest = false, tall = false }) {
   const toast = useToast();
   const { data: messages, reload } = useLiveData(() => api.messages(ticketId), {
     match: (ev) => ev.ticket_id === ticketId, deps: [ticketId], intervalMs: 15000,
   });
   const [text, setText] = useState("");
+  const [files, setFiles] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [drafting, setDrafting] = useState(false);
   const [typing, setTyping] = useState(null);
   const typingTimer = useRef();
   const lastPing = useRef(0);
-  const bottom = useRef();
+  const scroller = useRef();
 
   useEventListener((ev) => {
     if (ev.ticket_id !== ticketId || ev.type !== "typing") return;
@@ -27,7 +31,8 @@ export function Conversation({ ticketId, live = false, canReply = true, placehol
   });
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ block: "nearest" });
+    const el = scroller.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages?.length, typing]);
 
   const onChange = (e) => {
@@ -41,11 +46,13 @@ export function Conversation({ ticketId, live = false, canReply = true, placehol
   const send = async (e) => {
     e?.preventDefault();
     const body = text.trim();
-    if (!body) return;
+    if (!body && !files.length) return;
     setBusy(true);
     try {
-      await api.sendMessage(ticketId, body);
+      if (files.length) await api.sendMessageWithFiles(ticketId, body, files);
+      else await api.sendMessage(ticketId, body);
       setText("");
+      setFiles([]);
       setTyping(null);
       await reload();
       onSent?.();
@@ -56,10 +63,35 @@ export function Conversation({ ticketId, live = false, canReply = true, placehol
     }
   };
 
+  const draft = async () => {
+    setDrafting(true);
+    try {
+      const r = await api.suggestedReply(ticketId);
+      setText(r.text);
+      toast(`Draft ready (${r.tone === "high" ? "extra empathy" : r.tone === "medium" ? "apologetic" : "friendly"} tone) — edit before sending`, "info");
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  const chatMessages = messages?.filter((m) => m.kind !== "system").length ?? 0;
+
   return (
     <Tile eyebrow={live ? "Live chat · Expert Escalation" : "Conversation"} icon={MessageSquare} className={className}
-          action={live && <span className="chip bg-senior-soft text-senior-text"><span className="w-1.5 h-1.5 rounded-full bg-senior animate-pulse" aria-hidden />live</span>}>
-      <div className="flex-1 min-h-[220px] max-h-[460px] overflow-y-auto scroll-thin space-y-3 pr-1" aria-live="polite">
+          bodyClass="min-h-0"
+          action={
+            <div className="flex items-center gap-2">
+              {suggest && canReply && (
+                <button className="btn-ghost !py-1 !px-2.5 !text-xs" onClick={draft} disabled={drafting}>
+                  {drafting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Suggest reply
+                </button>
+              )}
+              {live && <span className="chip bg-senior-soft text-senior-text"><span className="w-1.5 h-1.5 rounded-full bg-senior animate-pulse" aria-hidden />live</span>}
+            </div>
+          }>
+      <div ref={scroller} className={clsx("flex-1 overflow-y-auto scroll-thin space-y-3 pr-1", tall ? "min-h-[360px] max-h-[620px]" : "min-h-[260px] max-h-[520px]")} aria-live="polite">
         {!messages ? <SkeletonLines rows={4} /> : messages.map((m) => m.kind === "system" ? (
           <p key={m.id} className="text-center text-[11px] text-ink-3 px-6">{m.body} · {timeAgo(m.created_at)}</p>
         ) : (
@@ -71,21 +103,28 @@ export function Conversation({ ticketId, live = false, canReply = true, placehol
                 {m.frustration != null && <span className="font-normal"> · frustration {Math.round(m.frustration * 100)}%</span>}
               </p>
               <p className="text-sm whitespace-pre-wrap break-words">{m.body}</p>
+              <AttachmentList items={m.attachments} compact light={m.mine} />
               <p className={clsx("text-[10px] mt-1", m.mine ? "opacity-60" : "text-ink-3")}>{timeAgo(m.created_at)}</p>
             </div>
           </div>
         ))}
+        {messages && chatMessages === 0 && (
+          <p className="text-center text-sm text-ink-3 py-6">No messages yet. {canReply ? "Write below to start the conversation." : ""}</p>
+        )}
         {typing && <p className="text-xs text-ink-3 italic">{typing} is typing…</p>}
-        <div ref={bottom} />
       </div>
       {canReply ? (
-        <form onSubmit={send} className="mt-3 flex gap-2 items-end">
-          <textarea className="field min-h-[44px] max-h-32 resize-y" rows={1} value={text} onChange={onChange}
-                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send(e)}
-                    placeholder={placeholder || "Write a message… (Enter to send)"} aria-label="Message" maxLength={4000} />
-          <button className="btn-primary !px-3 h-[44px]" disabled={busy || !text.trim()} aria-label="Send">
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </button>
+        <form onSubmit={send} className="mt-3 pt-3 border-t border-line space-y-2">
+          <PendingFiles files={files} onRemove={(i) => setFiles(files.filter((_, j) => j !== i))} />
+          <div className="flex gap-2 items-end">
+            <AttachButton files={files} setFiles={setFiles} onError={(m) => toast(m, "error")} disabled={busy} />
+            <textarea className="field min-h-[44px] max-h-40 resize-y" rows={text.includes("\n") ? 5 : 1} value={text} onChange={onChange}
+                      onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send(e)}
+                      placeholder={placeholder || "Write a message… (Enter to send, Shift+Enter for a new line)"} aria-label="Message" maxLength={4000} />
+            <button className="btn-primary !px-3 h-[44px]" disabled={busy || (!text.trim() && !files.length)} aria-label="Send">
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            </button>
+          </div>
         </form>
       ) : <p className="mt-3 text-xs text-ink-3">This ticket is closed.</p>}
     </Tile>

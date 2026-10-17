@@ -1,6 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Activity, ArrowLeft, ArrowUpCircle, CheckCircle2, Hand, Loader2, Radio, UserRound } from "lucide-react";
+import {
+  Activity, ArrowLeft, ArrowUpCircle, Boxes, CheckCircle2, ChevronDown, Compass, Hand, Loader2, Lock, Paperclip, Radio, UserRound,
+} from "lucide-react";
 import { api } from "../../api.js";
 import { useAuth } from "../../lib/auth.jsx";
 import { useEventListener, useLiveData } from "../../lib/events.jsx";
@@ -8,7 +10,8 @@ import { OPEN_STATUSES, SEGMENT_LABEL, STATUS_LABEL, isOpen, levelTitle, routeMe
 import QueueTile from "../../components/live/QueueTile.jsx";
 import TicketExplain from "../../components/TicketExplain.jsx";
 import { CallbackPanel, Conversation } from "../../components/Conversation.jsx";
-import { ErrorNote, RouteBadge, Skeleton, SkeletonLines, Tile, useToast } from "../../components/ui.jsx";
+import { ErrorNote, PageHeader, RouteBadge, Skeleton, SkeletonLines, Tile, useToast } from "../../components/ui.jsx";
+import { AttachmentList } from "../../components/Attachments.jsx";
 
 const NEXT = { level1: "level2", level2: "level3" };
 
@@ -90,6 +93,32 @@ export function AgentQueuePage() {
   );
 }
 
+function GuidesTile({ ticketId }) {
+  const [guides, setGuides] = useState(null);
+  const [open, setOpen] = useState(0);
+  useEffect(() => { api.guides(ticketId).then(setGuides).catch(() => setGuides([])); }, [ticketId]);
+  return (
+    <Tile eyebrow="Guides for this ticket" icon={Compass}>
+      {!guides ? <SkeletonLines rows={3} /> : guides.length === 0 ? (
+        <p className="text-sm text-ink-3">No specific guide. Check the knowledge base if you're unsure.</p>
+      ) : (
+        <ul className="space-y-2">
+          {guides.map((g, i) => (
+            <li key={g.id} className="rounded-2xl border border-line">
+              <button className="w-full text-left px-3.5 py-2.5 flex items-center gap-2" aria-expanded={open === i} onClick={() => setOpen(open === i ? -1 : i)}>
+                <Lock className="w-3.5 h-3.5 text-ink-3 shrink-0" aria-hidden />
+                <span className="text-sm font-semibold flex-1">{g.title}</span>
+                <ChevronDown className={`w-4 h-4 text-ink-3 transition ${open === i ? "rotate-180" : ""}`} aria-hidden />
+              </button>
+              {open === i && <p className="px-3.5 pb-3 text-xs text-ink-2 whitespace-pre-wrap leading-relaxed">{g.answer}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Tile>
+  );
+}
+
 export function StaffTicketPage() {
   const { id } = useParams();
   const ticketId = Number(id);
@@ -102,6 +131,7 @@ export function StaffTicketPage() {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState("");
   const admin = user.role === "admin";
+  const backTo = admin ? "/admin" : "/queue";
 
   const act = async (key, fn, msg, after) => {
     setBusy(key);
@@ -121,7 +151,7 @@ export function StaffTicketPage() {
     return (
       <div className="pt-6 space-y-3">
         <ErrorNote>{error.includes("not found") ? "This ticket is no longer at your level (it may have been escalated)." : error}</ErrorNote>
-        <Link to={admin ? "/admin" : "/queue"} className="btn-ghost">Back to queue</Link>
+        <Link to={backTo} className="btn-ghost">Back to queue</Link>
       </div>
     );
   }
@@ -133,27 +163,31 @@ export function StaffTicketPage() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-12 pt-2">
-      <div className="lg:col-span-12">
-        <Link to={admin ? "/admin" : "/queue"} className="text-sm text-ink-3 hover:text-ink inline-flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Back to queue</Link>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-extrabold tracking-tight">{t.subject || `Ticket #${t.id}`}</h1>
+      <PageHeader
+        title={t.subject || `Ticket #${t.id}`}
+        badges={<>
           <RouteBadge route={t.route} />
           <span className="chip bg-sunken text-ink-2">{STATUS_LABEL[t.status] ?? t.status}</span>
-        </div>
-        <p className="text-sm text-ink-3">
-          #{t.id} · {t.category_label} · {t.customer ? `${t.customer.name} (${SEGMENT_LABEL[t.customer.segment] ?? t.customer.segment})` : "Unknown customer"} · opened {timeAgo(t.created_at)}
-        </p>
-      </div>
+          {t.incident && <Link to="/incidents" className="chip bg-tier2-soft text-tier2-text"><Boxes className="w-3 h-3" aria-hidden />Incident #{t.incident.id}</Link>}
+        </>}
+        subtitle={`#${t.id} · ${t.category_label} · ${t.customer ? `${t.customer.name} (${SEGMENT_LABEL[t.customer.segment] ?? t.customer.segment})` : "Unknown customer"} · opened ${timeAgo(t.created_at)} · priority ${t.priority}`}
+        back={<Link to={backTo} className="text-sm text-ink-3 hover:text-ink inline-flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Back to queue</Link>}
+      />
 
-      <Conversation ticketId={t.id} className="lg:col-span-8" live={t.route === "level3" && open}
-                    canReply={atMyLevel || t.assigned_agent?.id === user.id}
-                    placeholder={t.route === "level3" ? "Chat live with the customer…" : "Reply to the customer…"} />
+      <div className="lg:col-span-8 grid gap-4 content-start">
+        <Conversation ticketId={t.id} live={t.route === "level3" && open} suggest tall
+                      canReply={atMyLevel || t.assigned_agent?.id === user.id}
+                      placeholder={t.route === "level3" ? "Chat live with the customer…" : "Reply to the customer…"} />
+        {t.attachments?.length > 0 && (
+          <Tile eyebrow="Files from the customer" icon={Paperclip}><AttachmentList items={t.attachments} /></Tile>
+        )}
+      </div>
 
       <div className="lg:col-span-4 grid gap-4 content-start">
         <Tile eyebrow="Actions" icon={Hand}>
           <p className="text-sm text-ink-2 flex items-center gap-1.5">
             <UserRound className="w-4 h-4" aria-hidden />
-            {t.assigned_agent ? <>Assigned to <b>{t.assigned_agent.id === user.id ? "you" : t.assigned_agent.name}</b></> : "Unassigned"}
+            {t.assigned_agent ? <>Assigned to <b>{t.assigned_agent.id === user.id ? "you" : t.assigned_agent.name}</b></> : "Unassigned (no agent free yet)"}
           </p>
           {!atMyLevel && <p className="mt-2 text-xs text-ink-3">This ticket has moved to {t.level_name}.</p>}
           {atMyLevel && open && (
@@ -185,6 +219,7 @@ export function StaffTicketPage() {
           {!open && <p className="mt-2 text-xs text-ink-3">{STATUS_LABEL[t.status]}.</p>}
         </Tile>
         {t.route === "level3" && <CallbackPanel ticketId={t.id} mode="agent" />}
+        <GuidesTile ticketId={t.id} />
       </div>
 
       <TicketExplain ticket={t} onChanged={reload} admin={admin} className="lg:col-span-12" />

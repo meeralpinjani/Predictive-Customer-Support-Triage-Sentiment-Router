@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db import Base
+from app.db import Base, UTCDateTime
 
 
 def utcnow() -> datetime:
@@ -35,7 +35,9 @@ class User(Base):
     customer_id: Mapped[str | None] = mapped_column(ForeignKey("customers.id"), nullable=True)
     profile_complete: Mapped[bool] = mapped_column(Boolean, default=True)  # False until a Google user picks a plan
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    availability: Mapped[str] = mapped_column(String, default="available")  # agents: available | busy | offline
+    max_open: Mapped[int] = mapped_column(Integer, default=8)               # agents: capacity (open tickets)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class KbArticle(Base):
@@ -45,6 +47,9 @@ class KbArticle(Base):
     questions: Mapped[str] = mapped_column(Text)  # JSON list string
     answer: Mapped[str] = mapped_column(Text)
     source: Mapped[str] = mapped_column(String, default="Help Center")
+    visibility: Mapped[str] = mapped_column(String, default="public")  # public (FAQ + auto-answers) | internal (agent guides)
+    tags: Mapped[str] = mapped_column(String, default="")              # internal guides: intents/flags they apply to
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class Ticket(Base):
@@ -56,8 +61,8 @@ class Ticket(Base):
     subject: Mapped[str] = mapped_column(String, default="")
     body: Mapped[str] = mapped_column(Text)
     channel: Mapped[str] = mapped_column(String, default="web")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
     status: Mapped[str] = mapped_column(String, default="queued")  # queued | in_progress | kb_handled | resolved
     frustration: Mapped[float] = mapped_column(Float, default=0.0)
     urgency: Mapped[float] = mapped_column(Float, default=0.0)
@@ -80,7 +85,20 @@ class Ticket(Base):
     analysis_mode: Mapped[str] = mapped_column(String, default="rules")
     analysis_confidence: Mapped[float] = mapped_column(Float, default=0.5)
     assigned_agent_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    first_response_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id"), nullable=True)
+
+
+class Incident(Base):
+    """Several tickets about the same underlying problem (e.g. one outage, many reports)."""
+    __tablename__ = "incidents"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, default="open")  # open | resolved
+    created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    resolved_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 
 
 class Message(Base):
@@ -93,7 +111,7 @@ class Message(Base):
     kind: Mapped[str] = mapped_column(String, default="message")  # message | system
     body: Mapped[str] = mapped_column(Text)
     frustration: Mapped[float | None] = mapped_column(Float, nullable=True)  # scored customer replies
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class CallbackRequest(Base):
@@ -105,7 +123,7 @@ class CallbackRequest(Base):
     preferred_time: Mapped[str] = mapped_column(String, default="")
     note: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String, default="requested")  # requested | scheduled | done
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class Feedback(Base):
@@ -118,4 +136,42 @@ class Feedback(Base):
     new_route: Mapped[str | None] = mapped_column(String, nullable=True)
     reason: Mapped[str] = mapped_column(Text, default="")
     helpful: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class Attachment(Base):
+    """An uploaded screenshot or PDF on a ticket (optionally on one message). Served only to people
+    allowed to see the ticket; stored under a random name, never the uploader's filename."""
+    __tablename__ = "attachments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"), index=True)
+    message_id: Mapped[int | None] = mapped_column(ForeignKey("messages.id"), nullable=True, index=True)
+    uploader_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    filename: Mapped[str] = mapped_column(String)
+    stored_name: Mapped[str] = mapped_column(String, unique=True)
+    content_type: Mapped[str] = mapped_column(String)
+    size: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class PasswordReset(Base):
+    """One-time reset link. Only a hash of the token is stored."""
+    __tablename__ = "password_resets"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(String, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class OutboxEmail(Base):
+    """Every email the app sends (or would send). Admin-only: shows links when Gmail is not set up."""
+    __tablename__ = "outbox"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    to: Mapped[str] = mapped_column(String)
+    subject: Mapped[str] = mapped_column(String)
+    body: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String, default="queued")  # queued | sent | outbox_only | failed
+    error: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)

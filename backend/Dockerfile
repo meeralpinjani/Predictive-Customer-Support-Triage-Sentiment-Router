@@ -4,7 +4,8 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 \
     HF_HOME=/models \
     NLP_MODE=hf \
-    DATABASE_URL=sqlite:////data/triage.db
+    DATABASE_URL=sqlite:////data/triage.db \
+    UPLOAD_DIR=/data/uploads
 
 COPY requirements.txt requirements-ml.txt ./
 RUN pip install --no-cache-dir -r requirements.txt \

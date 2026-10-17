@@ -1,0 +1,66 @@
+[
+  {
+    "id": "guide_escalate",
+    "title": "When and how to escalate",
+    "tags": "general,escalation",
+    "questions": ["when should I escalate", "how do I escalate a ticket", "escalation rules"],
+    "answer": "Escalate one level when: (1) you need access or skills your level does not have; (2) the customer is still unhappy after two replies; (3) money is lost or the customer's business is blocked; (4) you have spent more than 30 minutes without progress. Always write WHAT you tried and WHY you escalate in the reason box: the next level reads it first. Never promise a timeline the next level has not agreed to.",
+    "source": "Internal guide - Escalation"
+  },
+  {
+    "id": "guide_deescalate",
+    "title": "Calming an angry or frustrated customer",
+    "tags": "frustration,complaint,cancellation",
+    "questions": ["customer is angry", "how to calm a frustrated customer", "customer threatens to cancel"],
+    "answer": "1. Acknowledge the feeling in your first sentence (\"I understand how frustrating this is\"). 2. Own it: apologise for the experience without blaming other teams. 3. Give ONE concrete next step and a time (\"I'll update you within 30 minutes\"). 4. Don't argue with sarcasm or caps. 5. If they mention cancelling or a competitor, flag it in the ticket and keep the tone calm; retention offers come from Level 3 only.",
+    "source": "Internal guide - Customer care"
+  },
+  {
+    "id": "guide_security",
+    "title": "Security incident runbook (hacked account, fraud, unauthorized access)",
+    "tags": "security",
+    "questions": ["account hacked", "unauthorized access", "suspected fraud", "phishing"],
+    "answer": "Treat as urgent. 1. Do NOT ask the customer for their password. 2. Revoke all sessions (Security > Active sessions) and force a password reset. 3. Check recent logins, API keys and email changes; note anything unusual. 4. If payment data may be involved, loop in Finance. 5. Tell the customer what you did and how to enable two-factor authentication. Keep everything in the ticket for the audit trail.",
+    "source": "Internal guide - Security"
+  },
+  {
+    "id": "guide_legal",
+    "title": "Legal threats and regulator mentions",
+    "tags": "legal",
+    "questions": ["customer mentions lawyer", "legal action", "regulator complaint"],
+    "answer": "A manager is notified automatically. Do: stay factual, confirm you have escalated to the right team, and give a response time. Don't: admit fault, discuss liability, quote contract terms or promise compensation. Never delete or edit messages on this ticket. Copy any documents the customer sends into the ticket.",
+    "source": "Internal guide - Legal"
+  },
+  {
+    "id": "guide_safety",
+    "title": "Product safety: smoke, overheating, injury",
+    "tags": "safety",
+    "questions": ["device smoking", "overheating", "electric shock", "someone was injured"],
+    "answer": "First reply within minutes: tell the customer to stop using and unplug the device and keep it away from flammable material. If anyone is hurt, advise contacting emergency services. Collect: product model, serial number, photos, when it happened. Arrange a replacement or return without asking them to troubleshoot. Report to the product safety owner the same day.",
+    "source": "Internal guide - Safety"
+  },
+  {
+    "id": "guide_outage",
+    "title": "Outage response checklist",
+    "tags": "outage,performance",
+    "questions": ["service is down", "outage reported", "site not loading for everyone"],
+    "answer": "1. Check the status page and the Incidents page: several reports at once usually mean one incident, so group them. 2. Confirm scope: one customer or everyone? which region? 3. Reply once to all affected tickets from the incident (\"we're investigating, next update in 30 min\"). 4. Post updates on schedule even if there is no news. 5. When fixed, resolve the incident so every linked ticket closes with the same message.",
+    "source": "Internal guide - Technical"
+  },
+  {
+    "id": "guide_billing",
+    "title": "Billing disputes and refunds",
+    "tags": "billing_dispute,invoice",
+    "questions": ["charged twice", "refund request", "wrong amount charged"],
+    "answer": "Verify the charge in the billing system before replying. Duplicate charges: refund the duplicate straight away (3-5 business days to appear). Wrong plan charged: correct the plan and refund the difference. Refunds above the plan's monthly price need Level 3 approval. Always send the customer the refund reference.",
+    "source": "Internal guide - Billing"
+  },
+  {
+    "id": "guide_bug",
+    "title": "Collecting what engineering needs for a bug",
+    "tags": "bug,integration,access",
+    "questions": ["how to report a bug", "what info for engineering", "app crashes"],
+    "answer": "Ask for: a screenshot or screen recording, the exact time it happened (with time zone), browser/app version, steps to reproduce, and whether it happens for colleagues too. Check the Incidents page for similar reports first. Escalate to Level 2 with all of the above in the reason so nobody has to ask again.",
+    "source": "Internal guide - Technical"
+  }
+]

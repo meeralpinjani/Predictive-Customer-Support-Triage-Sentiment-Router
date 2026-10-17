@@ -6,22 +6,26 @@
 """
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app import events
 from app.auth import AGENT_ROLES, current_user, is_agent, require
 from app.categories import CATEGORY_BY_ID
 from app.db import get_db
-from app.models import CallbackRequest, Customer, Feedback, Message, Ticket, User
+from app.models import Attachment, CallbackRequest, Customer, Feedback, Message, Ticket, User
 from app.schemas import (
     CallbackIn, CallbackOut, CallbackPatch, CustomerTicketOut, EscalateIn, FeedbackIn, MessageIn, MessageOut,
     OverrideIn, TicketIn, TicketOut,
 )
+from app.services.files import attachment_out, path_for, save_uploads
+from app.services.knowledge import guides_for_ticket
+from app.services.replies import suggested_reply
 from app.services.router import LEVEL, Decision
 from app.services.triage import (
     OPEN, add_system_message, agent_reply, customer_reply, escalate_after_kb, escalate_manually, process_ticket,
-    route_ticket, serialise, serialise_for_customer, serialise_message,
+    rebalance, route_ticket, serialise, serialise_for_customer, serialise_message,
 )
 
 router = APIRouter(prefix="/api", tags=["tickets"])
@@ -202,6 +206,9 @@ def resolve_ticket(ticket_id: int, user: User = Depends(current_user), db: Sessi
         t.assigned_agent_id = user.id
     who = "the customer" if user.role == "customer" else user.name
     add_system_message(db, t, f"Resolved by {who}.")
+    if t.route in LEVEL:
+        db.flush()
+        rebalance(db, t.route)
     db.add(Feedback(ticket_id=t.id, user_id=user.id, kind="resolved", reason=f"Resolved by {who}"))
     db.commit()
     _publish("ticket.resolved", t)
@@ -316,3 +323,70 @@ def update_callback(ticket_id: int, callback_id: int, payload: CallbackPatch,
     db.commit()
     _publish("callback.updated", t)
     return _cb_out(cb)
+
+
+# ---------------------------------------------------------------- attachments
+def _can_post(user: User, t: Ticket) -> bool:
+    return user.role == "customer" or can_work(user, t) or t.assigned_agent_id == user.id
+
+
+@router.post("/tickets/{ticket_id}/attachments", status_code=status.HTTP_201_CREATED)
+async def upload_ticket_files(ticket_id: int, files: list[UploadFile] = File(...),
+                              user: User = Depends(current_user), db: Session = Depends(get_db)) -> list[dict]:
+    """Files that belong to the ticket itself (e.g. screenshots attached when creating it)."""
+    t = _viewable(db, ticket_id, user)
+    if not _can_post(user, t):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This ticket is not at your level")
+    saved = await save_uploads(db, files, t.id, user.id)
+    db.commit()
+    _publish("ticket.updated", t)
+    return [attachment_out(a) for a in saved]
+
+
+@router.post("/tickets/{ticket_id}/messages/upload", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
+async def post_message_with_files(ticket_id: int, files: list[UploadFile] = File(...), body: str = Form(""),
+                                  user: User = Depends(current_user), db: Session = Depends(get_db)) -> MessageOut:
+    """A chat message with screenshots / PDFs (the text is optional)."""
+    t = _viewable(db, ticket_id, user)
+    if not _can_post(user, t):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "This ticket is not at your level")
+    text = body.strip()[:4000] or f"Sent {len(files)} file{'s' if len(files) != 1 else ''}"
+    if user.role == "customer":
+        msg, old = customer_reply(db, t, user, text)
+    else:
+        msg, old = agent_reply(db, t, user, text), t.route
+    db.flush()
+    await save_uploads(db, files, t.id, user.id, message_id=msg.id)
+    db.commit()
+    db.refresh(msg)
+    events.publish({**events.ticket_event("message.created", t), "actor_id": user.id,
+                    "author_role": user.role, "preview": text[:120]})
+    _publish_route_change(t, old)
+    return serialise_message(msg, db, user)
+
+
+@router.get("/attachments/{attachment_id}")
+def download_attachment(attachment_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    att = db.get(Attachment, attachment_id)
+    if not att:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
+    _viewable(db, att.ticket_id, user)   # same rule as the ticket: 404 if you can't see it
+    path = path_for(att)
+    if not path.exists():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
+    return FileResponse(path, media_type=att.content_type, filename=att.filename,
+                        content_disposition_type="inline" if att.content_type.startswith("image/") else "attachment",
+                        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "private, max-age=3600"})
+
+
+# ---------------------------------------------------------------- agent helpers
+@router.get("/tickets/{ticket_id}/suggested-reply")
+def get_suggested_reply(ticket_id: int, user: User = Depends(require(*AGENT_ROLES, "admin")),
+                        db: Session = Depends(get_db)) -> dict:
+    return suggested_reply(db, _viewable(db, ticket_id, user), user)
+
+
+@router.get("/tickets/{ticket_id}/guides")
+def get_guides(ticket_id: int, user: User = Depends(require(*AGENT_ROLES, "admin")),
+               db: Session = Depends(get_db)) -> list[dict]:
+    return guides_for_ticket(db, _viewable(db, ticket_id, user))

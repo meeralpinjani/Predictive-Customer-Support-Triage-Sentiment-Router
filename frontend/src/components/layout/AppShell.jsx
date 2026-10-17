@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import {
-  BarChart3, Bell, BookOpen, Inbox, LayoutDashboard, LifeBuoy, LogOut, Moon, PlusCircle, SlidersHorizontal,
-  Snowflake, Sun, Users,
+  Activity, BarChart3, Bell, BookOpen, Boxes, HelpCircle, Inbox, LayoutDashboard, LifeBuoy, LogOut, Mail, Moon, PlusCircle,
+  MoreHorizontal, SlidersHorizontal, Snowflake, Sun, Users,
 } from "lucide-react";
+import { api } from "../../api.js";
+import GlobalSearch from "./GlobalSearch.jsx";
 import { useAuth } from "../../lib/auth.jsx";
 import { chime, useEvents, useEventListener } from "../../lib/events.jsx";
 import { ROLE_LABEL, isAgentRole, levelTitle, routeMeta, timeAgo } from "../../lib/meta.js";
@@ -14,19 +16,58 @@ const NAV = {
   customer: [
     { to: "/support", label: "My tickets", icon: LifeBuoy, end: true },
     { to: "/support/new", label: "New ticket", icon: PlusCircle },
+    { to: "/help", label: "Help centre", icon: HelpCircle },
   ],
   agent: [
     { to: "/queue", label: "My queue", icon: Inbox },
+    { to: "/incidents", label: "Incidents", icon: Boxes },
     { to: "/knowledge", label: "Knowledge base", icon: BookOpen },
   ],
   admin: [
     { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
+    { to: "/admin/analytics", label: "Analytics", icon: Activity },
     { to: "/admin/insights", label: "Insights", icon: BarChart3 },
-    { to: "/admin/users", label: "Users & roles", icon: Users },
-    { to: "/admin/tuning", label: "Tuning", icon: SlidersHorizontal },
+    { to: "/incidents", label: "Incidents", icon: Boxes },
+    { to: "/admin/users", label: "Users & workload", icon: Users },
     { to: "/knowledge", label: "Knowledge base", icon: BookOpen },
+    { to: "/admin/tuning", label: "Tuning", icon: SlidersHorizontal },
+    { to: "/admin/outbox", label: "Outbox", icon: Mail },
   ],
 };
+
+const AVAIL = {
+  available: { label: "Available", dot: "bg-tier1" },
+  busy: { label: "Busy", dot: "bg-tier2" },
+  offline: { label: "Offline", dot: "bg-ink-3" },
+};
+
+/** Agents set their own availability; busy/offline agents receive no new tickets. */
+function AvailabilitySwitch() {
+  const { user, refresh } = useAuth();
+  const toast = useToast();
+  if (!isAgentRole(user.role)) return null;
+  const current = user.availability || "available";
+  return (
+    <div className="mt-2">
+      <label className="sr-only" htmlFor="availability">Availability</label>
+      <div className="relative">
+        <span className={clsx("absolute left-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full", AVAIL[current].dot)} aria-hidden />
+        <select id="availability" value={current} className="field !py-1.5 !pl-6 !text-xs"
+                onChange={async (e) => {
+                  try {
+                    await api.setAvailability(e.target.value);
+                    await refresh();
+                    toast(e.target.value === "available" ? "You're available for new tickets" : `You're ${e.target.value}: no new tickets will be assigned to you`, "info");
+                  } catch (err) {
+                    toast(err.message, "error");
+                  }
+                }}>
+          {Object.entries(AVAIL).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
 
 const navFor = (role) => (role === "customer" ? NAV.customer : role === "admin" ? NAV.admin : NAV.agent);
 
@@ -87,6 +128,43 @@ function NotificationBell({ items, unread, onOpen }) {
   );
 }
 
+function MobileNav({ nav }) {
+  const [more, setMore] = useState(false);
+  const location = useLocation();
+  useEffect(() => setMore(false), [location.pathname]);
+  const main = nav.length > 5 ? nav.slice(0, 4) : nav;
+  const rest = nav.length > 5 ? nav.slice(4) : [];
+  const cls = ({ isActive }) => clsx("flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold", isActive ? "text-glacier-text" : "text-ink-3");
+  return (
+    <>
+      {more && (
+        <div className="lg:hidden fixed inset-x-0 bottom-[58px] z-30 mx-3 tile !p-2">
+          {rest.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end}
+                     className={({ isActive }) => clsx("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold", isActive ? "bg-sunken" : "")}>
+              <item.icon className="w-4 h-4" aria-hidden /> {item.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-card border-t border-line grid" aria-label="Main"
+           style={{ gridTemplateColumns: `repeat(${main.length + (rest.length ? 1 : 0)}, minmax(0, 1fr))` }}>
+        {main.map((item) => (
+          <NavLink key={item.to} to={item.to} end={item.end} className={cls}>
+            <item.icon className="w-5 h-5" aria-hidden /> {item.label.split(" ")[0]}
+          </NavLink>
+        ))}
+        {rest.length > 0 && (
+          <button onClick={() => setMore((m) => !m)} aria-expanded={more}
+                  className={clsx("flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold", more ? "text-glacier-text" : "text-ink-3")}>
+            <MoreHorizontal className="w-5 h-5" aria-hidden /> More
+          </button>
+        )}
+      </nav>
+    </>
+  );
+}
+
 export default function AppShell() {
   const { user, logout } = useAuth();
   const { connected } = useEvents();
@@ -120,7 +198,7 @@ export default function AppShell() {
             <span className="block text-[11px] text-ink-3">AlgoAmigos</span>
           </span>
         </Link>
-        <nav className="mt-8 space-y-1" aria-label="Main">
+        <nav className="mt-8 space-y-1 overflow-y-auto scroll-thin" aria-label="Main">
           {nav.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end}
                      className={({ isActive }) => clsx("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
@@ -134,6 +212,7 @@ export default function AppShell() {
             <p className="text-sm font-semibold truncate">{user.name}</p>
             <p className="text-[11px] text-ink-3 truncate">{user.email}</p>
             <span className="chip bg-card border border-line text-ink-2 mt-2">{roleBadge}</span>
+            <AvailabilitySwitch />
           </div>
           <div className="flex items-center justify-between px-1 text-xs text-ink-3">
             <span className="flex items-center gap-1.5">
@@ -155,13 +234,13 @@ export default function AppShell() {
       <div className="flex-1 min-w-0 pb-20 lg:pb-0">
         {/* ---------------- top bar */}
         <header className="sticky top-0 z-30 bg-canvas/85 backdrop-blur border-b border-line lg:border-none">
-          <div className="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
-            <Link to="/" className="lg:hidden flex items-center gap-2 font-extrabold tracking-tight">
+          <div className="mx-auto max-w-[1480px] px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            <Link to="/" className="lg:hidden flex items-center gap-2 font-extrabold tracking-tight shrink-0">
               <span className="w-8 h-8 rounded-xl bg-fjord grid place-items-center"><Snowflake className="w-4 h-4 text-sky-300" aria-hidden /></span>
-              Triage Router
+              <span className="hidden sm:inline">Triage Router</span>
             </Link>
-            <p className="hidden lg:block text-sm text-ink-3">{roleBadge}</p>
-            <div className="flex items-center gap-1.5">
+            <GlobalSearch />
+            <div className="flex items-center gap-1.5 shrink-0">
               <NotificationBell items={notes} unread={unread} onOpen={() => setUnread(0)} />
               <button onClick={toggleTheme} className="lg:hidden btn-ghost !p-2 !rounded-full" aria-label="Toggle theme">
                 {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -177,17 +256,8 @@ export default function AppShell() {
         </main>
       </div>
 
-      {/* ---------------- mobile bottom bar */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-card border-t border-line grid" aria-label="Main"
-           style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}>
-        {nav.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end}
-                   className={({ isActive }) => clsx("flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold",
-                     isActive ? "text-glacier-text" : "text-ink-3")}>
-            <item.icon className="w-5 h-5" aria-hidden /> {item.label}
-          </NavLink>
-        ))}
-      </nav>
+      {/* ---------------- mobile bottom bar (4 items + More when needed) */}
+      <MobileNav nav={nav} />
     </div>
   );
 }

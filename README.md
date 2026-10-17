@@ -8,11 +8,29 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 
 | Role | Gets the role by | Sees |
 |---|---|---|
-| **Customer** | Signing up (email + password, or Google) and choosing a plan | My tickets · New ticket (pick a category) · ticket page with conversation, instant answers, "Did this help?", and callback requests at Level 3 |
-| **Level 1 · General Support** | An admin assigns it | Queue of Level 1 tickets · claim, reply, escalate, resolve |
+| **Customer** | Signing up (email + password, or Google) and choosing a plan | My tickets · New ticket (category, screenshots, "articles that might help" while typing) · ticket page (conversation with attachments, instant answers, "Did this help?", callback at Level 3) · Help centre (FAQ) |
+| **Level 1 · General Support** | An admin assigns it | My queue · ticket workspace (chat with attachments, **Suggest reply**, guides for this ticket, claim / escalate / resolve) · Incidents · Knowledge base · availability switch |
 | **Level 2 · Technical Support** | An admin assigns it | Same for Level 2 |
 | **Level 3 · Expert Escalation** | An admin assigns it | Same for Level 3, plus live chat and callback scheduling |
-| **Admin** | `ADMIN_EMAIL` in `.env`, or promoted by an admin | Overview of all queues · Insights (evidence) · Users & roles · Tuning (what-if) · Knowledge base |
+| **Admin** | `ADMIN_EMAIL` in `.env`, or promoted by an admin | Overview of all queues · Analytics over time · Insights (evidence) · Incidents · Users & workload · Knowledge-base editor · Tuning (what-if, retrain) · Outbox |
+
+**Everyone** gets a search bar (Ctrl K), scoped by role:
+- **Customers:** help articles and their own tickets.
+- **Agents:** articles, internal guides, their level's tickets and those tickets' customers.
+- **Admins:** everything.
+
+**Working the queue:**
+- **Knowledge base:** public FAQ articles auto-answer customers and fill the Help centre. **Internal guides** (escalation rules, security runbook, legal threats, angry customers, outages, billing, bugs) appear automatically on matching tickets. Admins edit both and see **suggested new topics** from tickets nothing answered.
+- **Suggested reply:** a draft with empathy matched to the customer's frustration, plus the right article or next step. The agent edits it before sending.
+- **Incidents:** near-duplicate tickets (e.g. one outage, many reports) are suggested as a group. One reply or "resolve" covers every customer.
+- **Availability and capacity:** agents set Available / Busy / Offline, and admins set each agent's maximum open tickets. Nobody busy, offline or full gets new tickets; waiting tickets are handed out as capacity frees up.
+- **Attachments:** PNG, JPG or PDF, 5 MB each, up to 5 per message.
+  - Checked by their real file type (SVG and disguised files are refused).
+  - Stored privately and served only to people allowed to see the ticket.
+
+**Admin only:**
+- **Analytics over time:** hourly volume, deflection, escalations, first-response and resolution times, all computed live from the database.
+- **Retrain from agents:** finds the routing thresholds that best match agents' escalations and overrides. It refuses until at least 30 such decisions exist.
 
 - **Categories:** customers pick a category. *General* categories (account, billing, plans, how-to, feedback) start at Level 1; *technical* ones (bug, outage, integrations, data, performance) start at Level 2.
 - **Escalation rule:** the AI can only move a ticket **up**, never below its category. Level 3 can't be chosen; it's reached only by escalation:
@@ -27,9 +45,10 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 - **Real time:** every change streams live (server-sent events). The receiving level gets a toast, a chime and a bell notification, and the customer sees their ticket move.
 
 **Security:**
-- Passwords are hashed with scrypt.
-- Sessions are signed HttpOnly cookies.
-- Failed logins are throttled.
+- **Passwords:** hashed with scrypt, and must be 8+ characters with upper, lower and a number.
+- **Sessions:** signed HttpOnly cookies. "Remember me" keeps you signed in for 7 days; otherwise the session ends when the browser closes.
+- **Logins:** failed attempts are throttled.
+- **Forgot password:** emails a one-time link (hashed in the database, expires in 30 minutes). The response is the same whether or not the account exists.
 - Every API endpoint checks the role: customers only ever see their own tickets and never see internal scores; agents only act on their level.
 
 ## Results (held-out test set, `python -m eval.run_all`)
@@ -131,10 +150,17 @@ Without the ML packages, set `NLP_MODE=rules` in `.env`; everything still works.
 
 The "Continue with Google" button appears on the login and sign-up pages. New Google users choose their plan once. A Client ID is not secret, but don't commit `.env` anyway; it also holds `SECRET_KEY`.
 
+**Password-reset emails (optional, free):**
+1. On the Gmail account that should send them, turn on **2-Step Verification**.
+2. Create an **App password** (Google Account → Security → App passwords).
+3. Put `GMAIL_ADDRESS=` and `GMAIL_APP_PASSWORD=` in `backend/.env` and restart the backend.
+
+Until then, or if the venue has no internet, reset emails appear on the admin **Outbox** page with the working link, so the demo can't break.
+
 **Tests and evaluation:**
 ```bash
 cd backend
-pytest                        # 94 tests, isolated temp database (never touches triage.db)
+pytest                        # 110 tests, isolated temp database and uploads (never touches triage.db)
 python -m eval.run_all        # refit, re-tune, re-evaluate, write eval/report.json
 ```
 
@@ -175,6 +201,16 @@ Before demo day:
 | GET/POST/PATCH | `/api/tickets/{id}/callbacks` | customer (request), Level 3 (manage) | Callback requests |
 | POST | `/api/tickets/{id}/feedback` | customer | Auto-answer helped / didn't help |
 | GET | `/api/events` | signed in | Live events (server-sent events), filtered per role |
+| POST | `/api/auth/forgot` · `/api/auth/reset` | anyone | Email a one-time reset link · set a new password |
+| PATCH | `/api/auth/me/availability` | agents | Available / busy / offline |
+| GET | `/api/search?q=` | signed in | Role-scoped search: articles, tickets, customers, users |
+| POST | `/api/tickets/{id}/attachments` · `/messages/upload` | ticket participants | Upload PNG/JPG/PDF (ticket or chat message) |
+| GET | `/api/attachments/{id}` | ticket participants | Download (404 for anyone who can't see the ticket) |
+| GET | `/api/tickets/{id}/suggested-reply` · `/guides` | agents, admin | Draft reply · internal guides for this ticket |
+| GET/POST/PATCH/DELETE | `/api/kb-articles` · `/api/kb/suggest` · `/api/kb/topics` | all / admin edits | FAQ + guides, "might help" suggestions, suggested topics |
+| GET/POST | `/api/incidents[/suggestions]` · `/{id}/reply` · `/{id}/resolve` | agents, admin | Group duplicates, reply to all, resolve all |
+| GET | `/api/admin/analytics` · `/outbox` · `/users/workload/summary` | admin | Analytics over time · sent emails · agent workload |
+| GET/POST | `/api/admin/retrain` · `/retrain/apply` | admin | Propose / apply thresholds learned from agents |
 | GET | `/api/stats` · `/config` | staff | Queue metrics, live configuration |
 | GET/POST | `/api/eval` · `/whatif` · `/admin/rescore` | admin | Evaluation report, what-if preview, re-score |
 
@@ -196,10 +232,11 @@ frontend/src/           components (Nordic bento tiles, live chat, queue), lib (
   - On this data the transformer models mainly improve **urgency** (F1 0.78 → 0.84) and KB coverage (auto-answers 44% → 78% of routine questions). Frustration is driven mostly by the anger and sarcasm cues, which the fitted weights show openly.
 - **Customer value uses mock CRM data.**
 - **Accounts are hackathon-grade:**
-  - **In place:** hashed passwords, signed HttpOnly cookies, failed-login throttling and role checks.
-  - **Still missing:** email verification, password reset, multi-factor authentication and audit logging.
+  - **In place:** hashed passwords, signed HttpOnly cookies, failed-login throttling, role checks and password reset by email.
+  - **Still missing:** email verification, multi-factor authentication and audit logging.
 - **Live chat and events run in one API process.** Several API servers would need a shared message bus such as Redis.
 - **Calls are callback requests, not in-browser voice.**
+- **No email verification, two-factor login or encryption at rest** (decided out of scope). Attachments are stored on local disk.
 - **Out of scope:** real CRM integration and production scaling (playbook "will not do"; see roadmap).
 
 ## Roadmap

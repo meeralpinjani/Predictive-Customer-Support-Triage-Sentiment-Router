@@ -1,5 +1,7 @@
+import hashlib
 import logging
 import secrets
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
@@ -10,8 +12,13 @@ from app.auth import (
 )
 from app.config import PLAN_DEFAULTS, settings
 from app.db import get_db
-from app.models import Customer, User
-from app.schemas import AdminUserPatch, CustomerSummary, GoogleIn, LoginIn, ProfileIn, SignupIn, UserOut
+from app import events
+from app.models import Customer, PasswordReset, Ticket, User
+from app.schemas import (
+    AdminUserPatch, AvailabilityIn, CustomerSummary, ForgotIn, GoogleIn, LoginIn, ProfileIn, ResetIn, SignupIn, UserOut,
+)
+from app.services.mailer import gmail_configured, send_email
+from app.services.triage import OPEN, open_load, rebalance, release_agent
 
 log = logging.getLogger("triage.auth")
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -24,7 +31,7 @@ def user_out(db: Session, u: User) -> UserOut:
     return UserOut(
         id=u.id, email=u.email, name=u.name, role=u.role, profile_complete=u.profile_complete, auth=auth,
         customer=CustomerSummary(id=cust.id, name=cust.name, segment=cust.segment, plan=cust.plan) if cust else None,
-        active=u.active, created_at=u.created_at,
+        active=u.active, created_at=u.created_at, availability=u.availability or "available", max_open=u.max_open or 0,
     )
 
 
@@ -78,7 +85,61 @@ def login(payload: LoginIn, request: Request, response: Response, db: Session = 
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Wrong email or password")
     if not user.active:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "This account is disabled")
-    set_session(response, user)
+    set_session(response, user, remember=payload.remember)
+    return user_out(db, user)
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+@router.post("/forgot")
+def forgot_password(payload: ForgotIn, request: Request, db: Session = Depends(get_db)) -> dict:
+    """Email a one-time reset link. Same answer whether or not the account exists (no account probing)."""
+    check_rate_limit(f"forgot:{request.client.host if request.client else '?'}", limit=6)
+    email = payload.email.strip().lower()
+    user = db.query(User).filter(User.email == email, User.active.is_(True)).first()
+    if user:
+        token = secrets.token_urlsafe(32)
+        db.add(PasswordReset(user_id=user.id, token_hash=_hash_token(token),
+                             expires_at=datetime.now(timezone.utc) + timedelta(minutes=settings.reset_link_minutes)))
+        db.commit()
+        link = f"{settings.public_url.rstrip('/')}/reset-password?token={token}"
+        send_email(db, user.email, "Reset your Support Triage Router password",
+                   f"Hi {user.name.split()[0]},\n\nUse this link to choose a new password "
+                   f"(valid for {settings.reset_link_minutes} minutes, one use only):\n\n{link}\n\n"
+                   "If you did not ask for this, you can ignore this email.")
+    return {"ok": True, "message": "If an account exists for that email, a reset link is on its way.",
+            "delivery": "email" if gmail_configured() else "outbox"}
+
+
+@router.post("/reset")
+def reset_password(payload: ResetIn, request: Request, db: Session = Depends(get_db)) -> dict:
+    check_rate_limit(f"reset:{request.client.host if request.client else '?'}", limit=10)
+    row = db.query(PasswordReset).filter(PasswordReset.token_hash == _hash_token(payload.token)).first()
+    now = datetime.now(timezone.utc)
+    if row is not None:
+        expires = row.expires_at if row.expires_at.tzinfo else row.expires_at.replace(tzinfo=timezone.utc)
+    if row is None or row.used_at or expires < now:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "This reset link is invalid or has expired. Request a new one.")
+    user = db.get(User, row.user_id)
+    user.password_hash = hash_password(payload.password)
+    for other in db.query(PasswordReset).filter(PasswordReset.user_id == user.id, PasswordReset.used_at.is_(None)).all():
+        other.used_at = now
+    db.commit()
+    return {"ok": True, "message": "Password changed. You can sign in now."}
+
+
+@router.patch("/me/availability", response_model=UserOut)
+def set_availability(payload: AvailabilityIn, user: User = Depends(require("level1", "level2", "level3")),
+                     db: Session = Depends(get_db)) -> UserOut:
+    user.availability = payload.availability
+    if payload.availability == "available":
+        rebalance(db, user.role)
+    else:
+        release_agent(db, user)
+    db.commit()
+    events.publish({"type": "queue.rescored", "route": user.role, "old_route": None, "customer_id": None})
     return user_out(db, user)
 
 
@@ -109,7 +170,7 @@ def google_login(payload: GoogleIn, request: Request, response: Response, db: Se
         db.commit()
     if not user.active:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "This account is disabled")
-    set_session(response, user)
+    set_session(response, user, remember=True)
     return user_out(db, user)
 
 
@@ -164,5 +225,33 @@ def update_user(user_id: int, payload: AdminUserPatch, admin: User = Depends(req
         if not user.customer_id:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only customers have a plan")
         apply_plan(db.get(Customer, user.customer_id), payload.plan)
+    if payload.max_open is not None:
+        user.max_open = payload.max_open
+    if payload.availability is not None:
+        user.availability = payload.availability
+    if user.role in ("level1", "level2", "level3"):
+        if user.availability != "available" or not user.active:
+            release_agent(db, user)
+        rebalance(db, user.role)
     db.commit()
     return user_out(db, user)
+
+
+@admin_router.get("/workload/summary")
+def workload(_: User = Depends(require("admin")), db: Session = Depends(get_db)) -> list[dict]:
+    """Every agent's current load against their capacity, plus unassigned tickets per level."""
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    out = []
+    for a in db.query(User).filter(User.role.in_(("level1", "level2", "level3"))).order_by(User.role, User.name).all():
+        mine = db.query(Ticket).filter(Ticket.assigned_agent_id == a.id)
+        out.append({
+            "id": a.id, "name": a.name, "level": a.role, "availability": a.availability, "active": a.active,
+            "max_open": a.max_open, "open": open_load(db, a.id),
+            "in_progress": mine.filter(Ticket.status == "in_progress").count(),
+            "resolved_today": mine.filter(Ticket.status == "resolved", Ticket.resolved_at >= start).count(),
+        })
+    for lvl in ("level1", "level2", "level3"):
+        unassigned = db.query(Ticket).filter(Ticket.route == lvl, Ticket.status.in_(OPEN),
+                                             Ticket.assigned_agent_id.is_(None)).count()
+        out.append({"id": None, "name": "Unassigned", "level": lvl, "open": unassigned})
+    return out

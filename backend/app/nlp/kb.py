@@ -46,6 +46,20 @@ class _IndexedKb:
     def _similarities(self, text: str) -> list[float]:
         raise NotImplementedError
 
+    def rank(self, text: str, k: int = 3) -> list[KbMatch]:
+        """Best k articles (one score per article: its closest question)."""
+        if not self.texts:
+            return []
+        best: dict[int, float] = {}
+        for owner, sim in zip(self.owner, self._similarities(text)):
+            best[owner] = max(best.get(owner, -1.0), sim)
+        out = []
+        for i in sorted(best, key=best.get, reverse=True)[:k]:
+            a = self.articles[i]
+            out.append(KbMatch(article_id=a["id"], title=a["title"], answer=a["answer"],
+                               source=a.get("source", "Help Center"), confidence=round(max(best[i], 0.0), 3)))
+        return out
+
     def match(self, text: str) -> KbMatch | None:
         if not self.texts:
             return None

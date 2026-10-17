@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import events
 from app.models import Ticket
-from app.services.triage import OPEN, rescore_and_route
+from app.services.triage import OPEN, rebalance, rescore_and_route
 
 log = logging.getLogger("triage.rescore")
 
@@ -22,6 +22,8 @@ def rescore_open(db: Session, now: datetime | None = None, publish: bool = True)
         old = rescore_and_route(db, t, "Ageing upgrade", now=now)
         if old != t.route:
             moved.append((t, old))
+    for level in ("level1", "level2", "level3"):
+        rebalance(db, level)   # agents who freed up capacity pick up waiting tickets
     db.commit()
     if publish:
         for t, old in moved:

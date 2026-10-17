@@ -5,10 +5,12 @@ import { EventsProvider } from "./lib/events.jsx";
 import { homeFor, isAgentRole } from "./lib/meta.js";
 import { ToastProvider } from "./components/ui.jsx";
 import AppShell from "./components/layout/AppShell.jsx";
-import { LoginPage, SignupPage, WelcomePage } from "./pages/auth/AuthPages.jsx";
-import { CustomerTicketPage, NewTicketPage, SupportHome } from "./pages/customer/CustomerPages.jsx";
+import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage, WelcomePage } from "./pages/auth/AuthPages.jsx";
+import { CustomerTicketPage, HelpCentrePage, NewTicketPage, SupportHome } from "./pages/customer/CustomerPages.jsx";
 import { AgentQueuePage, StaffTicketPage } from "./pages/agent/AgentPages.jsx";
-import { AdminInsights, AdminOverview, AdminTuning, AdminUsers, KnowledgePage, NotFound } from "./pages/admin/AdminPages.jsx";
+import { AdminInsights, AdminOverview, AdminTuning, NotFound } from "./pages/admin/AdminPages.jsx";
+import { AdminAnalytics, AdminOutbox, AdminUsers } from "./pages/admin/AdminExtras.jsx";
+import { IncidentsPage, KnowledgePage, SearchPage } from "./pages/shared/SharedPages.jsx";
 
 /** Only lets through users whose role is allowed; everyone else goes to their own home. */
 function Guard({ allow, children }) {
@@ -54,15 +56,22 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/welcome" element={<WelcomePage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route element={<Shell />}>
               <Route path="/support" element={<Guard allow={isCustomer}><SupportHome /></Guard>} />
               <Route path="/support/new" element={<Guard allow={isCustomer}><NewTicketPage /></Guard>} />
               <Route path="/support/tickets/:id" element={<Guard allow={isCustomer}><CustomerTicketPage /></Guard>} />
+              <Route path="/help" element={<Guard allow={isCustomer}><HelpCentrePage /></Guard>} />
+              <Route path="/search" element={<Guard><SearchPage /></Guard>} />
+              <Route path="/incidents" element={<Guard allow={isStaff}><IncidentsPage /></Guard>} />
               <Route path="/queue" element={<Guard allow={isAgent}><AgentQueuePage /></Guard>} />
               <Route path="/tickets/:id" element={<Guard allow={isStaff}><StaffTicketPage /></Guard>} />
               <Route path="/knowledge" element={<Guard allow={isStaff}><KnowledgePage /></Guard>} />
               <Route path="/admin" element={<Guard allow={isAdmin}><AdminOverview /></Guard>} />
               <Route path="/admin/insights" element={<Guard allow={isAdmin}><AdminInsights /></Guard>} />
+              <Route path="/admin/analytics" element={<Guard allow={isAdmin}><AdminAnalytics /></Guard>} />
+              <Route path="/admin/outbox" element={<Guard allow={isAdmin}><AdminOutbox /></Guard>} />
               <Route path="/admin/users" element={<Guard allow={isAdmin}><AdminUsers /></Guard>} />
               <Route path="/admin/tuning" element={<Guard allow={isAdmin}><AdminTuning /></Guard>} />
               <Route path="*" element={<NotFound />} />

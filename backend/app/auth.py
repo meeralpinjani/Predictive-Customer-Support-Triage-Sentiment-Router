@@ -68,9 +68,11 @@ def read_token(token: str) -> int | None:
         return None
 
 
-def set_session(response: Response, user: User) -> None:
+def set_session(response: Response, user: User, remember: bool = True) -> None:
+    """remember=False: a browser-session cookie (gone when the browser closes); the signed token
+    itself still expires after `session_days`."""
     response.set_cookie(
-        COOKIE, make_token(user.id), max_age=settings.session_days * 86400,
+        COOKIE, make_token(user.id), max_age=settings.session_days * 86400 if remember else None,
         httponly=True, samesite="lax", secure=settings.cookie_secure, path="/",
     )
 

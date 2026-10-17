@@ -19,7 +19,7 @@ def test_session_tokens_are_signed():
 
 def test_signup_with_plan_creates_customer_and_session(anon):
     res = anon.post("/api/auth/signup", json={"name": "Test Pro", "email": "pro@example.com",
-                                              "password": "longenough1", "plan": "pro"})
+                                              "password": "Longenough1", "plan": "pro"})
     assert res.status_code == 201
     me = anon.get("/api/auth/me").json()
     assert me["role"] == "customer" and me["customer"]["segment"] == "pro"
@@ -29,9 +29,9 @@ def test_signup_with_plan_creates_customer_and_session(anon):
 
 
 def test_signup_validation_and_duplicates(anon):
-    assert anon.post("/api/auth/signup", json={"name": "x", "email": "bad", "password": "longenough1"}).status_code == 422
+    assert anon.post("/api/auth/signup", json={"name": "x", "email": "bad", "password": "Longenough1"}).status_code == 422
     assert anon.post("/api/auth/signup", json={"name": "x", "email": "a@b.co", "password": "short"}).status_code == 422
-    ok = {"name": "Dup", "email": "dup@example.com", "password": "longenough1"}
+    ok = {"name": "Dup", "email": "dup@example.com", "password": "Longenough1"}
     assert anon.post("/api/auth/signup", json=ok).status_code == 201
     assert anon.post("/api/auth/signup", json=ok).status_code == 409
 
@@ -50,7 +50,7 @@ def test_google_is_off_until_configured(anon):
 
 
 def test_admin_manages_roles(login, anon):
-    anon.post("/api/auth/signup", json={"name": "New Agent", "email": "agent@example.com", "password": "longenough1"})
+    anon.post("/api/auth/signup", json={"name": "New Agent", "email": "agent@example.com", "password": "Longenough1"})
     admin = login("admin")
     users = admin.get("/api/admin/users").json()
     new = next(u for u in users if u["email"] == "agent@example.com")

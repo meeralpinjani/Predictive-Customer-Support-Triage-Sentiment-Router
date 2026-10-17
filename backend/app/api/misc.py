@@ -92,18 +92,6 @@ def list_customers(_: User = Depends(require("admin")), db: Session = Depends(ge
     return db.query(Customer).order_by(Customer.id).all()
 
 
-@router.get("/kb-articles")
-def list_kb_articles(_: User = Depends(current_user), db: Session = Depends(get_db)) -> list[dict]:
-    out = []
-    for a in db.query(KbArticle).all():
-        try:
-            qs = json.loads(a.questions)
-        except ValueError:
-            qs = [a.questions]
-        out.append({"id": a.id, "title": a.title, "questions": qs, "answer": a.answer, "source": a.source})
-    return out
-
-
 @router.post("/kb/test-match")
 def test_kb_match(payload: KbTestIn, _: User = Depends(require(*STAFF)), db: Session = Depends(get_db)) -> dict:
     kb = active_kb(db)

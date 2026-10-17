@@ -14,6 +14,9 @@ os.environ["NLP_MODE"] = "rules"
 os.environ["SECRET_KEY"] = "test-secret"
 os.environ["GOOGLE_CLIENT_ID"] = ""
 os.environ["ADMIN_EMAIL"] = ""
+os.environ["UPLOAD_DIR"] = str(_TMP / "uploads")
+os.environ["GMAIL_ADDRESS"] = ""
+os.environ["GMAIL_APP_PASSWORD"] = ""
 
 import pytest  # noqa: E402
 

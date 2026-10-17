@@ -23,6 +23,7 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', "Inter", "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
+        hand: ["Caveat", "cursive"],
       },
       keyframes: {
         shimmer: { "100%": { transform: "translateX(100%)" } },

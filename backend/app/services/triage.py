@@ -13,7 +13,7 @@ from app.config import (
     REPEAT_CONTACT_POINTS,
     settings,
 )
-from app.models import CallbackRequest, Customer, KbArticle, Message, Ticket, User
+from app.models import Attachment, CallbackRequest, Customer, Incident, KbArticle, Message, Ticket, User
 from app.nlp.analyzer import analyse
 from app.nlp.kb import get_kb
 from app.schemas import (
@@ -51,9 +51,10 @@ def wait_minutes(created_at: datetime, now: datetime) -> float:
 
 # ---------------------------------------------------------------- knowledge base
 def load_kb(db: Session) -> Any:
+    """Index of PUBLIC articles only: internal agent guides are never auto-answered to customers."""
     articles = [
         {"id": a.id, "title": a.title, "questions": a.questions, "answer": a.answer, "source": a.source}
-        for a in db.query(KbArticle).all()
+        for a in db.query(KbArticle).filter(KbArticle.visibility == "public").all()
     ]
     mode = settings.nlp_mode
     if mode == "hf":
@@ -113,11 +114,39 @@ def open_load(db: Session, agent_id: int) -> int:
 
 
 def pick_agent(db: Session, level: str) -> int | None:
-    """Least-loaded active agent at the level (playbook 10.3); None if nobody holds that role yet."""
-    pool = db.query(User).filter(User.role == level, User.active.is_(True)).all()
-    if not pool:
-        return None
-    return min(pool, key=lambda a: (open_load(db, a.id), a.id)).id
+    """Least-loaded *available* agent at the level with spare capacity (playbook 10.3).
+    None when nobody is free: the ticket waits in the level queue and is assigned by rebalance()."""
+    pool = db.query(User).filter(User.role == level, User.active.is_(True), User.availability == "available").all()
+    free = [(open_load(db, a.id), a.id) for a in pool]
+    free = [(load, aid) for load, aid in free if load < (db.get(User, aid).max_open or 0)]
+    return min(free)[1] if free else None
+
+
+def rebalance(db: Session, level: str) -> list[Ticket]:
+    """Give unassigned waiting tickets at `level` to agents who have capacity, highest priority first."""
+    assigned = []
+    waiting = (db.query(Ticket)
+               .filter(Ticket.route == level, Ticket.status == "queued", Ticket.assigned_agent_id.is_(None))
+               .order_by(Ticket.priority.desc(), Ticket.created_at.asc()).all())
+    for t in waiting:
+        agent = pick_agent(db, level)
+        if agent is None:
+            break
+        t.assigned_agent_id = agent
+        assigned.append(t)
+        db.flush()
+    return assigned
+
+
+def release_agent(db: Session, agent: User) -> list[Ticket]:
+    """Agent went busy/offline: hand their not-yet-started tickets to colleagues (or back to the queue)."""
+    moved = db.query(Ticket).filter(Ticket.assigned_agent_id == agent.id, Ticket.status == "queued").all()
+    for t in moved:
+        t.assigned_agent_id = None
+    db.flush()
+    if agent.role in LEVEL:
+        rebalance(db, agent.role)
+    return moved
 
 
 def _explanation(t: Ticket) -> dict:
@@ -157,6 +186,9 @@ def route_ticket(db: Session, t: Ticket, d: Decision, note: bool = True) -> str:
         t.assigned_agent_id = None
     if note and t.id and d.route != old and old in LEVEL:
         add_system_message(db, t, f"Moved to {level_name(d.route)}: {d.reason}")
+    if t.id and old in LEVEL and d.route != old:
+        db.flush()
+        rebalance(db, old)  # the previous level's agent has a free slot now
     return old
 
 
@@ -313,6 +345,8 @@ def agent_reply(db: Session, t: Ticket, user: User, body: str) -> Message:
     msg = Message(ticket_id=t.id, author_id=user.id, author_role=user.role, body=body)
     db.add(msg)
     t.updated_at = utcnow()
+    if t.first_response_at is None:
+        t.first_response_at = t.updated_at
     if t.status == "queued" and user.role in LEVEL:
         t.status = "in_progress"
         t.assigned_agent_id = user.id
@@ -320,6 +354,13 @@ def agent_reply(db: Session, t: Ticket, user: User, body: str) -> Message:
 
 
 # ---------------------------------------------------------------- output
+def _attachments(db: Session, ticket_id: int, message_id: int | None) -> list[dict]:
+    from app.services.files import attachment_out
+    q = db.query(Attachment).filter(Attachment.ticket_id == ticket_id)
+    q = q.filter(Attachment.message_id.is_(None)) if message_id is None else q.filter(Attachment.message_id == message_id)
+    return [attachment_out(a) for a in q.order_by(Attachment.id).all()]
+
+
 def _kb_out(db: Session, t: Ticket) -> tuple[KbOut, str | None]:
     show_kb = t.kb_action in ("suggest", "auto_reply") or t.route == "auto_kb"
     art = db.get(KbArticle, t.kb_article_id) if t.kb_article_id else None
@@ -391,6 +432,9 @@ def serialise(ticket: Ticket, db: Session) -> TicketOut:
         message_count=db.query(Message).filter(Message.ticket_id == ticket.id, Message.kind == "message").count(),
         open_callbacks=db.query(CallbackRequest).filter(CallbackRequest.ticket_id == ticket.id,
                                                         CallbackRequest.status != "done").count(),
+        attachments=_attachments(db, ticket.id, None),
+        incident=({"id": inc.id, "title": inc.title, "status": inc.status}
+                  if ticket.incident_id and (inc := db.get(Incident, ticket.incident_id)) else None),
     )
 
 
@@ -417,6 +461,7 @@ def serialise_for_customer(ticket: Ticket, db: Session) -> CustomerTicketOut:
         auto_reply=auto_reply,
         kb=kb,
         live_chat=ticket.route == "level3",
+        attachments=_attachments(db, ticket.id, None),
     )
 
 
@@ -436,4 +481,5 @@ def serialise_message(m: Message, db: Session, viewer: User) -> MessageOut:
         created_at=ensure_utc(m.created_at),
         frustration=m.frustration if viewer.role != "customer" else None,
         mine=m.author_id == viewer.id,
+        attachments=_attachments(db, m.ticket_id, m.id),
     )

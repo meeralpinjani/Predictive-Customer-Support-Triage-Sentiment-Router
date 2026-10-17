@@ -1,8 +1,18 @@
 from datetime import datetime
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Plan = Literal["free", "basic", "pro", "enterprise"]
+Availability = Literal["available", "busy", "offline"]
+
+
+def check_password(p: str) -> str:
+    """At least 8 characters with an uppercase letter, a lowercase letter and a number."""
+    if len(p) < 8 or not re.search(r"[A-Z]", p) or not re.search(r"[a-z]", p) or not re.search(r"[0-9]", p):
+        raise ValueError("Password needs at least 8 characters, an uppercase letter, a lowercase letter and a number")
+    return p
 Role = Literal["customer", "level1", "level2", "level3", "admin"]
 
 
@@ -13,10 +23,28 @@ class SignupIn(BaseModel):
     password: str = Field(..., min_length=8, max_length=200)
     plan: Plan = "free"
 
+    _pw = field_validator("password")(check_password)
+
 
 class LoginIn(BaseModel):
     email: str = Field(..., max_length=200)
     password: str = Field(..., max_length=200)
+    remember: bool = False
+
+
+class ForgotIn(BaseModel):
+    email: str = Field(..., min_length=3, max_length=200)
+
+
+class ResetIn(BaseModel):
+    token: str = Field(..., min_length=20, max_length=200)
+    password: str = Field(..., max_length=200)
+
+    _pw = field_validator("password")(check_password)
+
+
+class AvailabilityIn(BaseModel):
+    availability: Availability
 
 
 class GoogleIn(BaseModel):
@@ -45,12 +73,39 @@ class UserOut(BaseModel):
     customer: CustomerSummary | None = None
     active: bool = True
     created_at: datetime | None = None
+    availability: str = "available"
+    max_open: int = 8
 
 
 class AdminUserPatch(BaseModel):
     role: Role | None = None
     active: bool | None = None
     plan: Plan | None = None
+    availability: Availability | None = None
+    max_open: int | None = Field(None, ge=0, le=100)
+
+
+class KbArticleIn(BaseModel):
+    title: str = Field(..., min_length=3, max_length=160)
+    answer: str = Field(..., min_length=10, max_length=5000)
+    questions: list[str] = Field(default_factory=list, max_length=30)
+    source: str = Field("Help Center", max_length=120)
+    visibility: Literal["public", "internal"] = "public"
+    tags: list[str] = Field(default_factory=list, max_length=12)
+
+
+class IncidentIn(BaseModel):
+    ticket_ids: list[int] = Field(..., min_length=2, max_length=100)
+    title: str = Field(..., min_length=3, max_length=160)
+
+
+class IncidentMessageIn(BaseModel):
+    body: str = Field("", max_length=4000)
+
+
+class RetrainApplyIn(BaseModel):
+    level3_score: int = Field(..., ge=30, le=95)
+    frustration_senior: float = Field(..., ge=0.2, le=0.95)
 
 
 class AgentSummary(BaseModel):
@@ -120,6 +175,15 @@ class WhatIfIn(BaseModel):
     frustration_senior: float | None = Field(None, ge=0, le=1)
 
 
+class AttachmentOut(BaseModel):
+    id: int
+    filename: str
+    content_type: str
+    size: int
+    url: str
+    is_image: bool
+
+
 class MessageOut(BaseModel):
     id: int
     author_name: str
@@ -129,6 +193,7 @@ class MessageOut(BaseModel):
     created_at: datetime
     frustration: float | None = None
     mine: bool = False
+    attachments: list[AttachmentOut] = []
 
 
 class CallbackOut(BaseModel):
@@ -193,6 +258,8 @@ class TicketOut(BaseModel):
     assigned_agent: AgentSummary | None = None
     message_count: int = 0
     open_callbacks: int = 0
+    attachments: list[AttachmentOut] = []
+    incident: dict | None = None
 
 
 class CustomerTicketOut(BaseModel):
@@ -211,6 +278,7 @@ class CustomerTicketOut(BaseModel):
     auto_reply: str | None = None
     kb: KbOut
     live_chat: bool = False
+    attachments: list[AttachmentOut] = []
 
 
 class HealthOut(BaseModel):

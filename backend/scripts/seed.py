@@ -56,7 +56,7 @@ def seed_accounts(db) -> int:
     for acc in DEMO_ACCOUNTS:
         user = db.query(User).filter(User.email == acc["email"]).first()
         if user is None:
-            user = User(email=acc["email"], name=acc["name"], role=acc["role"],
+            user = User(email=acc["email"], name=acc["name"], role=acc["role"], max_open=12,
                         customer_id=acc.get("customer_id"), password_hash=hash_password(passwords[acc["email"]]))
             db.add(user)
     db.commit()
@@ -77,8 +77,14 @@ def seed_database(with_tickets: bool = True) -> dict[str, int]:
         db.commit()
 
         for a in json.loads((DATA_DIR / "kb_articles.json").read_text(encoding="utf-8")):
-            db.merge(KbArticle(id=a["id"], title=a["title"], questions=json.dumps(a["questions"]),
-                               answer=a["answer"], source=a.get("source", "Help Center")))
+            if db.get(KbArticle, a["id"]) is None:   # don't overwrite articles edited in the admin editor
+                db.add(KbArticle(id=a["id"], title=a["title"], questions=json.dumps(a["questions"]),
+                                 answer=a["answer"], source=a.get("source", "Help Center"), visibility="public"))
+        for g in json.loads((DATA_DIR / "kb_guides.json").read_text(encoding="utf-8")):
+            if db.get(KbArticle, g["id"]) is None:
+                db.add(KbArticle(id=g["id"], title=g["title"], questions=json.dumps(g["questions"]),
+                                 answer=g["answer"], source=g.get("source", "Internal guide"),
+                                 visibility="internal", tags=g.get("tags", "")))
         db.commit()
         reset_kb()  # rebuild the KB index from the fresh articles on next use
 

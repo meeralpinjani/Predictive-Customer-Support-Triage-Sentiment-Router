@@ -24,3 +24,7 @@ frontend/dist/
 
 # Generated demo-account passwords (per install, never committed)
 backend/demo_accounts.local.json
+
+# Uploaded attachments (private)
+backend/uploads/
+backend/data/router_tuning.json

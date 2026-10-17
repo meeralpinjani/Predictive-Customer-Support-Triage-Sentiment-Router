@@ -178,3 +178,20 @@ export function useTheme() {
   }, [theme]);
   return [theme, () => setTheme((t) => (t === "dark" ? "light" : "dark"))];
 }
+
+/** One consistent page header: back link, title with badges right beside it, subtitle, actions on the right. */
+export function PageHeader({ title, subtitle, badges, actions, back }) {
+  return (
+    <div className="lg:col-span-12 flex flex-wrap items-end justify-between gap-3 pt-1">
+      <div className="min-w-0">
+        {back}
+        <div className="flex flex-wrap items-center gap-2.5 mt-1">
+          <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+          {badges}
+        </div>
+        {subtitle && <p className="text-sm text-ink-3 mt-0.5">{subtitle}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </div>
+  );
+}
