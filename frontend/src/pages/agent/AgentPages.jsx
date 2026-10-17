@@ -1,0 +1,193 @@
+import { useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Activity, ArrowLeft, ArrowUpCircle, CheckCircle2, Hand, Loader2, Radio, UserRound } from "lucide-react";
+import { api } from "../../api.js";
+import { useAuth } from "../../lib/auth.jsx";
+import { useEventListener, useLiveData } from "../../lib/events.jsx";
+import { OPEN_STATUSES, SEGMENT_LABEL, STATUS_LABEL, isOpen, levelTitle, routeMeta, timeAgo } from "../../lib/meta.js";
+import QueueTile from "../../components/live/QueueTile.jsx";
+import TicketExplain from "../../components/TicketExplain.jsx";
+import { CallbackPanel, Conversation } from "../../components/Conversation.jsx";
+import { ErrorNote, RouteBadge, Skeleton, SkeletonLines, Tile, useToast } from "../../components/ui.jsx";
+
+const NEXT = { level1: "level2", level2: "level3" };
+
+async function loadAgentTickets() {
+  const [queue, mine, resolved] = await Promise.all([
+    api.tickets({ view: "queue" }), api.tickets({ view: "mine" }), api.tickets({ view: "resolved" }),
+  ]);
+  const byId = new Map();
+  [...queue, ...mine, ...resolved].forEach((t) => byId.set(t.id, t));
+  return [...byId.values()].sort((a, b) => b.priority - a.priority || new Date(a.created_at) - new Date(b.created_at));
+}
+
+export function AgentQueuePage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: tickets, error } = useLiveData(loadAgentTickets, {
+    match: (ev) => ev.ticket_id != null || ev.type === "queue.rescored",
+  });
+  const [feed, setFeed] = useState([]);
+
+  useEventListener((ev) => {
+    if (!ev.ticket_id || ev.type === "typing") return;
+    const text = {
+      "ticket.created": `New ticket #${ev.ticket_id}`,
+      "ticket.escalated": ev.route === user.role ? `#${ev.ticket_id} escalated in from ${routeMeta(ev.old_route).label}`
+        : `#${ev.ticket_id} moved up to ${routeMeta(ev.route).label}`,
+      "message.created": ev.author_role === "customer" ? `Customer replied on #${ev.ticket_id}` : null,
+      "callback.requested": `Call requested on #${ev.ticket_id}`,
+      "ticket.resolved": `#${ev.ticket_id} resolved`,
+    }[ev.type];
+    if (text) setFeed((f) => [{ id: `${Date.now()}-${Math.random()}`, text, at: new Date().toISOString(), tid: ev.ticket_id }, ...f].slice(0, 12));
+  });
+
+  const tabs = useMemo(() => [
+    { value: "queue", label: "Level queue", match: (t) => t.route === user.role && OPEN_STATUSES.includes(t.status) },
+    { value: "mine", label: "Assigned to me", match: (t) => t.assigned_agent?.id === user.id && OPEN_STATUSES.includes(t.status) },
+    { value: "resolved", label: "Resolved by me", match: (t) => t.status === "resolved" },
+  ], [user]);
+
+  const list = tickets ?? [];
+  const queue = list.filter((t) => t.route === user.role && isOpen(t));
+  const waiting = queue.filter((t) => t.status === "queued").length;
+  const mine = list.filter((t) => t.assigned_agent?.id === user.id && t.status === "in_progress").length;
+  const atRisk = queue.filter((t) => t.wait_minutes >= 0.75 * t.sla_minutes).length;
+  const m = routeMeta(user.role);
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-12 pt-2">
+      <Tile dark className="lg:col-span-8" eyebrow="Your queue" icon={Radio}>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm text-slate-400">{levelTitle(user.role)}</p>
+            {tickets ? <p className="text-6xl font-extrabold text-white num leading-none mt-1">{queue.length}</p>
+              : <Skeleton className="h-14 w-24 !bg-fjord-surface mt-1" />}
+            <p className="mt-2 text-sm text-slate-400">open tickets at your level</p>
+          </div>
+          <dl className="flex gap-6 text-right">
+            {[["waiting", waiting, "text-sky-300"], ["yours", mine, "text-teal-300"], ["near SLA", atRisk, "text-amber-300"]].map(([k, v, c]) => (
+              <div key={k}><dt className="text-xs text-slate-400">{k}</dt><dd className={`text-2xl font-bold num ${c}`}>{tickets ? v : "–"}</dd></div>
+            ))}
+          </dl>
+        </div>
+        <div className="mt-5 h-1.5 rounded-full" style={{ background: m.bar }} aria-hidden />
+      </Tile>
+      <Tile className="lg:col-span-4" eyebrow="Live activity" icon={Activity}>
+        {feed.length === 0 ? <p className="text-sm text-ink-3">Escalations, new tickets and replies appear here as they happen.</p> : (
+          <ul className="space-y-2 max-h-40 overflow-y-auto scroll-thin">
+            {feed.map((f) => (
+              <li key={f.id}><Link to={`/tickets/${f.tid}`} className="flex justify-between gap-2 text-sm hover:text-glacier-text">
+                <span>{f.text}</span><span className="text-[11px] text-ink-3 shrink-0">{timeAgo(f.at)}</span></Link></li>
+            ))}
+          </ul>
+        )}
+      </Tile>
+      {error && <div className="lg:col-span-12"><ErrorNote>{error}</ErrorNote></div>}
+      <QueueTile tickets={list} loading={!tickets} onSelect={(id) => navigate(`/tickets/${id}`)} tabs={tabs}
+                 title="Tickets" eyebrow={levelTitle(user.role)} className="lg:col-span-12" showRoute={false} />
+    </div>
+  );
+}
+
+export function StaffTicketPage() {
+  const { id } = useParams();
+  const ticketId = Number(id);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { data: t, error, reload } = useLiveData(() => api.ticket(ticketId), {
+    match: (ev) => ev.ticket_id === ticketId, deps: [ticketId],
+  });
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState("");
+  const admin = user.role === "admin";
+
+  const act = async (key, fn, msg, after) => {
+    setBusy(key);
+    try {
+      await fn();
+      toast(msg, "success");
+      if (after) after();
+      else await reload();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="pt-6 space-y-3">
+        <ErrorNote>{error.includes("not found") ? "This ticket is no longer at your level (it may have been escalated)." : error}</ErrorNote>
+        <Link to={admin ? "/admin" : "/queue"} className="btn-ghost">Back to queue</Link>
+      </div>
+    );
+  }
+  if (!t) return <div className="pt-6"><SkeletonLines rows={8} /></div>;
+
+  const atMyLevel = admin || t.route === user.role;
+  const open = isOpen(t);
+  const next = NEXT[t.route];
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-12 pt-2">
+      <div className="lg:col-span-12">
+        <Link to={admin ? "/admin" : "/queue"} className="text-sm text-ink-3 hover:text-ink inline-flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Back to queue</Link>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-extrabold tracking-tight">{t.subject || `Ticket #${t.id}`}</h1>
+          <RouteBadge route={t.route} />
+          <span className="chip bg-sunken text-ink-2">{STATUS_LABEL[t.status] ?? t.status}</span>
+        </div>
+        <p className="text-sm text-ink-3">
+          #{t.id} · {t.category_label} · {t.customer ? `${t.customer.name} (${SEGMENT_LABEL[t.customer.segment] ?? t.customer.segment})` : "Unknown customer"} · opened {timeAgo(t.created_at)}
+        </p>
+      </div>
+
+      <Conversation ticketId={t.id} className="lg:col-span-8" live={t.route === "level3" && open}
+                    canReply={atMyLevel || t.assigned_agent?.id === user.id}
+                    placeholder={t.route === "level3" ? "Chat live with the customer…" : "Reply to the customer…"} />
+
+      <div className="lg:col-span-4 grid gap-4 content-start">
+        <Tile eyebrow="Actions" icon={Hand}>
+          <p className="text-sm text-ink-2 flex items-center gap-1.5">
+            <UserRound className="w-4 h-4" aria-hidden />
+            {t.assigned_agent ? <>Assigned to <b>{t.assigned_agent.id === user.id ? "you" : t.assigned_agent.name}</b></> : "Unassigned"}
+          </p>
+          {!atMyLevel && <p className="mt-2 text-xs text-ink-3">This ticket has moved to {t.level_name}.</p>}
+          {atMyLevel && open && (
+            <div className="mt-3 space-y-3">
+              {!admin && t.status === "queued" && (
+                <button className="btn-primary w-full" disabled={!!busy} onClick={() => act("claim", () => api.claim(t.id), "You're on it")}>
+                  {busy === "claim" && <Loader2 className="w-4 h-4 animate-spin" />}<Hand className="w-4 h-4" />Claim ticket
+                </button>
+              )}
+              {next && (
+                <form className="space-y-2" onSubmit={(e) => {
+                  e.preventDefault();
+                  act("esc", () => api.escalate(t.id, reason.trim()), `Escalated to ${levelTitle(next)}`,
+                      admin ? () => { setReason(""); reload(); } : () => navigate("/queue"));
+                }}>
+                  <textarea className="field min-h-[64px]" placeholder={`Why does this need ${routeMeta(next).name}?`} value={reason}
+                            onChange={(e) => setReason(e.target.value)} aria-label="Escalation reason" />
+                  <button className="btn-ghost w-full" disabled={!!busy || reason.trim().length < 3}>
+                    {busy === "esc" ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowUpCircle className="w-4 h-4" />}
+                    Escalate to {routeMeta(next).label}
+                  </button>
+                </form>
+              )}
+              <button className="btn-ghost w-full" disabled={!!busy} onClick={() => act("resolve", () => api.resolve(t.id), `Ticket #${t.id} resolved`)}>
+                {busy === "resolve" ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}Resolve
+              </button>
+            </div>
+          )}
+          {!open && <p className="mt-2 text-xs text-ink-3">{STATUS_LABEL[t.status]}.</p>}
+        </Tile>
+        {t.route === "level3" && <CallbackPanel ticketId={t.id} mode="agent" />}
+      </div>
+
+      <TicketExplain ticket={t} onChanged={reload} admin={admin} className="lg:col-span-12" />
+    </div>
+  );
+}

@@ -27,7 +27,7 @@ def test_paraphrase_matches_through_single_questions():
 
 def test_api_kb_suggestion(client):
     data = client.post("/api/tickets", json={
-        "customer_id": "c9", "subject": "Need my past invoice",
+        "customer_id": "c9", "category": "billing", "subject": "Need my past invoice",
         "body": "Where do I find my past receipts and tax invoices?",
     }).json()
     assert data["kb"]["confidence"] >= SUGGEST
@@ -38,7 +38,7 @@ def test_api_kb_suggestion(client):
 
 def test_api_kb_abstention_below_threshold(client):
     data = client.post("/api/tickets", json={
-        "customer_id": "c11", "subject": "Question about office cafeteria",
+        "customer_id": "c11", "category": "howto", "subject": "Question about office cafeteria",
         "body": "Is the company cafeteria serving vegan pizza on Thursdays?",
     }).json()
     assert data["kb"]["confidence"] < SUGGEST
@@ -48,7 +48,7 @@ def test_api_kb_abstention_below_threshold(client):
 
 def test_api_kb_auto_reply_flow(client):
     data = client.post("/api/tickets", json={
-        "customer_id": "c9", "subject": "Resetting Your Account Password",
+        "customer_id": "c9", "category": "account", "subject": "Resetting Your Account Password",
         "body": "How do I reset my password? Forgot my password what should I do?",
     }).json()
     assert data["kb"]["confidence"] >= AUTO
@@ -59,7 +59,7 @@ def test_api_kb_auto_reply_flow(client):
 
 def test_frustrated_customer_is_not_auto_answered(client):
     data = client.post("/api/tickets", json={
-        "customer_id": "c9",
+        "customer_id": "c9", "category": "account",
         "body": "How do I reset my password?? This is RIDICULOUS, third time asking, I am furious!!!",
     }).json()
     assert data["route"] != "auto_kb"

@@ -45,13 +45,13 @@ export function FormulaTile({ config }) {
   const w = config.weights;
   const shades = ["rgb(var(--glacier))", "rgb(var(--glacier) / .7)", "rgb(var(--glacier) / .45)", "rgb(var(--glacier) / .25)"];
   const ladder = [
-    { cond: "Critical flag: security, legal, safety or outage (negation-aware)", route: "senior" },
-    { cond: `Confident KB match ≥ ${config.kb_auto_threshold}, routine question, calm, score < ${config.tier2_score}`, route: "auto_kb" },
-    { cond: `Frustration ≥ ${config.frustration_senior.toFixed(2)}`, route: "senior" },
-    { cond: `High-value customer (value ≥ ${config.vip_value}) and score ≥ ${config.vip_score}`, route: "senior" },
-    { cond: `Score ≥ ${config.senior_score}`, route: "senior" },
-    { cond: `Score ≥ ${config.tier2_score}, or a billing / login / technical / cancellation problem`, route: "tier2" },
-    { cond: "Everything else", route: "tier1" },
+    { cond: "Critical flag: security, legal, safety or outage (negation-aware)", route: "level3" },
+    { cond: `Confident KB match ≥ ${config.kb_auto_threshold}, routine question, calm, score < ${config.auto_max_score}`, route: "auto_kb" },
+    { cond: `Frustration ≥ ${config.frustration_senior.toFixed(2)}`, route: "level3" },
+    { cond: `High-value customer (value ≥ ${config.vip_value}) and score ≥ ${config.vip_score}`, route: "level3" },
+    { cond: `Score ≥ ${config.level3_score}`, route: "level3" },
+    { cond: "Technical problem detected, or a technical category", route: "level2" },
+    { cond: "Everything else (general categories)", route: "level1" },
   ];
   return (
     <Tile eyebrow="How scoring works · playbook 9 & 10" title="One transparent score, one routing ladder" icon={Sigma} className="lg:col-span-8">

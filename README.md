@@ -2,7 +2,35 @@
 
 **Team AlgoAmigos · HelloWorld KIT '26**
 
-Support queues answer tickets first come, first served, so a furious enterprise customer whose production is down waits behind someone asking how to download an invoice. This system reads every ticket, measures **frustration**, **urgency** and **customer value**, merges them into **one explainable 0-100 priority score**, and routes the ticket: an instant knowledge-base answer, Tier 1, a Tier 2 specialist, or a senior agent. Waiting time raises priority, so nobody is left behind.
+Support queues answer tickets first come, first served, so a furious enterprise customer whose production is down waits behind someone asking how to download an invoice. This system reads every ticket, measures **frustration**, **urgency** and **customer value**, merges them into **one explainable 0-100 priority score**, and routes the ticket: an instant knowledge-base answer, **Level 1 · General Support**, **Level 2 · Technical Support**, or **Level 3 · Expert Escalation** with live chat and callbacks. Tickets escalate in real time, and waiting time raises priority, so nobody is left behind.
+
+## Roles and views
+
+| Role | Gets the role by | Sees |
+|---|---|---|
+| **Customer** | Signing up (email + password, or Google) and choosing a plan | My tickets · New ticket (pick a category) · ticket page with conversation, instant answers, "Did this help?", and callback requests at Level 3 |
+| **Level 1 · General Support** | An admin assigns it | Queue of Level 1 tickets · claim, reply, escalate, resolve |
+| **Level 2 · Technical Support** | An admin assigns it | Same for Level 2 |
+| **Level 3 · Expert Escalation** | An admin assigns it | Same for Level 3, plus live chat and callback scheduling |
+| **Admin** | `ADMIN_EMAIL` in `.env`, or promoted by an admin | Overview of all queues · Insights (evidence) · Users & roles · Tuning (what-if) · Knowledge base |
+
+- **Categories:** customers pick a category. *General* categories (account, billing, plans, how-to, feedback) start at Level 1; *technical* ones (bug, outage, integrations, data, performance) start at Level 2.
+- **Escalation rule:** the AI can only move a ticket **up**, never below its category. Level 3 can't be chosen; it's reached only by escalation:
+  - critical issues (security, legal, safety, outage);
+  - high frustration;
+  - high-value accounts;
+  - a high score;
+  - SLA ageing;
+  - "the answer didn't help";
+  - an angrier customer reply;
+  - an agent clicking **Escalate**.
+- **Real time:** every change streams live (server-sent events). The receiving level gets a toast, a chime and a bell notification, and the customer sees their ticket move.
+
+**Security:**
+- Passwords are hashed with scrypt.
+- Sessions are signed HttpOnly cookies.
+- Failed logins are throttled.
+- Every API endpoint checks the role: customers only ever see their own tickets and never see internal scores; agents only act on their level.
 
 ## Results (held-out test set, `python -m eval.run_all`)
 
@@ -14,16 +42,16 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 | Critical-issue recall (security, legal, safety, outage) | n/a | **1.00** | 1.00 |
 | KB auto-answer accuracy | ≥ 0.90 | **0.96** | 1.00 |
 | Safe auto-answers (routine and not angry) | n/a | **0.95** | 0.94 |
-| Latency per ticket | < 2 s | **151 ms** | 3 ms |
+| Latency per ticket | < 2 s | **~150-200 ms** | 4 ms |
 
 **A busy simulated day** (120 tickets, 3 agents, demand ≈ 129% of capacity, per-customer SLAs):
 
 | | FCFS | Router | Change |
 |---|---|---|---|
-| Urgent tickets, avg wait | 62.5 min | **32.3 min** | −48% |
-| High-value customers, avg wait | 55.3 min | **16.7 min** | −70% |
-| SLA breaches | 11 | **3** | −73% |
-| Low-priority tickets, avg wait | 63.8 min | 92.6 min | +45% (within SLA) |
+| Urgent tickets, avg wait | 62.5 min | **35.5 min** | −43% |
+| High-value customers, avg wait | 55.3 min | **16.9 min** | −69% |
+| SLA breaches | 11 | **5** | −55% |
+| Low-priority tickets, avg wait | 63.8 min | 89.3 min | +40% (within SLA) |
 | Tickets needing a human | 100% | **86%** | −14% deflected |
 
 The ablation (Insights tab) shows why every signal is needed: sorting by urgency alone is fastest for urgent tickets but starves high-value accounts and breaks SLAs. The full router gives up some urgent speed to keep breaches lowest. Trade-off stated honestly: urgent tickets from free-tier customers (8 h SLA) can wait longer than under FCFS, but within their SLA.
@@ -38,9 +66,11 @@ The ablation (Insights tab) shows why every signal is needed: sorting by urgency
                                · MiniLM knowledge-base retrieval            │
                                                                             ▼
            customers (mock CRM) ──► value model ──► priority engine ──► router ──► queues + agent
-                                   plan·LTV·churn·renewal   0-100 + reasons    auto KB / T1 / T2 / Senior
+                                   plan·LTV·churn·renewal   0-100 + reasons    auto KB / L1 / L2 / L3
                                                                             ▲
                                     background re-scorer (every 30 s): ageing + SLA-risk ramp
+                                                                            │
+                         live events (SSE) ──► customer · Level 1-3 agents · admin dashboards
 ```
 
 **Priority** (playbook 9.1) = 100 × (0.30 frustration + 0.30 urgency + 0.25 value + 0.15 wait/SLA), plus rule boosts (playbook 9.4):
@@ -48,14 +78,16 @@ The ablation (Insights tab) shows why every signal is needed: sorting by urgency
 - **+10** when renewal is under 14 days and the tone is negative.
 - **Up to +50** from 75% of the SLA onward, applied to queue order only, so tickets are served before they breach.
 
-**Routing ladder** (playbook 10.1):
-1. Critical flag → Senior (legal also notifies a manager).
+**Routing ladder** (playbook 10.1, adapted to three levels):
+1. Critical flag → Level 3 (legal also notifies a manager).
 2. Confident KB match on a calm, routine question → auto-answer.
-3. High frustration → Senior.
-4. High-value customer with score ≥ 50 → Senior.
-5. Score ≥ 65 → Senior.
-6. Score ≥ 40, or a billing / login / technical / cancellation problem → Tier 2 specialist.
-7. Anything else → Tier 1.
+3. High frustration → Level 3.
+4. High-value customer with score ≥ 50 → Level 3.
+5. Score ≥ 65 → Level 3.
+6. Technical problem detected, or a technical category → Level 2.
+7. Anything else (general categories) → Level 1.
+
+Afterwards a ticket only moves **up**: through ageing, customer replies, "didn't help" feedback, or an agent's **Escalate**.
 
 **Frustration** combines four interpretable signals: negative tone, anger and sarcasm, shouting, and churn threats. A logistic regression fitted on the training split weights them (playbook 9.5), and the "high frustration" cut-off is picked by cross-validation to favour recall. If the models are missing, slow (> 3 s) or still loading, every request falls back to the rules engine automatically.
 
@@ -76,32 +108,50 @@ python -m venv .venv && .venv/Scripts/activate          # macOS/Linux: source .v
 pip install -r requirements-dev.txt
 pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cpu
 cp .env.example .env
-python -m scripts.reset_demo        # fresh demo database (22 realistic tickets)
+python -m scripts.reset_demo        # fresh demo database (23 realistic tickets + demo accounts)
 uvicorn app.main:app --port 8000
 
 cd ../frontend && npm ci && npm run dev    # http://localhost:5173
 ```
 Without the ML packages, set `NLP_MODE=rules` in `.env`; everything still works.
 
+**Accounts:**
+- `reset_demo` and `seed` create one admin, one agent per level and four customers (`*@triage.demo`).
+- Each install gets **random passwords**, saved in `backend/demo_accounts.local.json`. That file is git-ignored, so passwords never reach GitHub.
+- Anyone else can sign up as a customer; an admin then promotes agents under **Users & roles**.
+- For anything public, set `SEED_DEMO_ACCOUNTS=false` and a strong `SECRET_KEY`.
+
+**Google sign-in (optional, about 5 minutes):**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) → create (or pick) a project.
+2. Open **APIs & Services → OAuth consent screen**: choose *External* and fill in the app name and your email. While testing, add yourself under *Test users*.
+3. Open **Credentials → Create credentials → OAuth client ID**:
+   - Type: *Web application*.
+   - Authorised JavaScript origins: `http://localhost:5173` (plus your deployed URL, if any).
+4. Copy the **Client ID** into `backend/.env` as `GOOGLE_CLIENT_ID=...` and restart the backend.
+
+The "Continue with Google" button appears on the login and sign-up pages. New Google users choose their plan once. A Client ID is not secret, but don't commit `.env` anyway; it also holds `SECRET_KEY`.
+
 **Tests and evaluation:**
 ```bash
 cd backend
-pytest                        # 74 tests, isolated temp database (never touches triage.db)
+pytest                        # 94 tests, isolated temp database (never touches triage.db)
 python -m eval.run_all        # refit, re-tune, re-evaluate, write eval/report.json
 ```
 
 ## Demo script (4 minutes, playbook 15.1)
 
+Use two browser windows, one normal and one private, so two people are signed in at once: the customer, and the agent or admin.
+
 | Time | Do | Say |
 |---|---|---|
-| 0:00 | Live tab, flip the queue to **Before · FCFS** | "This angry enterprise customer is #15 in line behind password resets." |
-| 0:30 | Flip to **After · Priority**, click **Outage**, then **Score & route** | "Frustration, urgency and value become one score; straight to a senior agent." |
-| 1:15 | Open the ticket | "Every point is explained: signals, rule boosts, how the AI read the tone, who it went to." |
-| 1:45 | Click **Password**, then submit | "Routine questions never reach an agent: 96% of auto-answers were correct on unseen questions." |
-| 2:15 | **Hinglish**, then **Sarcasm**, then **Not hacked** | "Hinglish works, sarcasm is caught, and 'we were not hacked' does not trigger a security escalation." |
-| 2:45 | Drag the what-if sliders | "Change the weights and watch the queue re-rank live. Nothing is saved." |
-| 3:15 | Insights tab | "On a busy day, urgent waits fell 48%, high-value 70%, SLA breaches 11 → 3. The ablation shows why every signal matters." |
-| 3:45 | Close | "Faster help for the customers who need it most, at lower cost." |
+| 0:00 | **Admin → Overview**, flip the queue to **Before · FCFS** | "This angry enterprise customer is #15 in line behind password resets." |
+| 0:30 | Flip to **After · Priority**; submit the **Outage** example | "Frustration, urgency and value become one score: straight to Level 3 experts." |
+| 1:00 | Customer window: **New ticket → How-to**, "How do I reset my password?" | "Routine questions get an instant answer: 96% correct on unseen questions." |
+| 1:30 | Customer: new **How-to** ticket, then reply angrily in the chat | Show the toast, the chime in the Level 3 window, and the ticket jumping from Level 1 to Level 3 live. |
+| 2:15 | Level 3 window: open it, reply in **live chat**; the customer requests a **call**; mark it scheduled | "Experts can talk to the customer in real time." |
+| 2:45 | Admin → **Tuning**: drag the sliders | "Change the weights and watch the queue re-rank live. Nothing is saved." |
+| 3:15 | Admin → **Insights** | "On a busy day: urgent waits −43%, high-value −69%, SLA breaches 11 → 5. The ablation shows why every signal matters." |
+| 3:45 | Close | "The right person, for the right ticket, right now." |
 
 Before demo day:
 - Run `.\start-demo.ps1 -Reset` so wait times look realistic.
@@ -109,26 +159,35 @@ Before demo day:
 
 ## API
 
-| Method | Path | Purpose |
-|---|---|---|
-| POST | `/api/tickets` | Submit and score a ticket |
-| GET | `/api/tickets?route=&status=&sort=priority\|fcfs` | Queue (read-only) |
-| GET | `/api/tickets/{id}` | Ticket with full explanation |
-| POST | `/api/tickets/{id}/override` | Agent changes route and/or priority (locks it, logged as feedback) |
-| POST | `/api/tickets/{id}/resolve` | Resolve (one-way) |
-| POST | `/api/tickets/{id}/feedback` | KB helped / didn't help (didn't help → re-scored and escalated) |
-| GET | `/api/stats` | Counts, waits, deflection, override and acceptance rates |
-| POST | `/api/whatif` | Preview re-ranking under other weights or thresholds |
-| GET | `/api/eval` · `/api/config` · `/api/health` | Evaluation report, live configuration, model status |
+| Method | Path | Who | Purpose |
+|---|---|---|---|
+| POST | `/api/auth/signup` · `/login` · `/google` · `/logout` | anyone | Accounts (session cookie) |
+| GET/PATCH | `/api/auth/me` | signed in | Current user; customers can change plan |
+| GET/PATCH | `/api/admin/users[/{id}]` | admin | Roles, plans, enable/disable |
+| GET | `/api/categories` | anyone | Ticket categories and their starting level |
+| POST | `/api/tickets` | customer, admin | Submit and score a ticket |
+| GET | `/api/my/tickets[/{id}]` | customer | Own tickets (no internal scores) |
+| GET | `/api/tickets?view=queue\|mine\|resolved` | agents, admin | Level queue / assigned / resolved (admin: all) |
+| GET | `/api/tickets/{id}` | agents, admin | Ticket with full explanation |
+| POST | `/api/tickets/{id}/claim` · `/escalate` · `/resolve` | agents (own level), admin | Work the ticket |
+| POST | `/api/tickets/{id}/override` | admin | Change level and/or priority (locks it) |
+| GET/POST | `/api/tickets/{id}/messages` · `/typing` | ticket participants | Conversation / live chat |
+| GET/POST/PATCH | `/api/tickets/{id}/callbacks` | customer (request), Level 3 (manage) | Callback requests |
+| POST | `/api/tickets/{id}/feedback` | customer | Auto-answer helped / didn't help |
+| GET | `/api/events` | signed in | Live events (server-sent events), filtered per role |
+| GET | `/api/stats` · `/config` | staff | Queue metrics, live configuration |
+| GET/POST | `/api/eval` · `/whatif` · `/admin/rescore` | admin | Evaluation report, what-if preview, re-score |
 
 ## Project layout
 
 ```
 backend/app/nlp/        rules.py (flags, intent, signals) · hf.py (models) · analyzer.py · kb.py · frustration_model.py
+backend/app/            auth.py (passwords, sessions, roles) · events.py (live events) · categories.py
 backend/app/services/   value.py · priority.py · router.py · triage.py · rescore.py
 backend/eval/           train_frustration · evaluate_nlp · evaluate_kb · simulate (+ablation) · run_all → report.json
 backend/data/           customers.json (20) · kb_articles.json (26) · tickets_labelled.csv (384) · kb_eval.csv · tickets_seed.csv
-frontend/src/           React + Tailwind, Nordic bento dashboard (Live + Insights tabs, light/dark)
+frontend/src/pages/     auth · customer · agent · admin pages (React Router)
+frontend/src/           components (Nordic bento tiles, live chat, queue), lib (auth, live events), light/dark
 ```
 
 ## Honest limitations
@@ -136,7 +195,12 @@ frontend/src/           React + Tailwind, Nordic bento dashboard (Live + Insight
   - The test split holds out whole templates and tone phrases, but real tickets would need re-tuning (playbook 16).
   - On this data the transformer models mainly improve **urgency** (F1 0.78 → 0.84) and KB coverage (auto-answers 44% → 78% of routine questions). Frustration is driven mostly by the anger and sarcasm cues, which the fitted weights show openly.
 - **Customer value uses mock CRM data.**
-- **Out of scope:** authentication, real CRM integration and production scaling (playbook "will not do"; see roadmap).
+- **Accounts are hackathon-grade:**
+  - **In place:** hashed passwords, signed HttpOnly cookies, failed-login throttling and role checks.
+  - **Still missing:** email verification, password reset, multi-factor authentication and audit logging.
+- **Live chat and events run in one API process.** Several API servers would need a shared message bus such as Redis.
+- **Calls are callback requests, not in-browser voice.**
+- **Out of scope:** real CRM integration and production scaling (playbook "will not do"; see roadmap).
 
 ## Roadmap
 - **Next 2 weeks:**

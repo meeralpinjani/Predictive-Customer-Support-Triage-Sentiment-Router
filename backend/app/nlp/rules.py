@@ -108,6 +108,8 @@ INTENTS: list[tuple[str, str, float, bool, str]] = [
     ("invoice", r"invoice|receipt|billing history|tax (details|invoice)|\bgst\b|billing address", 0.10, True, "billing"),
     ("bug", r"\bbug\b|\berrors?\b|crash|not working|doesn'?t work|nothing works|broken|stopped working|"
             r"fails? to|glitch|won'?t load|not loading|freez|nahi chal|kaam nahi|nahi ho raha", 0.45, False, "technical"),
+    ("performance", r"\b(very |so |really |extremely )?slow\b|slowness|takes (forever|ages|minutes)|\blag(gy|ging)?\b|"
+                    r"latency|time[sd]? ?out|loading forever|keeps loading", 0.40, False, "technical"),
     ("complaint", r"nobody (has )?(answered|replied|replies|responds|responded|helped)|no ?(one|body) (has )?(answered|replied|responded)|"
                   r"waiting for (days|weeks|a week|\d+ (days|hours))|terrible service|worst (service|support)|"
                   r"(third|3rd|fourth|fifth) time|how many times|still (no|waiting|not)", 0.35, False, "general"),

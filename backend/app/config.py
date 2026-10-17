@@ -11,15 +11,22 @@ class Settings(BaseSettings):
     kb_auto_threshold: float = 0.66
     kb_suggest_threshold_hf: float = 0.46   # MiniLM (hf mode)
     kb_auto_threshold_hf: float = 0.69
-    senior_score: int = 65
-    tier2_score: int = 40
+    level3_score: int = 65                  # score that escalates to Level 3 (Expert Escalation)
     frustration_senior: float | None = None  # None = threshold fitted by eval/train_frustration.py
     vip_value: float = 0.70                 # "high-value customer" escalation (playbook 10.1)
     vip_score: int = 50
     min_auto_confidence: float = 0.50       # never auto-answer below this NLP confidence
+    auto_max_score: int = 40                # auto-answer only below this score
     rescore_interval_sec: int = 30
     hf_timeout_sec: float = 3.0
     cors_origins: str = "http://localhost:5173"
+    # Accounts
+    secret_key: str = ""                    # signs session cookies; generated per run if empty
+    session_days: int = 7
+    cookie_secure: bool = False             # set true behind HTTPS
+    google_client_id: str = ""              # enables "Sign in with Google" when set
+    admin_email: str = ""                   # this address becomes admin on sign-up / login
+    seed_demo_accounts: bool = True         # predefined accounts from data/demo_accounts.json
 
     def kb_thresholds(self, mode: str | None = None) -> tuple[float, float]:
         if (mode or self.nlp_mode) == "hf":
@@ -59,6 +66,14 @@ PLAN_VALUE: dict[str, float] = {
 }
 VALUE_WEIGHTS: dict[str, float] = {"plan": 0.40, "ltv": 0.30, "churn": 0.20, "renewal": 0.10}
 LTV_CAP: float = 50_000.0
+
+# CRM defaults for customers who sign up themselves (plan chosen at sign-up).
+PLAN_DEFAULTS: dict[str, dict] = {
+    "free": {"plan": "Free", "sla_minutes": 480, "renewal_days": None, "ltv": 0.0},
+    "basic": {"plan": "Basic", "sla_minutes": 240, "renewal_days": 365, "ltv": 1200.0},
+    "pro": {"plan": "Pro", "sla_minutes": 120, "renewal_days": 365, "ltv": 6000.0},
+    "enterprise": {"plan": "Enterprise", "sla_minutes": 60, "renewal_days": 365, "ltv": 50000.0},
+}
 
 UNKNOWN_VALUE: float = 0.3
 DEFAULT_SLA_MIN: int = 240

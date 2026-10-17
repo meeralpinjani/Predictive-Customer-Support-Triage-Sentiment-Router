@@ -4,11 +4,11 @@ import { AlertTriangle, ArrowDown, ArrowUp, Inbox, ListOrdered } from "lucide-re
 import { OPEN_STATUSES, SEGMENT_LABEL, fmtWait, routeMeta } from "../../lib/meta.js";
 import { Empty, RouteBadge, Segmented, Skeleton, Tile } from "../ui.jsx";
 
-const TABS = [
+export const ADMIN_TABS = [
   { value: "open", label: "All open", match: (t) => OPEN_STATUSES.includes(t.status) },
-  { value: "senior", label: "Senior", match: (t) => OPEN_STATUSES.includes(t.status) && t.route === "senior" },
-  { value: "tier2", label: "Tier 2", match: (t) => OPEN_STATUSES.includes(t.status) && t.route === "tier2" },
-  { value: "tier1", label: "Tier 1", match: (t) => OPEN_STATUSES.includes(t.status) && t.route === "tier1" },
+  { value: "level3", label: "Level 3", match: (t) => OPEN_STATUSES.includes(t.status) && t.route === "level3" },
+  { value: "level2", label: "Level 2", match: (t) => OPEN_STATUSES.includes(t.status) && t.route === "level2" },
+  { value: "level1", label: "Level 1", match: (t) => OPEN_STATUSES.includes(t.status) && t.route === "level1" },
   { value: "auto", label: "Auto-answered", match: (t) => t.route === "auto_kb" },
   { value: "resolved", label: "Resolved", match: (t) => t.status === "resolved" },
 ];
@@ -25,13 +25,16 @@ function SlaBar({ wait, sla }) {
   );
 }
 
-export default function QueueTile({ tickets, loading, selectedId, onSelect, preview }) {
-  const [tab, setTab] = useState("open");
+export default function QueueTile({
+  tickets, loading, selectedId, onSelect, preview, tabs = ADMIN_TABS, title = "Live queue", eyebrow = "Agent view",
+  className = "lg:col-span-8", showRoute = true,
+}) {
+  const [tab, setTab] = useState(tabs[0].value);
   const [order, setOrder] = useState("priority");
   const refs = useRef(new Map());
 
   const { rows, arrival } = useMemo(() => {
-    const match = TABS.find((t) => t.value === tab).match;
+    const match = (tabs.find((t) => t.value === tab) ?? tabs[0]).match;
     const filtered = tickets.filter(match);
     const arrivalOrder = [...filtered].sort(byArrival);
     const arrival = new Map(arrivalOrder.map((t, i) => [t.id, i + 1]));
@@ -40,9 +43,9 @@ export default function QueueTile({ tickets, loading, selectedId, onSelect, prev
       rows = [...filtered].sort((a, b) => (preview.get(a.id)?.position ?? 1e9) - (preview.get(b.id)?.position ?? 1e9));
     }
     return { rows, arrival };
-  }, [tickets, tab, order, preview]);
+  }, [tickets, tab, order, preview, tabs]);
 
-  const counts = TABS.map((t) => ({ value: t.value, label: t.label, count: tickets.filter(t.match).length }));
+  const counts = tabs.map((t) => ({ value: t.value, label: t.label, count: tickets.filter(t.match).length }));
 
   const onKeyDown = (e) => {
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key) || rows.length === 0) return;
@@ -56,10 +59,10 @@ export default function QueueTile({ tickets, loading, selectedId, onSelect, prev
 
   return (
     <Tile
-      eyebrow="Agent view"
-      title={preview ? "Live queue · what-if preview" : "Live queue"}
+      eyebrow={eyebrow}
+      title={preview ? `${title} · what-if preview` : title}
       icon={ListOrdered}
-      className="lg:col-span-8"
+      className={className}
       action={
         <Segmented
           label="Queue order"
@@ -112,7 +115,10 @@ export default function QueueTile({ tickets, loading, selectedId, onSelect, prev
                   <div className="flex items-center gap-x-2 gap-y-1 flex-wrap">
                     <span className="font-semibold text-sm">{t.customer?.name ?? "Unknown customer"}</span>
                     {t.customer && <span className="text-[11px] text-ink-3">{SEGMENT_LABEL[t.customer.segment] ?? t.customer.segment}</span>}
-                    <RouteBadge route={t.route} />
+                    {showRoute && <RouteBadge route={t.route} />}
+                    {t.status === "in_progress" && <span className="chip bg-glacier-soft text-glacier-text">{t.assigned_agent ? t.assigned_agent.name.split(" ")[0] : "in progress"}</span>}
+                    {t.message_count > 0 && <span className="chip bg-sunken text-ink-2">{t.message_count} msg</span>}
+                    {t.open_callbacks > 0 && <span className="chip bg-senior-soft text-senior-text">call requested</span>}
                     {previewRoute && (
                       <span className="chip bg-sunken text-ink-2">→ <RouteBadge route={previewRoute} className="!px-1.5" /></span>
                     )}
@@ -125,6 +131,7 @@ export default function QueueTile({ tickets, loading, selectedId, onSelect, prev
                     {t.analysis.language === "hi-en" && <span className="chip bg-sunken text-ink-2">Hinglish</span>}
                   </div>
                   <p className="mt-0.5 text-sm text-ink-2 line-clamp-2 break-words">{t.subject ? `${t.subject} · ${t.body}` : t.body}</p>
+                  <p className="text-[11px] text-ink-3">{t.category_label}</p>
                   {t.reasons.length > 0 && <p className="mt-0.5 text-xs text-ink-3 line-clamp-1">Why: {t.reasons.join(" · ")}</p>}
                   <p className="sm:hidden mt-1 text-[11px] text-ink-3 num">
                     Waiting {fmtWait(t.wait_minutes)} · arrived #{arrival.get(t.id)}, shown #{i + 1}

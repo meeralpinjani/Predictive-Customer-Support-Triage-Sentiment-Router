@@ -19,4 +19,4 @@ ENV HF_HUB_OFFLINE=1
 
 EXPOSE 8000
 # Seed is idempotent: first start creates the demo data, later starts keep it.
-CMD ["sh", "-c", "python -m scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "python -m scripts.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers"]

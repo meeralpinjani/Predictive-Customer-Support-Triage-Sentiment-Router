@@ -21,8 +21,7 @@ function Slider({ label, value, min, max, step, onChange, display }) {
 export default function WhatIfTile({ config, onPreview, ticketsVersion }) {
   const defaults = config && {
     weights: config.weights,
-    senior_score: config.senior_score,
-    tier2_score: config.tier2_score,
+    level3_score: config.level3_score,
     frustration_senior: Number(config.frustration_senior.toFixed(2)),
   };
   const [state, setState] = useState(null);
@@ -83,11 +82,9 @@ export default function WhatIfTile({ config, onPreview, ticketsVersion }) {
                   display={`${Math.round((state.weights[k] / total) * 100)}%`} onChange={(v) => setWeight(k, v)} />
         ))}
         <div className="border-t border-line pt-3 space-y-3">
-          <Slider label="Senior from score" value={state.senior_score} min={30} max={95} step={1}
-                  onChange={(v) => setState((s) => ({ ...s, senior_score: v }))} />
-          <Slider label="Tier 2 from score" value={state.tier2_score} min={10} max={80} step={1}
-                  onChange={(v) => setState((s) => ({ ...s, tier2_score: v }))} />
-          <Slider label="Frustration → Senior" value={state.frustration_senior} min={0.2} max={0.95} step={0.01}
+          <Slider label="Level 3 from score" value={state.level3_score} min={30} max={95} step={1}
+                  onChange={(v) => setState((s) => ({ ...s, level3_score: v }))} />
+          <Slider label="Frustration → Level 3" value={state.frustration_senior} min={0.2} max={0.95} step={0.01}
                   onChange={(v) => setState((s) => ({ ...s, frustration_senior: v }))} />
         </div>
       </div>

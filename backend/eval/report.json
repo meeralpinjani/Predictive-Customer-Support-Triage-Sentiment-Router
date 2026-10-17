@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T10:55:07+00:00",
+  "generated_at": "2026-10-17T14:18:39+00:00",
   "primary_mode": "hf",
   "dataset": {
     "tickets": 384,
@@ -99,8 +99,8 @@
         "urgency_accuracy": 0.708
       },
       "latency_ms": {
-        "mean": 2.9,
-        "p95": 4.7
+        "mean": 3.7,
+        "p95": 4.9
       }
     },
     "hf": {
@@ -161,8 +161,8 @@
         "urgency_accuracy": 0.833
       },
       "latency_ms": {
-        "mean": 150.8,
-        "p95": 187.3
+        "mean": 204.0,
+        "p95": 267.2
       }
     }
   },
@@ -260,13 +260,13 @@
         "high_value_count": 21
       },
       "plus_urgency": {
-        "urgent_avg": 7.4,
+        "urgent_avg": 7.6,
         "urgent_p95": 17.6,
-        "high_value_avg": 92.6,
-        "non_urgent_avg": 129.0,
-        "overall_avg": 69.2,
-        "max_wait_overall": 592.0,
-        "sla_breaches": 20,
+        "high_value_avg": 90.4,
+        "non_urgent_avg": 128.1,
+        "overall_avg": 68.9,
+        "max_wait_overall": 589.1,
+        "sla_breaches": 19,
         "total_simulated": 120,
         "urgent_count": 59,
         "non_urgent_count": 61,
@@ -274,11 +274,11 @@
       },
       "plus_value": {
         "urgent_avg": 16.0,
-        "urgent_p95": 92.6,
-        "high_value_avg": 29.3,
-        "non_urgent_avg": 116.4,
-        "overall_avg": 67.0,
-        "max_wait_overall": 598.4,
+        "urgent_p95": 92.2,
+        "high_value_avg": 29.7,
+        "non_urgent_avg": 116.2,
+        "overall_avg": 66.9,
+        "max_wait_overall": 598.2,
         "sla_breaches": 16,
         "total_simulated": 120,
         "urgent_count": 59,
@@ -286,13 +286,13 @@
         "high_value_count": 21
       },
       "router": {
-        "urgent_avg": 32.3,
-        "urgent_p95": 193.5,
-        "high_value_avg": 16.7,
-        "non_urgent_avg": 92.6,
-        "overall_avg": 62.9,
-        "max_wait_overall": 446.1,
-        "sla_breaches": 3,
+        "urgent_avg": 35.5,
+        "urgent_p95": 191.2,
+        "high_value_avg": 16.9,
+        "non_urgent_avg": 89.3,
+        "overall_avg": 62.8,
+        "max_wait_overall": 443.7,
+        "sla_breaches": 5,
         "total_simulated": 120,
         "urgent_count": 59,
         "non_urgent_count": 61,
@@ -321,13 +321,13 @@
         "high_value_count": 21
       },
       "priority": {
-        "urgent_avg": 32.3,
-        "urgent_p95": 193.5,
-        "high_value_avg": 16.7,
-        "non_urgent_avg": 92.6,
-        "overall_avg": 62.9,
-        "max_wait_overall": 446.1,
-        "sla_breaches": 3,
+        "urgent_avg": 35.5,
+        "urgent_p95": 191.2,
+        "high_value_avg": 16.9,
+        "non_urgent_avg": 89.3,
+        "overall_avg": 62.8,
+        "max_wait_overall": 443.7,
+        "sla_breaches": 5,
         "total_simulated": 120,
         "urgent_count": 59,
         "non_urgent_count": 61,

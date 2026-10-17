@@ -5,6 +5,9 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import events
+from app.api.auth import admin_router as users_router
+from app.api.auth import router as auth_router
 from app.api.misc import router as misc_router
 from app.api.tickets import router as tickets_router
 from app.config import settings
@@ -36,6 +39,7 @@ async def background_rescore_worker() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Base.metadata.create_all(bind=engine)
+    events.bind_loop(asyncio.get_running_loop())
     if settings.nlp_mode == "hf":
         from app.nlp import hf
         hf.warmup(background=True)   # API serves with rules until the models are loaded
@@ -53,19 +57,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title="Predictive Customer Support Triage & Sentiment Router",
     description="Context-aware ticket triage and sentiment router API (AlgoAmigos)",
-    version="2.0.0",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+# The dashboard normally calls the API through the Vite / nginx proxy (same origin).
+# CORS only matters if it is served from another origin; cookies need credentials then.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins or ["http://localhost:5173"],
-    allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["Content-Type"],
 )
 
+app.include_router(auth_router)
+app.include_router(users_router)
 app.include_router(misc_router)
 app.include_router(tickets_router)
 

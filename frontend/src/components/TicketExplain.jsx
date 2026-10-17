@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, BookOpen, Brain, CheckCircle2, Gavel, Loader2, Lock, MousePointerClick, ScanSearch, ThumbsDown, ThumbsUp, UserRound,
+  AlertTriangle, BookOpen, Brain, CheckCircle2, Gavel, Loader2, Lock, MousePointerClick, ScanSearch, UserRound,
 } from "lucide-react";
-import { api } from "../../api.js";
+import { api } from "../api.js";
 import {
   BOOST_LABEL, COMPONENT_LABEL, COMPONENT_ORDER, INTENT_LABEL, SEGMENT_LABEL, SIGNAL_LABEL, STATUS_LABEL, VALUE_LABEL, fmtWait, isOpen, pct,
-} from "../../lib/meta.js";
-import { Empty, ErrorNote, MeterRow, RouteBadge, Tile, useToast } from "../ui.jsx";
+} from "../lib/meta.js";
+import { Empty, ErrorNote, MeterRow, RouteBadge, Tile, useToast } from "./ui.jsx";
 
 function Card({ title, icon: Icon, children, className = "" }) {
   return (
@@ -19,7 +19,7 @@ function Card({ title, icon: Icon, children, className = "" }) {
   );
 }
 
-export default function DetailTile({ ticket, onChanged }) {
+export default function TicketExplain({ ticket, onChanged, admin = false, className = "lg:col-span-8", action }) {
   const toast = useToast();
   const [route, setRoute] = useState("");
   const [priority, setPriority] = useState("");
@@ -51,7 +51,7 @@ export default function DetailTile({ ticket, onChanged }) {
 
   if (!ticket) {
     return (
-      <Tile eyebrow="Ticket detail" title="Why this score?" icon={ScanSearch} className="lg:col-span-8">
+      <Tile eyebrow="Ticket detail" title="Why this score?" icon={ScanSearch} className={className}>
         <Empty icon={MousePointerClick}>Select a ticket in the queue to see its signals, reasons and actions.</Empty>
       </Tile>
     );
@@ -69,13 +69,16 @@ export default function DetailTile({ ticket, onChanged }) {
       eyebrow={`Ticket #${t.id} · ${STATUS_LABEL[t.status] ?? t.status}`}
       title={t.subject || (INTENT_LABEL[t.analysis.intent] ?? "Ticket")}
       icon={ScanSearch}
-      className="lg:col-span-8"
+      className={className}
       action={
-        <div className="text-right">
+        <div className="text-right flex items-start gap-3">
+          {action}
+          <div>
           <p className="text-4xl font-extrabold num leading-none">{t.priority}</p>
           <p className="text-[10px] uppercase tracking-wider text-ink-3 mt-1">
-            {t.priority_locked ? "priority set by agent" : "priority / 100"}
+            {t.priority_locked ? "priority set by admin" : "priority / 100"}
           </p>
+          </div>
         </div>
       }
     >
@@ -136,10 +139,11 @@ export default function DetailTile({ ticket, onChanged }) {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <RouteBadge route={t.route} />
               <div className="flex gap-1.5">
-                {t.route_locked && <span className="chip bg-sunken text-ink-2" title="Agent override; ageing will not move it"><Lock className="w-3 h-3" aria-hidden /> locked</span>}
+                {t.route_locked && <span className="chip bg-sunken text-ink-2" title="Admin override; ageing will not move it"><Lock className="w-3 h-3" aria-hidden /> locked</span>}
                 {t.manager_flag && <span className="chip bg-senior-soft text-senior-text"><Gavel className="w-3 h-3" aria-hidden /> manager notified</span>}
               </div>
             </div>
+            <p className="mt-1 text-xs text-ink-3">{t.level_name} · {t.category_label}</p>
             <p className="mt-2 text-sm font-medium">{t.route_reason}</p>
             {t.reasons.length > 0 && (
               <ul className="mt-2 space-y-1">
@@ -191,25 +195,11 @@ export default function DetailTile({ ticket, onChanged }) {
               <p className="mt-1.5 text-sm font-semibold">{t.kb.title}</p>
               <p className="mt-1 text-xs text-ink-2 whitespace-pre-wrap">{t.kb.answer}</p>
               <p className="mt-1 text-[11px] text-ink-3">{t.kb.source}</p>
-              {t.kb.rated ? (
-                <p className="mt-3 text-xs text-ink-3">Feedback recorded.</p>
-              ) : (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button className="btn-ghost !py-1.5 !text-xs bg-card" disabled={!!busy}
-                          onClick={() => run("up", () => api.feedback(t.id, { kind: "kb_helpful" }), "Marked as helpful")}>
-                    <ThumbsUp className="w-3.5 h-3.5" /> Helped
-                  </button>
-                  <button className="btn-ghost !py-1.5 !text-xs bg-card" disabled={!!busy}
-                          onClick={() => run("down", () => api.feedback(t.id, { kind: "kb_not_helpful" }),
-                                             t.status === "kb_handled" ? "Escalated to a human agent" : "Feedback recorded")}>
-                    <ThumbsDown className="w-3.5 h-3.5" /> Didn't help
-                  </button>
-                </div>
-              )}
+              {t.route === "auto_kb" && <p className="mt-2 text-[11px] text-ink-3">{t.kb.rated ? "The customer rated this answer." : "Waiting for the customer's feedback."}</p>}
             </div>
           )}
 
-          {open && (
+          {admin && open && (
             <form
               className="rounded-2xl border border-line p-4 space-y-2.5"
               onSubmit={(e) => {
@@ -222,13 +212,13 @@ export default function DetailTile({ ticket, onChanged }) {
                 }), "Override saved and logged as feedback");
               }}
             >
-              <p className="eyebrow">Agent override</p>
+              <p className="eyebrow">Admin override</p>
               <div className="grid grid-cols-2 gap-2">
-                <select className="field" value={route} onChange={(e) => setRoute(e.target.value)} aria-label="New route">
-                  <option value="">Keep route</option>
-                  <option value="tier1">Tier 1</option>
-                  <option value="tier2">Tier 2</option>
-                  <option value="senior">Senior</option>
+                <select className="field" value={route} onChange={(e) => setRoute(e.target.value)} aria-label="New level">
+                  <option value="">Keep level</option>
+                  <option value="level1">Level 1 · General</option>
+                  <option value="level2">Level 2 · Technical</option>
+                  <option value="level3">Level 3 · Expert</option>
                 </select>
                 <input className="field" type="number" min={0} max={100} value={priority}
                        onChange={(e) => setPriority(e.target.value)} placeholder="Priority 0-100" aria-label="New priority" />

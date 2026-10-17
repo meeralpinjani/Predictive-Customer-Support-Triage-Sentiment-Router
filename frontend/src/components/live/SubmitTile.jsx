@@ -4,9 +4,10 @@ import { api } from "../../api.js";
 import { EXAMPLES, SEGMENT_LABEL } from "../../lib/meta.js";
 import { ErrorNote, RouteBadge, Tile, useToast } from "../ui.jsx";
 
-export default function SubmitTile({ customers, onSubmitted, onOpen }) {
+export default function SubmitTile({ customers, categories = [], onSubmitted, onOpen }) {
   const toast = useToast();
   const [customerId, setCustomerId] = useState("c1");
+  const [category, setCategory] = useState("outage");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -15,6 +16,7 @@ export default function SubmitTile({ customers, onSubmitted, onOpen }) {
 
   const useExample = (ex) => {
     setCustomerId(ex.customer_id);
+    setCategory(ex.category);
     setSubject("");
     setBody(ex.body);
     setResult(null);
@@ -27,11 +29,11 @@ export default function SubmitTile({ customers, onSubmitted, onOpen }) {
     setBusy(true);
     setError("");
     try {
-      const t = await api.submitTicket({ customer_id: customerId || null, subject: subject.trim(), body: body.trim() });
+      const t = await api.submitTicket({ customer_id: customerId || null, category, subject: subject.trim(), body: body.trim() });
       setResult(t);
       setBody("");
       setSubject("");
-      toast(`Ticket #${t.id} scored ${t.priority} → ${t.route === "auto_kb" ? "answered automatically" : t.route}`, "success");
+      toast(`Ticket #${t.id} scored ${t.priority} → ${t.level_name}`, "success");
       onSubmitted?.(t);
     } catch (err) {
       setError(err.message);
@@ -43,7 +45,7 @@ export default function SubmitTile({ customers, onSubmitted, onOpen }) {
   const selected = customers.find((c) => c.id === customerId);
 
   return (
-    <Tile eyebrow="Customer view" title="Submit a ticket" icon={Send} className="lg:col-span-4">
+    <Tile eyebrow="Test as any CRM customer" title="Submit a ticket" icon={Send} className="lg:col-span-4">
       <form onSubmit={submit} className="flex flex-col gap-3">
         <label className="block">
           <span className="eyebrow">Customer</span>
@@ -61,6 +63,16 @@ export default function SubmitTile({ customers, onSubmitted, onOpen }) {
               {selected.renewal_days != null && ` · renews in ${selected.renewal_days}d`}
             </span>
           )}
+        </label>
+        <label className="block">
+          <span className="eyebrow">Category</span>
+          <select className="field mt-1" value={category} onChange={(e) => setCategory(e.target.value)}>
+            {["level1", "level2"].map((lvl) => (
+              <optgroup key={lvl} label={lvl === "level1" ? "Level 1 · General Support" : "Level 2 · Technical Support"}>
+                {categories.filter((c) => c.level === lvl).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </optgroup>
+            ))}
+          </select>
         </label>
         <label className="block">
           <span className="eyebrow">Subject</span>

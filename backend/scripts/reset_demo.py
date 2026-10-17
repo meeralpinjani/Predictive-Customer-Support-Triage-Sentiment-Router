@@ -20,7 +20,7 @@ def reset() -> dict[str, int]:
     counts = seed_database()
     db = SessionLocal()
     try:
-        rescore_open(db)  # apply ageing for the back-dated tickets
+        rescore_open(db, publish=False)  # apply ageing for the back-dated tickets
     finally:
         db.close()
     return counts
@@ -31,3 +31,5 @@ if __name__ == "__main__":
     print("Demo database reset.")
     for k, v in counts.items():
         print(f"  - {k}: {v}")
+    from scripts.seed import ACCOUNTS_FILE
+    print(f"Demo account passwords: {ACCOUNTS_FILE}")

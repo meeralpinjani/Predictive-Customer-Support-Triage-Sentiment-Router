@@ -53,7 +53,7 @@ def evaluate(mode: str, split: str = "test") -> dict:
     true_urgent = (df["urgency_label"] == "high") | (df["critical"] == 1)
     true_frustrated = df["frustration_label"] == "high"
     should_escalate = true_urgent | true_frustrated
-    sent_senior = df["pred_route"] == "senior"
+    sent_senior = df["pred_route"] == "level3"
     auto = df["pred_route"] == "auto_kb"
     safe_auto = df["intent"].isin(ROUTINE_INTENTS) & (df["frustration_label"] != "high")
 

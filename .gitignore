@@ -21,3 +21,6 @@ backend/eval/nlp_mistakes*.csv
 
 # Frontend build output (built by npm run build / Docker)
 frontend/dist/
+
+# Generated demo-account passwords (per install, never committed)
+backend/demo_accounts.local.json

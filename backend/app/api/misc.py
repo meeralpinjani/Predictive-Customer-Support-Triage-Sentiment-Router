@@ -1,22 +1,30 @@
+import asyncio
 from datetime import datetime, timezone
 import json
 from pathlib import Path
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.config import DEFAULT_SLA_MIN, REPEAT_CONTACT_POINTS, RENEWAL_RISK_POINTS, SLA_RISK_POINTS, SLA_RISK_START, WEIGHTS, settings
+from app import events
+from app.auth import AGENT_ROLES, current_user, require
+from app.categories import CATEGORIES, LEVELS
+from app.config import (
+    DEFAULT_SLA_MIN, REPEAT_CONTACT_POINTS, RENEWAL_RISK_POINTS, SLA_RISK_POINTS, SLA_RISK_START, WEIGHTS, settings,
+)
 from app.db import get_db
-from app.models import Customer, Feedback, KbArticle, Ticket
+from app.models import Customer, Feedback, KbArticle, Ticket, User
 from app.nlp import frustration_model
 from app.schemas import CustomerOut, HealthOut, KbTestIn, StatsOut, WhatIfIn
 from app.services.priority import compute_priority
 from app.services.rescore import rescore_open
 from app.services.router import decide, frustration_threshold
-from app.services.triage import OPEN, active_kb, kb_thresholds_for, wait_minutes, _explanation
+from app.services.triage import OPEN, _explanation, active_kb, kb_thresholds_for, wait_minutes
 
 router = APIRouter(prefix="/api", tags=["system"])
+STAFF = (*AGENT_ROLES, "admin")
 
 REPORT_PATH = Path(__file__).resolve().parents[2] / "eval" / "report.json"
 
@@ -52,13 +60,40 @@ def health(db: Session = Depends(get_db)) -> HealthOut:
     )
 
 
+@router.get("/categories")
+def categories() -> dict:
+    return {"categories": CATEGORIES, "levels": LEVELS}
+
+
+@router.get("/events")
+async def event_stream(request: Request, user: User = Depends(current_user)) -> StreamingResponse:
+    """Server-sent events: live queue changes, escalations, chat messages, typing."""
+    events.bind_loop(asyncio.get_running_loop())
+    sub = events.subscribe(user.id, user.role, user.customer_id)
+
+    async def stream():
+        try:
+            yield "retry: 3000\n\n"
+            while not await request.is_disconnected():
+                try:
+                    ev = await asyncio.wait_for(sub.queue.get(), timeout=15)
+                    yield events.encode(ev)
+                except asyncio.TimeoutError:
+                    yield ": keep-alive\n\n"
+        finally:
+            events.unsubscribe(sub)
+
+    return StreamingResponse(stream(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
 @router.get("/customers", response_model=list[CustomerOut])
-def list_customers(db: Session = Depends(get_db)) -> list[Customer]:
+def list_customers(_: User = Depends(require("admin")), db: Session = Depends(get_db)) -> list[Customer]:
     return db.query(Customer).order_by(Customer.id).all()
 
 
 @router.get("/kb-articles")
-def list_kb_articles(db: Session = Depends(get_db)) -> list[dict]:
+def list_kb_articles(_: User = Depends(current_user), db: Session = Depends(get_db)) -> list[dict]:
     out = []
     for a in db.query(KbArticle).all():
         try:
@@ -70,7 +105,7 @@ def list_kb_articles(db: Session = Depends(get_db)) -> list[dict]:
 
 
 @router.post("/kb/test-match")
-def test_kb_match(payload: KbTestIn, db: Session = Depends(get_db)) -> dict:
+def test_kb_match(payload: KbTestIn, _: User = Depends(require(*STAFF)), db: Session = Depends(get_db)) -> dict:
     kb = active_kb(db)
     suggest_th, auto_th = kb_thresholds_for(kb)
     match = kb.match(payload.text) if kb else None
@@ -79,19 +114,13 @@ def test_kb_match(payload: KbTestIn, db: Session = Depends(get_db)) -> dict:
         return {"matched": False, "confidence": 0.0, "action": "none", **base}
     action = "auto_reply" if match.confidence >= auto_th else "suggest" if match.confidence >= suggest_th else "none"
     return {
-        "matched": True,
-        "article_id": match.article_id,
-        "title": match.title,
-        "source": match.source,
-        "answer": match.answer,
-        "confidence": match.confidence,
-        "action": action,
-        **base,
+        "matched": True, "article_id": match.article_id, "title": match.title, "source": match.source,
+        "answer": match.answer, "confidence": match.confidence, "action": action, **base,
     }
 
 
 @router.get("/stats", response_model=StatsOut)
-def get_stats(db: Session = Depends(get_db)) -> StatsOut:
+def get_stats(_: User = Depends(require(*STAFF)), db: Session = Depends(get_db)) -> StatsOut:
     now = datetime.now(timezone.utc)
     all_tickets = db.query(Ticket).all()
     open_tickets = [t for t in all_tickets if t.status in OPEN]
@@ -114,6 +143,7 @@ def get_stats(db: Session = Depends(get_db)) -> StatsOut:
     helpful = sum(1 for f in feedback if f.helpful is True)
     unhelpful = sum(1 for f in feedback if f.helpful is False)
     human_routed = sum(1 for t in all_tickets if t.route != "auto_kb")
+    agents = db.query(User).filter(User.role.in_(AGENT_ROLES), User.active.is_(True)).all()
 
     return StatsOut(
         total_tickets=total,
@@ -124,25 +154,29 @@ def get_stats(db: Session = Depends(get_db)) -> StatsOut:
         p95_wait_minutes=round(float(np.percentile(waits, 95)), 1) if waits else 0.0,
         avg_wait_by_segment={s: round(float(np.mean(ws)), 1) for s, ws in seg_waits.items()},
         sla_breached_open=sum(1 for t, w in zip(open_tickets, waits) if w > (t.sla_minutes or DEFAULT_SLA_MIN)),
-        deflection_rate=round(counts_by_route.get("auto_kb", 0) / total, 3) if total else 0.0,
+        deflection_rate=round(sum(1 for t in all_tickets if t.route == "auto_kb") / total, 3) if total else 0.0,
         override_rate=round(len(overridden) / human_routed, 3) if human_routed else 0.0,
         suggestion_acceptance_rate=round(helpful / (helpful + unhelpful), 3) if helpful + unhelpful else 0.0,
         abstention_rate=round(sum(1 for t in all_tickets if t.kb_action == "none") / total, 3) if total else 0.0,
         kb_ratings=helpful + unhelpful,
+        escalations=sum(1 for f in feedback if f.kind == "escalate")
+        + sum(1 for t in all_tickets if "Ageing upgrade" in t.route_reason or "Customer reply" in t.route_reason
+              or "did not help" in t.route_reason),
+        agents_online={lvl: sum(1 for a in agents if a.role == lvl) for lvl in AGENT_ROLES},
     )
 
 
 @router.get("/config")
-def get_config() -> dict:
+def get_config(_: User = Depends(require(*STAFF))) -> dict:
     suggest_th, auto_th = settings.kb_thresholds()
     return {
         "nlp_mode": settings.nlp_mode,
         "weights": WEIGHTS,
-        "senior_score": settings.senior_score,
-        "tier2_score": settings.tier2_score,
+        "level3_score": settings.level3_score,
         "frustration_senior": frustration_threshold(),
         "vip_value": settings.vip_value,
         "vip_score": settings.vip_score,
+        "auto_max_score": settings.auto_max_score,
         "kb_suggest_threshold": suggest_th,
         "kb_auto_threshold": auto_th,
         "min_auto_confidence": settings.min_auto_confidence,
@@ -152,6 +186,8 @@ def get_config() -> dict:
             "sla_risk_max": SLA_RISK_POINTS,
             "sla_risk_start": SLA_RISK_START,
         },
+        "levels": LEVELS,
+        "categories": CATEGORIES,
         "frustration_model": frustration_model.describe("hf" if settings.nlp_mode == "hf" else "rules"),
         "rescore_interval_sec": settings.rescore_interval_sec,
     }
@@ -165,18 +201,18 @@ def _report() -> dict:
 
 
 @router.get("/eval")
-def get_eval() -> dict:
+def get_eval(_: User = Depends(require("admin"))) -> dict:
     """Offline evaluation results (eval/report.json), so the demo never computes them live."""
     return _report()
 
 
 @router.get("/simulation")
-def get_simulation() -> dict:
+def get_simulation(_: User = Depends(require("admin"))) -> dict:
     return _report()["simulation"]
 
 
 @router.post("/whatif")
-def what_if(payload: WhatIfIn, db: Session = Depends(get_db)) -> dict:
+def what_if(payload: WhatIfIn, _: User = Depends(require("admin")), db: Session = Depends(get_db)) -> dict:
     """Preview how the open queue would re-rank under other weights/thresholds. Saves nothing."""
     weights = dict(WEIGHTS)
     if payload.weights:
@@ -195,8 +231,8 @@ def what_if(payload: WhatIfIn, db: Session = Depends(get_db)) -> dict:
                               t.sla_minutes or DEFAULT_SLA_MIN, _explanation(t).get("static_boosts", {}), weights)
         flags = [f for f in t.critical_flags.split(",") if f]
         d = decide(pr.route_score, t.frustration, t.intent, flags, t.kb_confidence, value=t.value,
-                   allow_auto=False, senior_score=payload.senior_score, tier2_score=payload.tier2_score,
-                   frustration_senior=payload.frustration_senior, mode=t.analysis_mode)
+                   allow_auto=False, level3_score=payload.level3_score,
+                   frustration_senior=payload.frustration_senior, mode=t.analysis_mode, category=t.category)
         route = t.route if t.route_locked else d.route
         rows.append({"id": t.id, "score": t.priority if t.priority_locked else pr.score, "route": route,
                      "old_score": t.priority, "old_route": t.route, "created_at": t.created_at})
@@ -215,6 +251,6 @@ def what_if(payload: WhatIfIn, db: Session = Depends(get_db)) -> dict:
 
 
 @router.post("/admin/rescore")
-def force_rescore(db: Session = Depends(get_db)) -> dict[str, str | int]:
+def force_rescore(_: User = Depends(require("admin")), db: Session = Depends(get_db)) -> dict[str, str | int]:
     count = rescore_open(db)
     return {"status": "ok", "message": f"Rescored {count} open tickets", "rescored_count": count}
