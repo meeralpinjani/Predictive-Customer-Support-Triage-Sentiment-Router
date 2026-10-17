@@ -4,6 +4,8 @@
 
 Support queues answer tickets first come, first served, so a furious enterprise customer whose production is down waits behind someone asking how to download an invoice. This system reads every ticket, measures **frustration**, **urgency** and **customer value**, merges them into **one explainable 0-100 priority score**, and routes the ticket: an instant knowledge-base answer, **Level 1 · General Support**, **Level 2 · Technical Support**, or **Level 3 · Expert Escalation** with live chat and callbacks. Tickets escalate in real time, and waiting time raises priority, so nobody is left behind.
 
+> **New to the project?** Read [docs/TEAM-GUIDE.md](docs/TEAM-GUIDE.md) (plain-language overview) and [docs/HOW-TO-RUN-AND-TEST.md](docs/HOW-TO-RUN-AND-TEST.md) (step-by-step checklist).
+
 ## Roles and views
 
 | Role | Gets the role by | Sees |
@@ -12,7 +14,7 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 | **Level 1 · General Support** | An admin assigns it | My queue · ticket workspace (chat with attachments, **Suggest reply**, guides for this ticket, claim / escalate / resolve) · Incidents · Knowledge base · availability switch |
 | **Level 2 · Technical Support** | An admin assigns it | Same for Level 2 |
 | **Level 3 · Expert Escalation** | An admin assigns it | Same for Level 3, plus live chat and callback scheduling |
-| **Admin** | `ADMIN_EMAIL` in `.env`, or promoted by an admin | Overview of all queues · Analytics over time · Insights (evidence) · Incidents · Users & workload · Knowledge-base editor · Tuning (what-if, retrain) · Outbox |
+| **Admin** | `ADMIN_EMAIL` in `.env`, or promoted by an admin | Overview of all queues · Analytics over time · Insights (evidence) · Incidents · Users & workload · Knowledge-base editor · Tuning (what-if, retrain) |
 
 **Everyone** gets a search bar (Ctrl K), scoped by role:
 - **Customers:** help articles and their own tickets.
@@ -48,7 +50,10 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 - **Passwords:** hashed with scrypt, and must be 8+ characters with upper, lower and a number.
 - **Sessions:** signed HttpOnly cookies. "Remember me" keeps you signed in for 7 days; otherwise the session ends when the browser closes.
 - **Logins:** failed attempts are throttled.
-- **Forgot password:** emails a one-time link (hashed in the database, expires in 30 minutes). The response is the same whether or not the account exists.
+- **Forgot password:** works without email.
+  - A **recovery code** shown once at sign-up (stored only as a hash) lets users reset alone.
+  - Without the code, an admin creates a **one-time reset link** (hashed, expires in 30 minutes).
+  - The "request help" step answers the same whether or not the account exists.
 - Every API endpoint checks the role: customers only ever see their own tickets and never see internal scores; agents only act on their level.
 
 ## Results (held-out test set, `python -m eval.run_all`)
@@ -150,17 +155,16 @@ Without the ML packages, set `NLP_MODE=rules` in `.env`; everything still works.
 
 The "Continue with Google" button appears on the login and sign-up pages. New Google users choose their plan once. A Client ID is not secret, but don't commit `.env` anyway; it also holds `SECRET_KEY`.
 
-**Password-reset emails (optional, free):**
-1. On the Gmail account that should send them, turn on **2-Step Verification**.
-2. Create an **App password** (Google Account → Security → App passwords).
-3. Put `GMAIL_ADDRESS=` and `GMAIL_APP_PASSWORD=` in `backend/.env` and restart the backend.
-
-Until then, or if the venue has no internet, reset emails appear on the admin **Outbox** page with the working link, so the demo can't break.
+**Forgot password (no email needed):**
+1. **Recovery code:** every new account is shown a one-time code (e.g. `K7QX-2MPD-9RTA`) to save.
+   - On *Forgot password? → I have my recovery code*, the customer enters email + code + a new password and immediately gets a fresh code.
+   - Anyone can create a new code under **Account & security**.
+2. **Lost the code:** *Forgot password? → I lost my code* sends a request to the admin's **Users & workload** page. The admin clicks **Create reset link** (one-time, 30 minutes) and gives the link to the person.
 
 **Tests and evaluation:**
 ```bash
 cd backend
-pytest                        # 110 tests, isolated temp database and uploads (never touches triage.db)
+pytest                        # 112 tests, isolated temp database and uploads (never touches triage.db)
 python -m eval.run_all        # refit, re-tune, re-evaluate, write eval/report.json
 ```
 
@@ -201,7 +205,8 @@ Before demo day:
 | GET/POST/PATCH | `/api/tickets/{id}/callbacks` | customer (request), Level 3 (manage) | Callback requests |
 | POST | `/api/tickets/{id}/feedback` | customer | Auto-answer helped / didn't help |
 | GET | `/api/events` | signed in | Live events (server-sent events), filtered per role |
-| POST | `/api/auth/forgot` · `/api/auth/reset` | anyone | Email a one-time reset link · set a new password |
+| POST | `/api/auth/recover` · `/api/auth/forgot` · `/api/auth/reset` | anyone | Reset with recovery code · ask an admin for help · use an admin's one-time link |
+| POST | `/api/auth/me/recovery-code` · `/api/admin/users/{id}/reset-link` | signed in · admin | New recovery code · create a one-time reset link |
 | PATCH | `/api/auth/me/availability` | agents | Available / busy / offline |
 | GET | `/api/search?q=` | signed in | Role-scoped search: articles, tickets, customers, users |
 | POST | `/api/tickets/{id}/attachments` · `/messages/upload` | ticket participants | Upload PNG/JPG/PDF (ticket or chat message) |
@@ -209,7 +214,7 @@ Before demo day:
 | GET | `/api/tickets/{id}/suggested-reply` · `/guides` | agents, admin | Draft reply · internal guides for this ticket |
 | GET/POST/PATCH/DELETE | `/api/kb-articles` · `/api/kb/suggest` · `/api/kb/topics` | all / admin edits | FAQ + guides, "might help" suggestions, suggested topics |
 | GET/POST | `/api/incidents[/suggestions]` · `/{id}/reply` · `/{id}/resolve` | agents, admin | Group duplicates, reply to all, resolve all |
-| GET | `/api/admin/analytics` · `/outbox` · `/users/workload/summary` | admin | Analytics over time · sent emails · agent workload |
+| GET | `/api/admin/analytics` · `/users/workload/summary` | admin | Analytics over time · agent workload |
 | GET/POST | `/api/admin/retrain` · `/retrain/apply` | admin | Propose / apply thresholds learned from agents |
 | GET | `/api/stats` · `/config` | staff | Queue metrics, live configuration |
 | GET/POST | `/api/eval` · `/whatif` · `/admin/rescore` | admin | Evaluation report, what-if preview, re-score |
@@ -232,11 +237,11 @@ frontend/src/           components (Nordic bento tiles, live chat, queue), lib (
   - On this data the transformer models mainly improve **urgency** (F1 0.78 → 0.84) and KB coverage (auto-answers 44% → 78% of routine questions). Frustration is driven mostly by the anger and sarcasm cues, which the fitted weights show openly.
 - **Customer value uses mock CRM data.**
 - **Accounts are hackathon-grade:**
-  - **In place:** hashed passwords, signed HttpOnly cookies, failed-login throttling, role checks and password reset by email.
+  - **In place:** hashed passwords, signed HttpOnly cookies, failed-login throttling, role checks, and password reset by recovery code or admin link.
   - **Still missing:** email verification, multi-factor authentication and audit logging.
 - **Live chat and events run in one API process.** Several API servers would need a shared message bus such as Redis.
 - **Calls are callback requests, not in-browser voice.**
-- **No email verification, two-factor login or encryption at rest** (decided out of scope). Attachments are stored on local disk.
+- **No email of any kind, two-factor login or encryption at rest** (decided out of scope). Attachments are stored on local disk.
 - **Out of scope:** real CRM integration and production scaling (playbook "will not do"; see roadmap).
 
 ## Roadmap

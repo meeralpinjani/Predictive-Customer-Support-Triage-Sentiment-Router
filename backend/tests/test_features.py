@@ -1,5 +1,5 @@
 """Attachments, search, knowledge base, suggested replies, availability, incidents, analytics,
-retraining and password reset."""
+retraining and password recovery."""
 import re
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
@@ -180,22 +180,48 @@ def test_retrain_refuses_without_enough_decisions(login):
 
 
 # ---------------------------------------------------------------- password reset
-def test_forgot_and_reset_password(anon, login):
-    anon.post("/api/auth/signup", json={"name": "Reset Me", "email": "resetme@example.com", "password": "Original1"})
-    res = anon.post("/api/auth/forgot", json={"email": "resetme@example.com"}).json()
-    assert res["delivery"] == "outbox"
+def test_recovery_code_resets_password(anon, login):
+    res = anon.post("/api/auth/signup", json={"name": "Code User", "email": "codeuser@example.com", "password": "Original1"})
+    code = res.json()["recovery_code"]
+    assert re.fullmatch(r"[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}", code)
+    assert anon.get("/api/auth/me").json()["recovery_code"] is None          # shown once, never again
+    assert anon.get("/api/auth/me").json()["has_recovery_code"] is True
+
+    wrong = anon.post("/api/auth/recover", json={"email": "codeuser@example.com", "code": "AAAA-BBBB-CCCC", "password": "BrandNew2"})
+    assert wrong.status_code == 401
+    ok = anon.post("/api/auth/recover", json={"email": "codeuser@example.com", "code": code.lower().replace("-", " "),
+                                              "password": "BrandNew2"}).json()
+    assert ok["ok"] and ok["recovery_code"] != code                          # a fresh code replaces the used one
+    again = anon.post("/api/auth/recover", json={"email": "codeuser@example.com", "code": code, "password": "BrandNew3"})
+    assert again.status_code == 401                                          # old code is used up
+    assert anon.post("/api/auth/login", json={"email": "codeuser@example.com", "password": "BrandNew2"}).status_code == 200
+
+
+def test_regenerate_code_needs_current_password(anon):
+    anon.post("/api/auth/signup", json={"name": "Regen", "email": "regen@example.com", "password": "Original1"})
+    assert anon.post("/api/auth/me/recovery-code", json={"current_password": "nope"}).status_code == 401
+    assert anon.post("/api/auth/me/recovery-code", json={"current_password": "Original1"}).json()["recovery_code"]
+
+
+def test_admin_reset_link_fallback(anon, login):
+    anon.post("/api/auth/signup", json={"name": "Lost Code", "email": "lostcode@example.com", "password": "Original1"})
+    res = anon.post("/api/auth/forgot", json={"email": "lostcode@example.com"}).json()
     # Same answer for unknown emails (no account probing).
     assert anon.post("/api/auth/forgot", json={"email": "nobody@example.com"}).json()["message"] == res["message"]
 
-    mail = login("admin").get("/api/admin/outbox").json()["emails"][0]
-    assert mail["to"] == "resetme@example.com" and mail["status"] == "outbox_only"
-    token = re.search(r"token=([A-Za-z0-9_\-]+)", mail["body"]).group(1)
+    admin = login("admin")
+    user = next(u for u in admin.get("/api/admin/users").json() if u["email"] == "lostcode@example.com")
+    assert user["reset_requested_at"] is not None                            # admin sees the request
+    link = admin.post(f"/api/admin/users/{user['id']}/reset-link").json()
+    token = link["path"].split("token=")[1]
+    assert login("level1").post(f"/api/admin/users/{user['id']}/reset-link").status_code == 403
 
     assert anon.post("/api/auth/reset", json={"token": token, "password": "weak"}).status_code == 422
     assert anon.post("/api/auth/reset", json={"token": token, "password": "BrandNew2"}).json()["ok"]
     assert anon.post("/api/auth/reset", json={"token": token, "password": "BrandNew3"}).status_code == 400  # one use
-    assert anon.post("/api/auth/login", json={"email": "resetme@example.com", "password": "BrandNew2"}).status_code == 200
-    assert anon.post("/api/auth/login", json={"email": "resetme@example.com", "password": "Original1"}).status_code == 401
+    assert anon.post("/api/auth/login", json={"email": "lostcode@example.com", "password": "BrandNew2"}).status_code == 200
+    after = next(u for u in admin.get("/api/admin/users").json() if u["email"] == "lostcode@example.com")
+    assert after["reset_requested_at"] is None
 
 
 def test_remember_me_controls_cookie_lifetime(anon):

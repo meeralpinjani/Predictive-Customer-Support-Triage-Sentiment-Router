@@ -9,7 +9,8 @@ import { ForgotPasswordPage, LoginPage, ResetPasswordPage, SignupPage, WelcomePa
 import { CustomerTicketPage, HelpCentrePage, NewTicketPage, SupportHome } from "./pages/customer/CustomerPages.jsx";
 import { AgentQueuePage, StaffTicketPage } from "./pages/agent/AgentPages.jsx";
 import { AdminInsights, AdminOverview, AdminTuning, NotFound } from "./pages/admin/AdminPages.jsx";
-import { AdminAnalytics, AdminOutbox, AdminUsers } from "./pages/admin/AdminExtras.jsx";
+import { AdminAnalytics, AdminUsers } from "./pages/admin/AdminExtras.jsx";
+import { AccountPage } from "./pages/auth/AccountPage.jsx";
 import { IncidentsPage, KnowledgePage, SearchPage } from "./pages/shared/SharedPages.jsx";
 
 /** Only lets through users whose role is allowed; everyone else goes to their own home. */
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/support/tickets/:id" element={<Guard allow={isCustomer}><CustomerTicketPage /></Guard>} />
               <Route path="/help" element={<Guard allow={isCustomer}><HelpCentrePage /></Guard>} />
               <Route path="/search" element={<Guard><SearchPage /></Guard>} />
+              <Route path="/account" element={<Guard><AccountPage /></Guard>} />
               <Route path="/incidents" element={<Guard allow={isStaff}><IncidentsPage /></Guard>} />
               <Route path="/queue" element={<Guard allow={isAgent}><AgentQueuePage /></Guard>} />
               <Route path="/tickets/:id" element={<Guard allow={isStaff}><StaffTicketPage /></Guard>} />
@@ -71,7 +73,6 @@ export default function App() {
               <Route path="/admin" element={<Guard allow={isAdmin}><AdminOverview /></Guard>} />
               <Route path="/admin/insights" element={<Guard allow={isAdmin}><AdminInsights /></Guard>} />
               <Route path="/admin/analytics" element={<Guard allow={isAdmin}><AdminAnalytics /></Guard>} />
-              <Route path="/admin/outbox" element={<Guard allow={isAdmin}><AdminOutbox /></Guard>} />
               <Route path="/admin/users" element={<Guard allow={isAdmin}><AdminUsers /></Guard>} />
               <Route path="/admin/tuning" element={<Guard allow={isAdmin}><AdminTuning /></Guard>} />
               <Route path="*" element={<NotFound />} />

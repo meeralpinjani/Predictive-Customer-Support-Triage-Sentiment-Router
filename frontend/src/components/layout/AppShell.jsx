@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import {
-  Activity, BarChart3, Bell, BookOpen, Boxes, HelpCircle, Inbox, LayoutDashboard, LifeBuoy, LogOut, Mail, Moon, PlusCircle,
+  Activity, BarChart3, Bell, BookOpen, Boxes, HelpCircle, Inbox, LayoutDashboard, LifeBuoy, LogOut, Moon, PlusCircle,
   MoreHorizontal, SlidersHorizontal, Snowflake, Sun, Users,
 } from "lucide-react";
 import { api } from "../../api.js";
@@ -31,7 +31,6 @@ const NAV = {
     { to: "/admin/users", label: "Users & workload", icon: Users },
     { to: "/knowledge", label: "Knowledge base", icon: BookOpen },
     { to: "/admin/tuning", label: "Tuning", icon: SlidersHorizontal },
-    { to: "/admin/outbox", label: "Outbox", icon: Mail },
   ],
 };
 
@@ -212,6 +211,7 @@ export default function AppShell() {
             <p className="text-sm font-semibold truncate">{user.name}</p>
             <p className="text-[11px] text-ink-3 truncate">{user.email}</p>
             <span className="chip bg-card border border-line text-ink-2 mt-2">{roleBadge}</span>
+            <Link to="/account" className="block mt-2 text-xs font-semibold text-glacier-text hover:underline">Account &amp; security</Link>
             <AvailabilitySwitch />
           </div>
           <div className="flex items-center justify-between px-1 text-xs text-ink-3">

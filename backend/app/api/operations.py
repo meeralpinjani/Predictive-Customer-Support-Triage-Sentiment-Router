@@ -1,16 +1,15 @@
-"""Incidents (grouped duplicate tickets), analytics over time, the email outbox and retraining."""
+"""Incidents (grouped duplicate tickets), analytics over time and retraining."""
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app import events
 from app.auth import AGENT_ROLES, require
 from app.db import get_db
-from app.models import Incident, OutboxEmail, Ticket, User
+from app.models import Incident, Ticket, User
 from app.schemas import IncidentIn, IncidentMessageIn, RetrainApplyIn
 from app.services import incidents as inc_svc
 from app.services import retrain
 from app.services.analytics import analytics
-from app.services.mailer import gmail_configured
 
 router = APIRouter(prefix="/api", tags=["operations"])
 STAFF = (*AGENT_ROLES, "admin")
@@ -99,14 +98,6 @@ def incident_resolve(incident_id: int, payload: IncidentMessageIn, user: User = 
 def get_analytics(days: int = Query(7, ge=1, le=30), _: User = Depends(require("admin")),
                   db: Session = Depends(get_db)) -> dict:
     return analytics(db, days)
-
-
-@router.get("/admin/outbox")
-def outbox(_: User = Depends(require("admin")), db: Session = Depends(get_db)) -> dict:
-    rows = db.query(OutboxEmail).order_by(OutboxEmail.created_at.desc()).limit(50).all()
-    return {"gmail_configured": gmail_configured(),
-            "emails": [{"id": e.id, "to": e.to, "subject": e.subject, "body": e.body, "status": e.status,
-                        "error": e.error, "created_at": e.created_at} for e in rows]}
 
 
 @router.get("/admin/retrain")

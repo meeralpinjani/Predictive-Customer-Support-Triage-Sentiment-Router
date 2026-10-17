@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { Activity, AlertTriangle, BrainCircuit, CheckCircle2, Clock3, Inbox, Loader2, Mail, Shield, Table2, BarChart3, Users } from "lucide-react";
+import { Activity, AlertTriangle, BrainCircuit, CheckCircle2, Clock3, Inbox, KeyRound, Loader2, Shield, Table2, BarChart3, Users } from "lucide-react";
 import { api } from "../../api.js";
 import { useAuth } from "../../lib/auth.jsx";
 import { useLiveData } from "../../lib/events.jsx";
@@ -175,6 +175,18 @@ export function AdminUsers() {
   const rows = (users ?? []).filter((u) => (roleFilter === "all" || u.role === roleFilter) &&
     (!q || `${u.name} ${u.email}`.toLowerCase().includes(q.toLowerCase())));
   const workBy = Object.fromEntries((work ?? []).filter((w) => w.id).map((w) => [w.id, w]));
+  const [link, setLink] = useState(null);
+  const requests = (users ?? []).filter((u) => u.reset_requested_at);
+
+  const makeLink = async (u) => {
+    try {
+      const res = await api.adminResetLink(u.id);
+      setLink({ user: u, url: `${window.location.origin}${res.path}`, minutes: res.expires_minutes });
+      await reload();
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
@@ -204,6 +216,33 @@ export function AdminUsers() {
           </Tile>
         );
       })}
+
+      {(requests.length > 0 || link) && (
+        <Tile className="lg:col-span-12" eyebrow="Password help" title={link ? `Reset link for ${link.user.name}` : `${requests.length} user${requests.length === 1 ? "" : "s"} lost their recovery code`} icon={KeyRound}>
+          {link ? (
+            <div className="space-y-3">
+              <p className="text-sm text-ink-2">Give this link to <b>{link.user.email}</b>. It works once and expires in {link.minutes} minutes.</p>
+              <div className="flex gap-2">
+                <input className="field font-mono !text-xs" readOnly value={link.url} onFocus={(e) => e.target.select()} aria-label="Reset link" />
+                <button className="btn-primary shrink-0" onClick={async () => {
+                  try { await navigator.clipboard.writeText(link.url); toast("Link copied", "success"); } catch { /* select manually */ }
+                }}>Copy</button>
+                <button className="btn-ghost shrink-0" onClick={() => setLink(null)}>Done</button>
+              </div>
+            </div>
+          ) : (
+            <ul className="divide-y divide-line">
+              {requests.map((u) => (
+                <li key={u.id} className="py-2.5 flex items-center gap-3">
+                  <span className="flex-1 min-w-0"><span className="block text-sm font-semibold">{u.name}</span>
+                    <span className="block text-xs text-ink-3">{u.email} · asked {timeAgo(u.reset_requested_at)}</span></span>
+                  <button className="btn-primary !py-1.5" onClick={() => makeLink(u)}>Create reset link</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Tile>
+      )}
 
       <Tile className="lg:col-span-12" eyebrow="Access control" title="All users" icon={Users}
             action={
@@ -259,10 +298,15 @@ export function AdminUsers() {
                       </td>
                       <td className="py-2.5 pr-3 text-ink-2">{u.auth === "both" ? "Password + Google" : u.auth === "google" ? "Google" : "Password"}</td>
                       <td className="py-2.5 text-right">
-                        <button className="btn-ghost !py-1 !text-xs" disabled={u.id === me.id}
-                                onClick={() => update(u, { active: !u.active }, u.active ? `${u.name} disabled` : `${u.name} enabled`)}>
-                          {u.active ? "Disable" : "Enable"}
-                        </button>
+                        <div className="flex justify-end gap-1.5">
+                          <button className="btn-ghost !py-1 !text-xs" disabled={!u.active} onClick={() => makeLink(u)} title="One-time password reset link">
+                            Reset link
+                          </button>
+                          <button className="btn-ghost !py-1 !text-xs" disabled={u.id === me.id}
+                                  onClick={() => update(u, { active: !u.active }, u.active ? `${u.name} disabled` : `${u.name} enabled`)}>
+                            {u.active ? "Disable" : "Enable"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -270,48 +314,6 @@ export function AdminUsers() {
               </tbody>
             </table>
           </div>
-        )}
-      </Tile>
-    </div>
-  );
-}
-
-// ------------------------------------------------------------------ outbox
-export function AdminOutbox() {
-  const { data, error } = useLiveData(() => api.outbox(), { intervalMs: 10000 });
-  const [open, setOpen] = useState(null);
-  const tone = { sent: "bg-tier1-soft text-tier1-text", queued: "bg-glacier-soft text-glacier-text", outbox_only: "bg-sunken text-ink-2", failed: "bg-senior-soft text-senior-text" };
-  const label = { sent: "Sent", queued: "Sending…", outbox_only: "Outbox only", failed: "Failed" };
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
-      <PageHeader title="Outbox" subtitle="Every email the app sends, such as password reset links." />
-      {data && !data.gmail_configured && (
-        <div className="lg:col-span-12 rounded-2xl border border-glacier/30 bg-glacier-soft/60 p-4 text-sm">
-          <p className="font-semibold text-glacier-text">Gmail sending is not set up</p>
-          <p className="text-ink-2 mt-1">Emails are kept here instead of being sent. To send real emails for free, add <code className="font-mono">GMAIL_ADDRESS</code> and a Gmail <b>app password</b> (<code className="font-mono">GMAIL_APP_PASSWORD</code>) to <code className="font-mono">backend/.env</code> and restart the backend.</p>
-        </div>
-      )}
-      <Tile className="lg:col-span-12" eyebrow={`${data?.emails.length ?? 0} recent emails`} icon={Mail}>
-        {error && <ErrorNote>{error}</ErrorNote>}
-        {!data ? <SkeletonLines rows={4} /> : data.emails.length === 0 ? <Empty icon={Mail}>No emails yet.</Empty> : (
-          <ul className="divide-y divide-line">
-            {data.emails.map((e) => (
-              <li key={e.id}>
-                <button className="w-full text-left py-3 flex items-center gap-3" onClick={() => setOpen(open === e.id ? null : e.id)} aria-expanded={open === e.id}>
-                  <Mail className="w-4 h-4 text-ink-3 shrink-0" aria-hidden />
-                  <span className="min-w-0 flex-1"><span className="block text-sm font-semibold truncate">{e.subject}</span>
-                    <span className="block text-xs text-ink-3">to {e.to} · {timeAgo(e.created_at)}</span></span>
-                  <span className={clsx("chip", tone[e.status])}>{label[e.status] ?? e.status}</span>
-                </button>
-                {open === e.id && (
-                  <div className="pb-4 pl-7">
-                    <pre className="whitespace-pre-wrap text-sm text-ink-2 font-sans rounded-2xl bg-sunken p-4">{e.body}</pre>
-                    {e.error && <p className="mt-2 text-xs text-senior-text">Error: {e.error}</p>}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
         )}
       </Tile>
     </div>

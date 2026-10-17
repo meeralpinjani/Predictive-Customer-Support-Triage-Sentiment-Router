@@ -15,9 +15,9 @@ from app.db import get_db
 from app import events
 from app.models import Customer, PasswordReset, Ticket, User
 from app.schemas import (
-    AdminUserPatch, AvailabilityIn, CustomerSummary, ForgotIn, GoogleIn, LoginIn, ProfileIn, ResetIn, SignupIn, UserOut,
+    AdminUserPatch, AvailabilityIn, CustomerSummary, ForgotIn, GoogleIn, LoginIn, ProfileIn, RecoverIn, RecoveryCodeIn,
+    ResetIn, SignupIn, UserOut,
 )
-from app.services.mailer import gmail_configured, send_email
 from app.services.triage import OPEN, open_load, rebalance, release_agent
 
 log = logging.getLogger("triage.auth")
@@ -25,13 +25,29 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 admin_router = APIRouter(prefix="/api/admin/users", tags=["admin"])
 
 
-def user_out(db: Session, u: User) -> UserOut:
+# Recovery codes: no look-alike characters (0/O, 1/I/L), shown once, stored only as a hash.
+_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def _normalise_code(code: str) -> str:
+    return "".join(ch for ch in code.upper() if ch.isalnum())
+
+
+def new_recovery_code(user: User) -> str:
+    raw = "".join(secrets.choice(_CODE_ALPHABET) for _ in range(12))
+    user.recovery_code_hash = hash_password(raw)
+    return f"{raw[:4]}-{raw[4:8]}-{raw[8:]}"
+
+
+def user_out(db: Session, u: User, recovery_code: str | None = None) -> UserOut:
     cust = db.get(Customer, u.customer_id) if u.customer_id else None
     auth = "both" if (u.password_hash and u.google_sub) else "google" if u.google_sub else "password"
     return UserOut(
         id=u.id, email=u.email, name=u.name, role=u.role, profile_complete=u.profile_complete, auth=auth,
         customer=CustomerSummary(id=cust.id, name=cust.name, segment=cust.segment, plan=cust.plan) if cust else None,
         active=u.active, created_at=u.created_at, availability=u.availability or "available", max_open=u.max_open or 0,
+        has_recovery_code=bool(u.recovery_code_hash), reset_requested_at=u.reset_requested_at,
+        recovery_code=recovery_code,
     )
 
 
@@ -71,8 +87,10 @@ def signup(payload: SignupIn, request: Request, response: Response, db: Session 
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "An account with this email already exists")
     user = create_customer_user(db, email=email, name=payload.name.strip(), plan=payload.plan, password=payload.password)
+    code = new_recovery_code(user)
+    db.commit()
     set_session(response, user)
-    return user_out(db, user)
+    return user_out(db, user, recovery_code=code)
 
 
 @router.post("/login", response_model=UserOut)
@@ -93,24 +111,48 @@ def _hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+@router.post("/recover")
+def recover_with_code(payload: RecoverIn, request: Request, db: Session = Depends(get_db)) -> dict:
+    """Self-service reset with the recovery code shown at sign-up. Returns a NEW code (the old one is used up)."""
+    email = payload.email.strip().lower()
+    key = f"recover:{email}"
+    check_rate_limit(key, limit=5, record=False)
+    user = db.query(User).filter(User.email == email, User.active.is_(True)).first()
+    if not user or not user.recovery_code_hash or not verify_password(_normalise_code(payload.code), user.recovery_code_hash):
+        record_failure(key)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "That email and recovery code don't match")
+    user.password_hash = hash_password(payload.password)
+    user.reset_requested_at = None
+    code = new_recovery_code(user)
+    now = datetime.now(timezone.utc)
+    for other in db.query(PasswordReset).filter(PasswordReset.user_id == user.id, PasswordReset.used_at.is_(None)).all():
+        other.used_at = now
+    db.commit()
+    return {"ok": True, "message": "Password changed. Save your new recovery code.", "recovery_code": code}
+
+
 @router.post("/forgot")
-def forgot_password(payload: ForgotIn, request: Request, db: Session = Depends(get_db)) -> dict:
-    """Email a one-time reset link. Same answer whether or not the account exists (no account probing)."""
+def request_admin_reset(payload: ForgotIn, request: Request, db: Session = Depends(get_db)) -> dict:
+    """No recovery code? Ask an admin: the request shows on the admin's Users page.
+    Same answer whether or not the account exists (no account probing)."""
     check_rate_limit(f"forgot:{request.client.host if request.client else '?'}", limit=6)
     email = payload.email.strip().lower()
     user = db.query(User).filter(User.email == email, User.active.is_(True)).first()
     if user:
-        token = secrets.token_urlsafe(32)
-        db.add(PasswordReset(user_id=user.id, token_hash=_hash_token(token),
-                             expires_at=datetime.now(timezone.utc) + timedelta(minutes=settings.reset_link_minutes)))
+        user.reset_requested_at = datetime.now(timezone.utc)
         db.commit()
-        link = f"{settings.public_url.rstrip('/')}/reset-password?token={token}"
-        send_email(db, user.email, "Reset your Support Triage Router password",
-                   f"Hi {user.name.split()[0]},\n\nUse this link to choose a new password "
-                   f"(valid for {settings.reset_link_minutes} minutes, one use only):\n\n{link}\n\n"
-                   "If you did not ask for this, you can ignore this email.")
-    return {"ok": True, "message": "If an account exists for that email, a reset link is on its way.",
-            "delivery": "email" if gmail_configured() else "outbox"}
+    return {"ok": True, "message": "Request sent. An admin will give you a one-time reset link."}
+
+
+@router.post("/me/recovery-code")
+def regenerate_recovery_code(payload: RecoveryCodeIn, user: User = Depends(current_user),
+                             db: Session = Depends(get_db)) -> dict:
+    """New recovery code (the old one stops working). Password-protected for password accounts."""
+    if user.password_hash and not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Current password is wrong")
+    code = new_recovery_code(user)
+    db.commit()
+    return {"recovery_code": code}
 
 
 @router.post("/reset")
@@ -235,6 +277,21 @@ def update_user(user_id: int, payload: AdminUserPatch, admin: User = Depends(req
         rebalance(db, user.role)
     db.commit()
     return user_out(db, user)
+
+
+@admin_router.post("/{user_id}/reset-link")
+def create_reset_link(user_id: int, _: User = Depends(require("admin")), db: Session = Depends(get_db)) -> dict:
+    """One-time reset link for a user who lost their recovery code. The admin passes it on."""
+    user = db.get(User, user_id)
+    if not user or not user.active:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    token = secrets.token_urlsafe(32)
+    db.add(PasswordReset(user_id=user.id, token_hash=_hash_token(token),
+                         expires_at=datetime.now(timezone.utc) + timedelta(minutes=settings.reset_link_minutes)))
+    user.reset_requested_at = None
+    db.commit()
+    return {"path": f"/reset-password?token={token}", "expires_minutes": settings.reset_link_minutes,
+            "user": user.email}
 
 
 @admin_router.get("/workload/summary")

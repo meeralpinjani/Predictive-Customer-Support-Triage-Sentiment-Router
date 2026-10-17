@@ -249,6 +249,51 @@ function GoogleButton({ onError }) {
   );
 }
 
+/** Shows a one-time recovery code with copy / download and an "I saved it" confirmation. */
+export function RecoveryCodeCard({ code, email, onDone, doneLabel = "Continue" }) {
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const download = () => {
+    const blob = new Blob([
+      `Support Triage Router - account recovery code\n\nAccount: ${email}\nRecovery code: ${code}\n\n` +
+      "Use it on the sign-in page under 'Forgot password?'. It works once; you get a new one after using it.\n",
+    ], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "triage-router-recovery-code.txt";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  return (
+    <div className="space-y-4">
+      <Alert kind="info" title="Save your recovery code">
+        If you ever forget your password, this code lets you reset it yourself. It's shown only now.
+      </Alert>
+      <div className="rounded-2xl border-2 border-dashed border-glacier/50 bg-glacier-soft/40 py-5 text-center">
+        <p className="font-mono text-2xl font-bold tracking-[0.2em] select-all" aria-label="Recovery code">{code}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" className="btn-ghost" onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(code);
+            setCopied(true);
+          } catch {
+            /* clipboard blocked: the code is selectable */
+          }
+        }}>{copied ? <><Check className="w-4 h-4" />Copied</> : "Copy"}</button>
+        <button type="button" className="btn-ghost" onClick={download}>Download .txt</button>
+      </div>
+      <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+        <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="w-4 h-4 accent-[rgb(var(--glacier))]" />
+        I've saved my recovery code somewhere safe
+      </label>
+      <button type="button" className="btn-primary w-full !py-3" disabled={!saved} onClick={onDone}>
+        {doneLabel}<ArrowRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ pages
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -321,12 +366,13 @@ function PlanPicker({ value, onChange }) {
 }
 
 export function SignupPage() {
-  const { user, signup } = useAuth();
+  const { user, refresh } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", email: "", password: "", plan: "free" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  if (user) return <Navigate to={homeFor(user)} replace />;
+  const [created, setCreated] = useState(null);
+  if (user && !created) return <Navigate to={homeFor(user)} replace />;
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async (e) => {
@@ -335,14 +381,23 @@ export function SignupPage() {
     setBusy(true);
     setError("");
     try {
-      await signup(form);
-      navigate("/", { replace: true });
+      setCreated(await api.signup(form));   // signed in; show the recovery code before entering the app
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
+
+  if (created) {
+    return (
+      <AuthLayout>
+        <Heading title={`Welcome, ${created.name.split(" ")[0]}!`} subtitle="Your account is ready. One last thing:" />
+        <RecoveryCodeCard code={created.recovery_code} email={created.email} doneLabel="Go to my tickets"
+                          onDone={async () => { await refresh(); navigate("/", { replace: true }); }} />
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>
@@ -365,17 +420,27 @@ export function SignupPage() {
 }
 
 export function ForgotPasswordPage() {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState("code"); // code | admin
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [sent, setSent] = useState(null);
+  const [newCode, setNewCode] = useState(null);
+  const [requested, setRequested] = useState(null);
+  const match = confirm.length > 0 && password === confirm;
 
-  const submit = async (e) => {
+  const recover = async (e) => {
     e.preventDefault();
+    if (!passwordOk(password)) return setError("Please meet all the password rules.");
+    if (!match) return setError("The passwords don't match.");
     setBusy(true);
     setError("");
     try {
-      setSent(await api.forgot(email));
+      const res = await api.recover(email, code, password);
+      setNewCode(res.recovery_code);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -383,23 +448,66 @@ export function ForgotPasswordPage() {
     }
   };
 
+  const askAdmin = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      setRequested(await api.forgot(email));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (newCode) {
+    return (
+      <AuthLayout>
+        <Heading title="Password changed" subtitle="Your old recovery code is used up. Here is your new one." />
+        <RecoveryCodeCard code={newCode} email={email} doneLabel="Go to sign in" onDone={() => navigate("/login")} />
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout>
       <Link to="/login" className="inline-flex items-center gap-1 text-sm text-ink-3 hover:text-ink mb-4"><ArrowLeft className="w-4 h-4" />Back to sign in</Link>
-      <Heading title="Forgot your password?" subtitle="Enter your email address and we'll send you a link to reset your password." />
-      {sent ? (
+      <Heading title="Forgot your password?"
+               subtitle={mode === "code" ? "Use the recovery code you saved when you signed up." : "No code? An admin can give you a one-time reset link."} />
+      <div className="grid grid-cols-2 gap-1 rounded-2xl bg-sunken p-1 mb-4" role="tablist">
+        {[["code", "I have my recovery code"], ["admin", "I lost my code"]].map(([k, l]) => (
+          <button key={k} type="button" role="tab" aria-selected={mode === k} onClick={() => { setMode(k); setError(""); }}
+                  className={clsx("rounded-xl py-2 text-xs font-semibold transition", mode === k ? "bg-card shadow-sm text-ink" : "text-ink-3 hover:text-ink")}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {mode === "code" ? (
+        <form onSubmit={recover} className="space-y-3">
+          {error && <Alert title="Couldn't reset the password">{error}</Alert>}
+          <IconField icon={Mail} label="Email address" type="email" autoComplete="email" value={email} onChange={setEmail} />
+          <IconField icon={Lock} label="Recovery code (e.g. K7QX-2MPD-9RTA)" autoComplete="off" value={code} onChange={setCode} />
+          <IconField icon={Lock} label="New password" toggle autoComplete="new-password" value={password} onChange={setPassword} />
+          <IconField icon={Lock} label="Confirm new password" toggle autoComplete="new-password" value={confirm} onChange={setConfirm} />
+          <PasswordChecklist password={password} />
+          {confirm && !match && <p className="text-xs text-senior-text">Passwords don't match yet.</p>}
+          <PrimaryButton busy={busy} disabled={!passwordOk(password) || !match || code.length < 8}>Reset password</PrimaryButton>
+        </form>
+      ) : requested ? (
         <div className="space-y-4">
-          <Alert kind="info" title="Check your inbox">
-            {sent.message} The link works once and expires in 30 minutes.
+          <Alert kind="info" title="Request sent">
+            {requested.message} Contact your support admin; the link works once and expires in 30 minutes.
           </Alert>
           <Link to="/login" className="btn-ghost w-full">Back to sign in</Link>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={askAdmin} className="space-y-3">
           {error && <Alert>{error}</Alert>}
           <IconField icon={Mail} label="Email address" type="email" autoComplete="email" value={email} onChange={setEmail} />
-          <PrimaryButton busy={busy}>Send reset link</PrimaryButton>
-          <Alert kind="info">We'll send you a secure, one-time link to reset your password. It expires in 30 minutes.</Alert>
+          <PrimaryButton busy={busy}>Ask an admin for a reset link</PrimaryButton>
+          <Alert kind="info">Your request appears on the admin's Users page. They'll give you a secure, one-time link that expires in 30 minutes.</Alert>
         </form>
       )}
     </AuthLayout>
@@ -438,14 +546,14 @@ export function ResetPasswordPage() {
     <AuthLayout>
       <Heading title="Reset your password" subtitle="Enter your new password below." />
       {!token ? (
-        <Alert title="Missing link">Open the reset link from your email, or <Link to="/forgot-password" className="font-semibold underline">request a new one</Link>.</Alert>
+        <Alert title="Missing link">Open the reset link your admin gave you, or <Link to="/forgot-password" className="font-semibold underline">reset with your recovery code</Link>.</Alert>
       ) : done ? (
         <Alert kind="info" title="Password changed">Taking you to sign in…</Alert>
       ) : (
         <form onSubmit={submit} className="space-y-3">
           {error && (
             <Alert title="Couldn't reset the password">
-              {error} {error.includes("expired") && <Link to="/forgot-password" className="font-semibold underline">Request a new link</Link>}
+              {error} {error.includes("expired") && <Link to="/forgot-password" className="font-semibold underline">Ask for a new link</Link>}
             </Alert>
           )}
           <IconField icon={Lock} label="New password" toggle autoComplete="new-password" value={password} onChange={setPassword} />

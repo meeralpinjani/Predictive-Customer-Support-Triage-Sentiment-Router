@@ -31,11 +31,7 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"           # private: files are only served through the API
     max_upload_mb: int = 5
     max_files_per_message: int = 5
-    # Email (free Gmail SMTP with an app password). Without it, emails go to the admin Outbox only.
-    gmail_address: str = ""
-    gmail_app_password: str = ""
-    public_url: str = "http://localhost:5173"   # used to build links in emails
-    reset_link_minutes: int = 30
+    reset_link_minutes: int = 30            # admin-created password reset links
 
     def kb_thresholds(self, mode: str | None = None) -> tuple[float, float]:
         if (mode or self.nlp_mode) == "hf":

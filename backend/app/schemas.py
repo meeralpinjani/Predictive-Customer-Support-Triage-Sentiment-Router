@@ -36,6 +36,18 @@ class ForgotIn(BaseModel):
     email: str = Field(..., min_length=3, max_length=200)
 
 
+class RecoverIn(BaseModel):
+    email: str = Field(..., min_length=3, max_length=200)
+    code: str = Field(..., min_length=8, max_length=40)
+    password: str = Field(..., max_length=200)
+
+    _pw = field_validator("password")(check_password)
+
+
+class RecoveryCodeIn(BaseModel):
+    current_password: str = Field("", max_length=200)
+
+
 class ResetIn(BaseModel):
     token: str = Field(..., min_length=20, max_length=200)
     password: str = Field(..., max_length=200)
@@ -75,6 +87,9 @@ class UserOut(BaseModel):
     created_at: datetime | None = None
     availability: str = "available"
     max_open: int = 8
+    has_recovery_code: bool = False
+    reset_requested_at: datetime | None = None
+    recovery_code: str | None = None   # only right after sign-up / regeneration, never stored in clear
 
 
 class AdminUserPatch(BaseModel):

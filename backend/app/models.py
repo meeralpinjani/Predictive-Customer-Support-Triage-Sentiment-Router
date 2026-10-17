@@ -37,6 +37,8 @@ class User(Base):
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     availability: Mapped[str] = mapped_column(String, default="available")  # agents: available | busy | offline
     max_open: Mapped[int] = mapped_column(Integer, default=8)               # agents: capacity (open tickets)
+    recovery_code_hash: Mapped[str | None] = mapped_column(String, nullable=True)  # one-time code shown at sign-up
+    reset_requested_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)  # "ask the admin" requests
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
@@ -164,14 +166,3 @@ class PasswordReset(Base):
     used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-
-class OutboxEmail(Base):
-    """Every email the app sends (or would send). Admin-only: shows links when Gmail is not set up."""
-    __tablename__ = "outbox"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    to: Mapped[str] = mapped_column(String)
-    subject: Mapped[str] = mapped_column(String)
-    body: Mapped[str] = mapped_column(Text)
-    status: Mapped[str] = mapped_column(String, default="queued")  # queued | sent | outbox_only | failed
-    error: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
