@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+backend/.venv*/
+
+# Secrets / local state
+.env
+*.db
+*.db-journal
+
+# Node
+node_modules/
+
+# Eval artefacts
+backend/eval/nlp_mistakes.csv
+
+# Model caches
+.hf_cache/

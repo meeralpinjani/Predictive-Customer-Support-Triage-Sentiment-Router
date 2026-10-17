@@ -1,0 +1,185 @@
+[
+  {
+    "id": "kb_pass_01",
+    "title": "Resetting Your Account Password",
+    "questions": [
+      "How do I reset my password?",
+      "Forgot my password what should I do?",
+      "Can I change my login password?",
+      "Where is the password reset link?",
+      "How to recover lost account password"
+    ],
+    "answer": "To reset your password, visit the login page and click 'Forgot Password'. Enter your registered email address and click 'Send Recovery Link'. Check your inbox for the reset link, which expires after 30 minutes.",
+    "source": "Help Center - Account Security"
+  },
+  {
+    "id": "kb_inv_02",
+    "title": "Downloading Past Invoices and Receipts",
+    "questions": [
+      "How can I download my invoice?",
+      "Where do I find my past receipts?",
+      "Need VAT tax invoice for accounting",
+      "How to access billing history and invoices",
+      "Can I get a PDF receipt for my payment?"
+    ],
+    "answer": "Navigate to Settings > Billing & Invoices. Scroll down to the 'Payment History' table where you can view and download all past invoices and tax receipts in PDF format.",
+    "source": "Help Center - Billing"
+  },
+  {
+    "id": "kb_email_03",
+    "title": "Updating Your Account Email Address",
+    "questions": [
+      "How do I update my registered email?",
+      "Change email address on account",
+      "Can I transfer my login email?",
+      "Where to update my contact email"
+    ],
+    "answer": "Go to Profile > Account Details. Click 'Edit' next to your email address, enter your new email, and submit. You will receive verification emails at both old and new addresses to confirm the change.",
+    "source": "Help Center - Account Settings"
+  },
+  {
+    "id": "kb_plan_04",
+    "title": "Upgrading or Changing Your Subscription Plan",
+    "questions": [
+      "How to upgrade my plan?",
+      "Can I downgrade from Pro to Basic?",
+      "Change subscription tier",
+      "Switch to annual billing plan",
+      "How do I change my subscription?"
+    ],
+    "answer": "Go to Settings > Subscription. Choose your desired plan (Basic, Pro, or Enterprise) and select monthly or annual billing. Upgrades take effect immediately with prorated billing.",
+    "source": "Help Center - Billing"
+  },
+  {
+    "id": "kb_refund_05",
+    "title": "Refund Policy and Request Process",
+    "questions": [
+      "What is your refund policy?",
+      "How do I request a refund?",
+      "Can I get money back for accidental charge?",
+      "Refund dispute timeline"
+    ],
+    "answer": "We offer a full 14-day money-back guarantee for initial subscription purchases. For accidental duplicate charges or billing disputes, submit a ticket under Billing and our finance team will process eligible refunds within 3-5 business days.",
+    "source": "Help Center - Billing & Legal"
+  },
+  {
+    "id": "kb_2fa_06",
+    "title": "Enabling Two-Factor Authentication (2FA)",
+    "questions": [
+      "How do I enable two-factor authentication?",
+      "Set up 2FA or multi-factor login",
+      "How to use authenticator app",
+      "Add two step verification to my account"
+    ],
+    "answer": "Go to Settings > Security > Two-Factor Authentication. Toggle 2FA ON, scan the QR code using Google Authenticator or Authy, and enter the 6-digit confirmation code. Save your backup recovery codes securely.",
+    "source": "Help Center - Security"
+  },
+  {
+    "id": "kb_export_07",
+    "title": "Exporting Your Workspace Data",
+    "questions": [
+      "How do I export my data?",
+      "Can I download all customer records?",
+      "Export CSV or JSON backup",
+      "Where to find data export options"
+    ],
+    "answer": "Administrators can navigate to Workspace Settings > Data Management > Export. Select either CSV or JSON format and click 'Generate Archive'. An encrypted download link will be emailed within 10 minutes.",
+    "source": "Help Center - Data & Privacy"
+  },
+  {
+    "id": "kb_ship_08",
+    "title": "Tracking Hardware & Physical Deliveries",
+    "questions": [
+      "Where is my shipment?",
+      "How do I track my package delivery?",
+      "Tracking number not updating",
+      "When will my security key or hardware arrive?"
+    ],
+    "answer": "Check your dispatch confirmation email for the courier tracking code and carrier URL. Deliveries usually take 3-5 business days domestically. If tracking shows no scans for over 48 hours, contact logistics support.",
+    "source": "Help Center - Logistics"
+  },
+  {
+    "id": "kb_notify_09",
+    "title": "Managing Notification and Email Preferences",
+    "questions": [
+      "How do I turn off email notifications?",
+      "Change notification settings",
+      "Too many alert emails",
+      "Mute ticket updates"
+    ],
+    "answer": "Visit Preferences > Notifications. Customize your alerts for email, browser push notifications, and daily summaries by toggling the relevant switches.",
+    "source": "Help Center - General"
+  },
+  {
+    "id": "kb_theme_10",
+    "title": "Customizing Theme and Dark Mode",
+    "questions": [
+      "How do I enable dark mode?",
+      "Where is the light mode switch?",
+      "Can I change the dashboard theme?",
+      "Would be nice to have dark mode"
+    ],
+    "answer": "Click your user avatar in the top right corner and toggle 'Dark Mode' or select 'System Default' to sync with your operating system preferences.",
+    "source": "Help Center - Interface"
+  },
+  {
+    "id": "kb_delete_11",
+    "title": "Account Cancellation and Data Deletion",
+    "questions": [
+      "How do I close my account?",
+      "Delete my personal profile and data",
+      "Cancel account permanently",
+      "GDPR erasure request"
+    ],
+    "answer": "Go to Settings > Account > Danger Zone. Click 'Delete Account' and enter your password. Account deletion is permanent after a 14-day grace period.",
+    "source": "Help Center - Privacy"
+  },
+  {
+    "id": "kb_api_12",
+    "title": "Generating and Managing API Keys",
+    "questions": [
+      "How do I generate an API key?",
+      "Where can I find my secret developer token?",
+      "Rotate API credentials",
+      "API key rate limits"
+    ],
+    "answer": "Developers can visit Settings > Developer > API Keys. Click 'Create New Secret Key', name the key, assign permissions, and copy the key immediately as it will not be displayed again.",
+    "source": "Help Center - Developer Platform"
+  },
+  {
+    "id": "kb_sso_13",
+    "title": "Configuring Single Sign-On (SSO / SAML)",
+    "questions": [
+      "How to configure SAML SSO?",
+      "Set up Okta or Azure AD Single Sign On",
+      "Enterprise SSO integration guide",
+      "Where do I enter Identity Provider metadata?"
+    ],
+    "answer": "Enterprise workspace owners can navigate to Security > SAML SSO. Paste your IdP Entity ID, SSO URL, and x.509 certificate. Test authentication with the provided simulation button before enforcing SSO.",
+    "source": "Help Center - Enterprise Security"
+  },
+  {
+    "id": "kb_address_14",
+    "title": "Updating Billing Address and Tax Details",
+    "questions": [
+      "How to change billing address?",
+      "Update company VAT registration number",
+      "Edit payment method address",
+      "Incorrect address on invoice"
+    ],
+    "answer": "Go to Billing > Payment Methods > Edit Billing Address. Update company name, street, postal code, and tax/VAT ID. Changes apply to all future generated invoices.",
+    "source": "Help Center - Billing"
+  },
+  {
+    "id": "kb_session_15",
+    "title": "Managing Active Sessions and Logging Out",
+    "questions": [
+      "How do I log out of other devices?",
+      "Revoke active web sessions",
+      "Remote logout",
+      "Someone else logged into my device session"
+    ],
+    "answer": "Under Security > Active Sessions, review all current devices, IP addresses, and login times. Click 'Sign Out All Other Devices' to invalidate any unauthorized active sessions immediately.",
+    "source": "Help Center - Account Security"
+  }
+]

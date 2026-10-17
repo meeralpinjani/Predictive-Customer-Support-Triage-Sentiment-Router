@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-nordic-frost text-nordic-dark font-sans antialiased;
+  }
+  ::selection {
+    @apply bg-nordic-ice;
+  }
+}
+
+@layer components {
+  .tile {
+    @apply bg-nordic-card rounded-3xl border border-nordic-border/80 p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)];
+  }
+  .tile-dark {
+    @apply bg-nordic-fjord text-slate-100 rounded-3xl p-5 sm:p-6 border border-nordic-fjordSurface;
+  }
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-nordic-muted;
+  }
+  .field {
+    @apply w-full rounded-xl border border-nordic-border bg-nordic-frost/60 px-3 py-2 text-sm text-nordic-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-nordic-glacier/30 focus:border-nordic-glacier transition;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-nordic-glacier/40;
+  }
+  .btn-primary {
+    @apply btn bg-nordic-fjord text-white hover:bg-nordic-fjordSurface;
+  }
+  .btn-ghost {
+    @apply btn bg-nordic-frost text-nordic-slate hover:bg-slate-200/70;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+  }
+  .mono {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}

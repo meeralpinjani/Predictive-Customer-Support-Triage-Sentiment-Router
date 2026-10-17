@@ -1,0 +1,221 @@
+text,urgency_label,frustration_label,critical,intent
+Our production dashboard is DOWN. We will cancel if this is not fixed ASAP!,high,high,1,outage
+Production server is down and rejecting all user logins.,high,low,1,outage
+Emergency: Complete site outage. All transactions are failing immediately.,high,high,1,outage
+The database cluster is down and throwing 500 errors across all clients.,high,high,1,outage
+Production website has been down for 30 minutes. We are losing business!,high,high,1,outage
+"Our api platform is down right now, need urgent resolution.",high,low,1,outage
+Someone logged in to my account from another country. Was there a breach?,high,low,1,security
+Unauthorized access detected on our company admin dashboard.,high,high,1,security
+We suspect an account takeover. Stolen credentials and unauthorized changes.,high,high,1,security
+Phishing attack detected targeting our employee credentials.,high,low,1,security
+Our private security tokens have been compromised and breached.,high,high,1,security
+Our corporate counsel has advised legal action and a lawsuit regarding SLA breach.,high,high,1,legal
+Our attorney will sue you in court if our data is not exported today.,high,high,1,legal
+Notice of legal lawsuit regarding unauthorized billing charges.,high,high,1,legal
+We have engaged a lawyer and will report this to the federal regulator.,high,high,1,legal
+The power backup hardware started smoking and overheating. It is unsafe!,high,high,1,safety
+Electric shock hazard from the supplied power connector unit.,high,high,1,safety
+Worker injury due to defective equipment casing hazard.,high,high,1,safety
+I was charged twice this month. Please refund today.,medium,low,0,billing_dispute
+Double charge on our credit card statement. Need refund immediately.,medium,medium,0,billing_dispute
+"We were billed after cancelling. This is ridiculous, refund our money.",medium,high,0,billing_dispute
+Wrong charge on invoice #9021. Please review and credit account.,medium,low,0,billing_dispute
+Duplicate payment went through on our renewal invoice.,medium,low,0,billing_dispute
+Why was my account charged $199 instead of $99? Terrible service.,medium,high,0,billing_dispute
+How do I reset my password?,low,low,0,password_reset
+Forgot my password and recovery link is not arriving.,low,low,0,password_reset
+Where can I reset my account login password?,low,low,0,password_reset
+Need assistance with password reset on mobile app.,low,low,0,password_reset
+Where can I download my invoice for September?,low,low,0,invoice
+Need PDF receipt of our last payment for accounting records.,low,low,0,invoice
+How to access past billing history and VAT tax invoices?,low,low,0,invoice
+Please send the annual invoice receipt to our finance department.,low,low,0,invoice
+How do I invite additional team members to our workspace?,low,low,0,how_to
+Where do I find the setting to update my email address?,low,low,0,how_to
+How to configure two-factor authentication on mobile?,low,low,0,how_to
+Where can we export our workspace logs and activity history?,low,low,0,how_to
+How to change our company notification email preferences?,low,low,0,how_to
+The CSV export feature crashes whenever exporting more than 100 rows.,medium,low,0,bug
+Mobile app crashes on startup when opening the notification tab.,medium,low,0,bug
+We are getting unexpected 500 error when submitting the profile form.,medium,low,0,bug
+Search filters are broken and do not return any matching records.,medium,low,0,bug
+Slow performance on dashboard during peak European hours.,medium,medium,0,bug
+"This is the worst app, nothing works and nobody replies!!!",medium,high,0,bug
+Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable.,medium,high,0,complaint
+"Furious with this terrible tool, nothing works and I am fed up with the bugs.",medium,high,0,complaint
+"Unacceptable delays, ridiculous customer service, nobody helps us.",medium,high,0,complaint
+I want to cancel my subscription and close my account next month.,low,low,0,cancellation
+Please cancel my subscription and close my account. Switching to competitor.,medium,medium,0,cancellation
+We decided to cancel our pro plan and request confirmation.,low,low,0,cancellation
+Would be nice to have dark mode in the web app.,low,low,0,feature_request
+Feature request: please add custom logo uploads to PDF export reports.,low,low,0,feature_request
+Suggestion: would love keyboard shortcuts for navigating tickets.,low,low,0,feature_request
+Please add support for webhook event triggers on status update.,low,low,0,feature_request
+Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Thank you.,high,high,1,outage
+Production server is down and rejecting all user logins. Please assist.,high,low,1,outage
+Emergency: Complete site outage. All transactions are failing immediately. Thanks in advance.,high,high,1,outage
+The database cluster is down and throwing 500 errors across all clients. Need update ASAP.,high,high,1,outage
+Production website has been down for 30 minutes. We are losing business! Looking forward to your reply.,high,high,1,outage
+"Our api platform is down right now, need urgent resolution. Critical for our team.",high,low,1,outage
+Someone logged in to my account from another country. Was there a breach? Thank you.,high,low,1,security
+Unauthorized access detected on our company admin dashboard. Please assist.,high,high,1,security
+We suspect an account takeover. Stolen credentials and unauthorized changes. Thanks in advance.,high,high,1,security
+Phishing attack detected targeting our employee credentials. Need update ASAP.,high,low,1,security
+Our private security tokens have been compromised and breached. Looking forward to your reply.,high,high,1,security
+Our corporate counsel has advised legal action and a lawsuit regarding SLA breach. Critical for our team.,high,high,1,legal
+Our attorney will sue you in court if our data is not exported today. Thank you.,high,high,1,legal
+Notice of legal lawsuit regarding unauthorized billing charges. Please assist.,high,high,1,legal
+We have engaged a lawyer and will report this to the federal regulator. Thanks in advance.,high,high,1,legal
+The power backup hardware started smoking and overheating. It is unsafe! Need update ASAP.,high,high,1,safety
+Electric shock hazard from the supplied power connector unit. Looking forward to your reply.,high,high,1,safety
+Worker injury due to defective equipment casing hazard. Critical for our team.,high,high,1,safety
+I was charged twice this month. Please refund today. Thank you.,medium,low,0,billing_dispute
+Double charge on our credit card statement. Need refund immediately. Please assist.,medium,medium,0,billing_dispute
+"We were billed after cancelling. This is ridiculous, refund our money. Thanks in advance.",medium,high,0,billing_dispute
+Wrong charge on invoice #9021. Please review and credit account. Need update ASAP.,medium,low,0,billing_dispute
+Duplicate payment went through on our renewal invoice. Looking forward to your reply.,medium,low,0,billing_dispute
+Why was my account charged $199 instead of $99? Terrible service. Critical for our team.,medium,high,0,billing_dispute
+How do I reset my password? Thank you.,low,low,0,password_reset
+Forgot my password and recovery link is not arriving. Please assist.,low,low,0,password_reset
+Where can I reset my account login password? Thanks in advance.,low,low,0,password_reset
+Need assistance with password reset on mobile app. Need update ASAP.,low,low,0,password_reset
+Where can I download my invoice for September? Looking forward to your reply.,low,low,0,invoice
+Need PDF receipt of our last payment for accounting records. Critical for our team.,low,low,0,invoice
+How to access past billing history and VAT tax invoices? Thank you.,low,low,0,invoice
+Please send the annual invoice receipt to our finance department. Please assist.,low,low,0,invoice
+How do I invite additional team members to our workspace? Thanks in advance.,low,low,0,how_to
+Where do I find the setting to update my email address? Need update ASAP.,low,low,0,how_to
+How to configure two-factor authentication on mobile? Looking forward to your reply.,low,low,0,how_to
+Where can we export our workspace logs and activity history? Critical for our team.,low,low,0,how_to
+How to change our company notification email preferences? Thank you.,low,low,0,how_to
+The CSV export feature crashes whenever exporting more than 100 rows. Please assist.,medium,low,0,bug
+Mobile app crashes on startup when opening the notification tab. Thanks in advance.,medium,low,0,bug
+We are getting unexpected 500 error when submitting the profile form. Need update ASAP.,medium,low,0,bug
+Search filters are broken and do not return any matching records. Looking forward to your reply.,medium,low,0,bug
+Slow performance on dashboard during peak European hours. Critical for our team.,medium,medium,0,bug
+"This is the worst app, nothing works and nobody replies!!! Thank you.",medium,high,0,bug
+Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable. Please assist.,medium,high,0,complaint
+"Furious with this terrible tool, nothing works and I am fed up with the bugs. Thanks in advance.",medium,high,0,complaint
+"Unacceptable delays, ridiculous customer service, nobody helps us. Need update ASAP.",medium,high,0,complaint
+I want to cancel my subscription and close my account next month. Looking forward to your reply.,low,low,0,cancellation
+Please cancel my subscription and close my account. Switching to competitor. Critical for our team.,medium,medium,0,cancellation
+We decided to cancel our pro plan and request confirmation. Thank you.,low,low,0,cancellation
+Would be nice to have dark mode in the web app. Please assist.,low,low,0,feature_request
+Feature request: please add custom logo uploads to PDF export reports. Thanks in advance.,low,low,0,feature_request
+Suggestion: would love keyboard shortcuts for navigating tickets. Need update ASAP.,low,low,0,feature_request
+Please add support for webhook event triggers on status update. Looking forward to your reply.,low,low,0,feature_request
+Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Critical for our team.,high,high,1,outage
+Production server is down and rejecting all user logins. Thank you.,high,low,1,outage
+Emergency: Complete site outage. All transactions are failing immediately. Please assist.,high,high,1,outage
+The database cluster is down and throwing 500 errors across all clients. Thanks in advance.,high,high,1,outage
+Production website has been down for 30 minutes. We are losing business! Need update ASAP.,high,high,1,outage
+"Our api platform is down right now, need urgent resolution. Looking forward to your reply.",high,low,1,outage
+Someone logged in to my account from another country. Was there a breach? Critical for our team.,high,low,1,security
+Unauthorized access detected on our company admin dashboard. Thank you.,high,high,1,security
+We suspect an account takeover. Stolen credentials and unauthorized changes. Please assist.,high,high,1,security
+Phishing attack detected targeting our employee credentials. Thanks in advance.,high,low,1,security
+Our private security tokens have been compromised and breached. Need update ASAP.,high,high,1,security
+Our corporate counsel has advised legal action and a lawsuit regarding SLA breach. Looking forward to your reply.,high,high,1,legal
+Our attorney will sue you in court if our data is not exported today. Critical for our team.,high,high,1,legal
+Notice of legal lawsuit regarding unauthorized billing charges. Thank you.,high,high,1,legal
+We have engaged a lawyer and will report this to the federal regulator. Please assist.,high,high,1,legal
+The power backup hardware started smoking and overheating. It is unsafe! Thanks in advance.,high,high,1,safety
+Electric shock hazard from the supplied power connector unit. Need update ASAP.,high,high,1,safety
+Worker injury due to defective equipment casing hazard. Looking forward to your reply.,high,high,1,safety
+I was charged twice this month. Please refund today. Critical for our team.,medium,low,0,billing_dispute
+Double charge on our credit card statement. Need refund immediately. Thank you.,medium,medium,0,billing_dispute
+"We were billed after cancelling. This is ridiculous, refund our money. Please assist.",medium,high,0,billing_dispute
+Wrong charge on invoice #9021. Please review and credit account. Thanks in advance.,medium,low,0,billing_dispute
+Duplicate payment went through on our renewal invoice. Need update ASAP.,medium,low,0,billing_dispute
+Why was my account charged $199 instead of $99? Terrible service. Looking forward to your reply.,medium,high,0,billing_dispute
+How do I reset my password? Critical for our team.,low,low,0,password_reset
+Forgot my password and recovery link is not arriving. Thank you.,low,low,0,password_reset
+Where can I reset my account login password? Please assist.,low,low,0,password_reset
+Need assistance with password reset on mobile app. Thanks in advance.,low,low,0,password_reset
+Where can I download my invoice for September? Need update ASAP.,low,low,0,invoice
+Need PDF receipt of our last payment for accounting records. Looking forward to your reply.,low,low,0,invoice
+How to access past billing history and VAT tax invoices? Critical for our team.,low,low,0,invoice
+Please send the annual invoice receipt to our finance department. Thank you.,low,low,0,invoice
+How do I invite additional team members to our workspace? Please assist.,low,low,0,how_to
+Where do I find the setting to update my email address? Thanks in advance.,low,low,0,how_to
+How to configure two-factor authentication on mobile? Need update ASAP.,low,low,0,how_to
+Where can we export our workspace logs and activity history? Looking forward to your reply.,low,low,0,how_to
+How to change our company notification email preferences? Critical for our team.,low,low,0,how_to
+The CSV export feature crashes whenever exporting more than 100 rows. Thank you.,medium,low,0,bug
+Mobile app crashes on startup when opening the notification tab. Please assist.,medium,low,0,bug
+We are getting unexpected 500 error when submitting the profile form. Thanks in advance.,medium,low,0,bug
+Search filters are broken and do not return any matching records. Need update ASAP.,medium,low,0,bug
+Slow performance on dashboard during peak European hours. Looking forward to your reply.,medium,medium,0,bug
+"This is the worst app, nothing works and nobody replies!!! Critical for our team.",medium,high,0,bug
+Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable. Thank you.,medium,high,0,complaint
+"Furious with this terrible tool, nothing works and I am fed up with the bugs. Please assist.",medium,high,0,complaint
+"Unacceptable delays, ridiculous customer service, nobody helps us. Thanks in advance.",medium,high,0,complaint
+I want to cancel my subscription and close my account next month. Need update ASAP.,low,low,0,cancellation
+Please cancel my subscription and close my account. Switching to competitor. Looking forward to your reply.,medium,medium,0,cancellation
+We decided to cancel our pro plan and request confirmation. Critical for our team.,low,low,0,cancellation
+Would be nice to have dark mode in the web app. Thank you.,low,low,0,feature_request
+Feature request: please add custom logo uploads to PDF export reports. Please assist.,low,low,0,feature_request
+Suggestion: would love keyboard shortcuts for navigating tickets. Thanks in advance.,low,low,0,feature_request
+Please add support for webhook event triggers on status update. Need update ASAP.,low,low,0,feature_request
+Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Looking forward to your reply.,high,high,1,outage
+Production server is down and rejecting all user logins. Critical for our team.,high,low,1,outage
+Emergency: Complete site outage. All transactions are failing immediately. Thank you.,high,high,1,outage
+The database cluster is down and throwing 500 errors across all clients. Please assist.,high,high,1,outage
+Production website has been down for 30 minutes. We are losing business! Thanks in advance.,high,high,1,outage
+"Our api platform is down right now, need urgent resolution. Need update ASAP.",high,low,1,outage
+Someone logged in to my account from another country. Was there a breach? Looking forward to your reply.,high,low,1,security
+Unauthorized access detected on our company admin dashboard. Critical for our team.,high,high,1,security
+We suspect an account takeover. Stolen credentials and unauthorized changes. Thank you.,high,high,1,security
+Phishing attack detected targeting our employee credentials. Please assist.,high,low,1,security
+Our private security tokens have been compromised and breached. Thanks in advance.,high,high,1,security
+Our corporate counsel has advised legal action and a lawsuit regarding SLA breach. Need update ASAP.,high,high,1,legal
+Our attorney will sue you in court if our data is not exported today. Looking forward to your reply.,high,high,1,legal
+Notice of legal lawsuit regarding unauthorized billing charges. Critical for our team.,high,high,1,legal
+We have engaged a lawyer and will report this to the federal regulator. Thank you.,high,high,1,legal
+The power backup hardware started smoking and overheating. It is unsafe! Please assist.,high,high,1,safety
+Electric shock hazard from the supplied power connector unit. Thanks in advance.,high,high,1,safety
+Worker injury due to defective equipment casing hazard. Need update ASAP.,high,high,1,safety
+I was charged twice this month. Please refund today. Looking forward to your reply.,medium,low,0,billing_dispute
+Double charge on our credit card statement. Need refund immediately. Critical for our team.,medium,medium,0,billing_dispute
+"We were billed after cancelling. This is ridiculous, refund our money. Thank you.",medium,high,0,billing_dispute
+Wrong charge on invoice #9021. Please review and credit account. Please assist.,medium,low,0,billing_dispute
+Duplicate payment went through on our renewal invoice. Thanks in advance.,medium,low,0,billing_dispute
+Why was my account charged $199 instead of $99? Terrible service. Need update ASAP.,medium,high,0,billing_dispute
+How do I reset my password? Looking forward to your reply.,low,low,0,password_reset
+Forgot my password and recovery link is not arriving. Critical for our team.,low,low,0,password_reset
+Where can I reset my account login password? Thank you.,low,low,0,password_reset
+Need assistance with password reset on mobile app. Please assist.,low,low,0,password_reset
+Where can I download my invoice for September? Thanks in advance.,low,low,0,invoice
+Need PDF receipt of our last payment for accounting records. Need update ASAP.,low,low,0,invoice
+How to access past billing history and VAT tax invoices? Looking forward to your reply.,low,low,0,invoice
+Please send the annual invoice receipt to our finance department. Critical for our team.,low,low,0,invoice
+How do I invite additional team members to our workspace? Thank you.,low,low,0,how_to
+Where do I find the setting to update my email address? Please assist.,low,low,0,how_to
+How to configure two-factor authentication on mobile? Thanks in advance.,low,low,0,how_to
+Where can we export our workspace logs and activity history? Need update ASAP.,low,low,0,how_to
+How to change our company notification email preferences? Looking forward to your reply.,low,low,0,how_to
+The CSV export feature crashes whenever exporting more than 100 rows. Critical for our team.,medium,low,0,bug
+Mobile app crashes on startup when opening the notification tab. Thank you.,medium,low,0,bug
+We are getting unexpected 500 error when submitting the profile form. Please assist.,medium,low,0,bug
+Search filters are broken and do not return any matching records. Thanks in advance.,medium,low,0,bug
+Slow performance on dashboard during peak European hours. Need update ASAP.,medium,medium,0,bug
+"This is the worst app, nothing works and nobody replies!!! Looking forward to your reply.",medium,high,0,bug
+Nobody answered our ticket for 3 days. This service is utterly useless and unacceptable. Critical for our team.,medium,high,0,complaint
+"Furious with this terrible tool, nothing works and I am fed up with the bugs. Thank you.",medium,high,0,complaint
+"Unacceptable delays, ridiculous customer service, nobody helps us. Please assist.",medium,high,0,complaint
+I want to cancel my subscription and close my account next month. Thanks in advance.,low,low,0,cancellation
+Please cancel my subscription and close my account. Switching to competitor. Need update ASAP.,medium,medium,0,cancellation
+We decided to cancel our pro plan and request confirmation. Looking forward to your reply.,low,low,0,cancellation
+Would be nice to have dark mode in the web app. Critical for our team.,low,low,0,feature_request
+Feature request: please add custom logo uploads to PDF export reports. Thank you.,low,low,0,feature_request
+Suggestion: would love keyboard shortcuts for navigating tickets. Please assist.,low,low,0,feature_request
+Please add support for webhook event triggers on status update. Thanks in advance.,low,low,0,feature_request
+Our production dashboard is DOWN. We will cancel if this is not fixed ASAP! Need update ASAP.,high,high,1,outage
+Production server is down and rejecting all user logins. Looking forward to your reply.,high,low,1,outage
+Emergency: Complete site outage. All transactions are failing immediately. Critical for our team.,high,high,1,outage
+The database cluster is down and throwing 500 errors across all clients. Thank you.,high,high,1,outage
+Production website has been down for 30 minutes. We are losing business! Please assist.,high,high,1,outage
+"Our api platform is down right now, need urgent resolution. Thanks in advance.",high,low,1,outage
+Someone logged in to my account from another country. Was there a breach? Need update ASAP.,high,low,1,security
+Unauthorized access detected on our company admin dashboard. Looking forward to your reply.,high,high,1,security
