@@ -2,46 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Nordic tokens as RGB triplets. Chart colours were validated for colour-blind separation
+   and 3:1 contrast against each mode's card surface. */
+:root {
+  --canvas: 240 244 248;
+  --card: 255 255 255;
+  --sunken: 241 245 249;
+  --line: 226 232 240;
+  --ink: 15 23 42;
+  --ink-2: 51 65 85;
+  --ink-3: 100 116 139;
+  --glacier: 2 132 199;
+  --glacier-soft: 224 242 254;
+  --glacier-text: 3 105 161;
+  --senior: 190 18 60;
+  --senior-soft: 255 228 230;
+  --senior-text: 159 18 57;
+  --tier2: 217 119 6;
+  --tier2-soft: 254 243 199;
+  --tier2-text: 146 64 14;
+  --tier1: 13 148 136;
+  --tier1-soft: 204 251 241;
+  --tier1-text: 17 94 89;
+  --auto: 79 70 229;
+  --auto-soft: 238 242 255;
+  --auto-text: 67 56 202;
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: 8 13 24;
+  --card: 15 23 38;
+  --sunken: 11 18 31;
+  --line: 33 45 66;
+  --ink: 226 232 240;
+  --ink-2: 203 213 225;
+  --ink-3: 148 163 184;
+  --glacier: 56 189 248;
+  --glacier-soft: 12 45 72;
+  --glacier-text: 125 211 252;
+  --senior: 225 29 72;
+  --senior-soft: 76 5 25;
+  --senior-text: 253 164 175;
+  --tier2: 217 119 6;
+  --tier2-soft: 69 26 3;
+  --tier2-text: 252 211 77;
+  --tier1: 13 148 136;
+  --tier1-soft: 4 47 46;
+  --tier1-text: 94 234 212;
+  --auto: 99 102 241;
+  --auto-soft: 30 27 75;
+  --auto-text: 165 180 252;
+  color-scheme: dark;
+}
+
 @layer base {
+  html {
+    font-size: 15px;
+  }
+  @media (min-width: 1600px) {
+    html {
+      font-size: 16px; /* projector / large screens */
+    }
+  }
   body {
-    @apply bg-nordic-frost text-nordic-dark font-sans antialiased;
+    @apply bg-canvas text-ink font-sans antialiased transition-colors;
   }
   ::selection {
-    @apply bg-nordic-ice;
+    @apply bg-glacier/25;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-glacier/60 ring-offset-2 ring-offset-canvas;
   }
 }
 
 @layer components {
   .tile {
-    @apply bg-nordic-card rounded-3xl border border-nordic-border/80 p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)];
+    @apply bg-card rounded-3xl border border-line p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.10)];
   }
   .tile-dark {
-    @apply bg-nordic-fjord text-slate-100 rounded-3xl p-5 sm:p-6 border border-nordic-fjordSurface;
+    @apply bg-fjord text-slate-100 rounded-3xl p-5 sm:p-6 border border-fjord-surface;
   }
   .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-nordic-muted;
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3;
   }
   .field {
-    @apply w-full rounded-xl border border-nordic-border bg-nordic-frost/60 px-3 py-2 text-sm text-nordic-dark placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-nordic-glacier/30 focus:border-nordic-glacier transition;
+    @apply w-full rounded-xl border border-line bg-sunken px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-glacier/30 focus:border-glacier transition;
   }
   .btn {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-nordic-glacier/40;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-nordic-fjord text-white hover:bg-nordic-fjordSurface;
+    @apply btn bg-fjord text-white hover:bg-fjord-surface dark:bg-glacier dark:text-fjord dark:hover:bg-glacier/90;
   }
   .btn-ghost {
-    @apply btn bg-nordic-frost text-nordic-slate hover:bg-slate-200/70;
+    @apply btn bg-sunken text-ink-2 hover:bg-line;
   }
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold whitespace-nowrap;
   }
-  .mono {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+  .num {
+    @apply tabular-nums tracking-tight;
   }
 }
 
 .scroll-thin {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: rgb(var(--line)) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
