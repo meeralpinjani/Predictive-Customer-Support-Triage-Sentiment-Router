@@ -8,19 +8,22 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models import Feedback, Ticket
+from app.models import AppSetting, Feedback, Ticket
 from app.services.priority import compute_priority
 from app.services.router import decide, frustration_threshold
 from app.services.triage import _explanation, flags_of
 
 MIN_DECISIONS = 30
-TUNING_FILE = Path(__file__).resolve().parents[2] / "data" / "router_tuning.json"
+TUNING_KEY = "router_tuning"
+LEGACY_TUNING_FILE = Path(__file__).resolve().parents[2] / "data" / "router_tuning.json"
 
 
-def load_tuning() -> None:
-    """Apply previously accepted retraining results at startup."""
+def load_tuning(db: Session) -> None:
+    """Apply previously accepted retraining results at startup (stored in the database so they
+    survive redeploys; a tuning file from older versions is still honoured)."""
+    row = db.get(AppSetting, TUNING_KEY)
     try:
-        data = json.loads(TUNING_FILE.read_text(encoding="utf-8"))
+        data = json.loads(row.value) if row else json.loads(LEGACY_TUNING_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return
     settings.level3_score = int(data.get("level3_score", settings.level3_score))
@@ -76,9 +79,10 @@ def propose(db: Session) -> dict:
     }
 
 
-def apply(level3_score: int, frustration_senior: float) -> dict:
+def apply(db: Session, level3_score: int, frustration_senior: float) -> dict:
     settings.level3_score = level3_score
     settings.frustration_senior = frustration_senior
-    TUNING_FILE.write_text(json.dumps({"level3_score": level3_score, "frustration_senior": frustration_senior},
-                                      indent=2), encoding="utf-8")
+    db.merge(AppSetting(key=TUNING_KEY, value=json.dumps({"level3_score": level3_score,
+                                                          "frustration_senior": frustration_senior})))
+    db.commit()
     return {"level3_score": level3_score, "frustration_senior": frustration_senior}

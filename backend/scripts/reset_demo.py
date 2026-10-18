@@ -2,8 +2,9 @@
 
 Seed tickets are scored through the real pipeline with arrival times spread over the last
 few hours, so the queue, waits and SLA ageing look like a live support desk.
-Stop the API first (or restart it afterwards) so it does not hold the SQLite file open.
+Restart the API afterwards so its in-memory caches match the fresh data.
 """
+from app.schema_upgrade import create_and_upgrade
 from app.db import Base, engine
 from app.services.rescore import rescore_open
 from app.db import SessionLocal
@@ -16,7 +17,7 @@ def reset() -> dict[str, int]:
         from app.nlp import hf
         hf.warmup(background=False)  # score the seed tickets with the models, not the fallback
     Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    create_and_upgrade(engine)
     counts = seed_database()
     db = SessionLocal()
     try:

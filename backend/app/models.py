@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, Index, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base, UTCDateTime
@@ -113,7 +113,11 @@ class Message(Base):
     kind: Mapped[str] = mapped_column(String, default="message")  # message | system
     body: Mapped[str] = mapped_column(Text)
     frustration: Mapped[float | None] = mapped_column(Float, nullable=True)  # scored customer replies
+    # Set by the browser so a retried send returns the saved message instead of a duplicate.
+    client_message_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+    __table_args__ = (Index("uq_messages_client_id", "ticket_id", "author_id", "client_message_id", unique=True),)
 
 
 class CallbackRequest(Base):
@@ -153,7 +157,16 @@ class Attachment(Base):
     stored_name: Mapped[str] = mapped_column(String, unique=True)
     content_type: Mapped[str] = mapped_column(String)
     size: Mapped[int] = mapped_column(Integer)
+    # Kept in the database so files survive hosts whose disk is wiped on restart.
+    content: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class AppSetting(Base):
+    """Small key/value store for state that must survive redeploys (e.g. accepted router tuning)."""
+    __tablename__ = "app_settings"
+    key: Mapped[str] = mapped_column(String, primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
 
 
 class PasswordReset(Base):
@@ -166,3 +179,94 @@ class PasswordReset(Base):
     used_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
+
+
+class IntegrityAssessment(Base):
+    """One integrity review-aid assessment of a ticket (admins only). Append-only: reassessing
+    inserts a new row; only a pending row is later filled in with its result."""
+    __tablename__ = "integrity_assessments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"), index=True)
+    trigger: Mapped[str] = mapped_column(String)                       # ticket_created | customer_reply | attachments | manual
+    trigger_key: Mapped[str] = mapped_column(String, unique=True)      # dedupes retries of the same trigger
+    status: Mapped[str] = mapped_column(String, default="pending")     # pending | complete | error
+    assessment_version: Mapped[str] = mapped_column(String)
+    policy_version: Mapped[str] = mapped_column(String)
+    model_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    model_version: Mapped[str | None] = mapped_column(String, nullable=True)
+    ai_status: Mapped[str] = mapped_column(String, default="not_assessed")
+    ai_score: Mapped[float | None] = mapped_column(Float, nullable=True)       # mean detector score, not a probability
+    ai_score_max: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ai_chunk_count: Mapped[int] = mapped_column(Integer, default=0)
+    ai_word_count: Mapped[int] = mapped_column(Integer, default=0)
+    ai_reason: Mapped[str | None] = mapped_column(String, nullable=True)
+    duplicate_max_similarity: Mapped[float | None] = mapped_column(Float, nullable=True)
+    duplicate_method: Mapped[str | None] = mapped_column(String, nullable=True)
+    related_ticket_ids: Mapped[str] = mapped_column(Text, default="[]")         # JSON
+    consistency_status: Mapped[str] = mapped_column(String, default="insufficient_evidence")
+    consistency_findings: Mapped[str] = mapped_column(Text, default="[]")       # JSON
+    manipulation_indicators: Mapped[str] = mapped_column(Text, default="[]")    # JSON
+    document_findings: Mapped[str] = mapped_column(Text, default="[]")          # JSON
+    policy_reasons: Mapped[str] = mapped_column(Text, default="[]")             # JSON
+    review_state: Mapped[str] = mapped_column(String, default="clear", index=True)
+    review_recommended: Mapped[bool] = mapped_column(Boolean, default=False)
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class IntegrityReviewAction(Base):
+    """Audit trail: every admin review action on an assessment."""
+    __tablename__ = "integrity_review_actions"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    assessment_id: Mapped[int] = mapped_column(ForeignKey("integrity_assessments.id"), index=True)
+    actor_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    action: Mapped[str] = mapped_column(String)          # start_review | dismiss | confirm
+    reason: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class TicketSummary(Base):
+    """One revision of a ticket's summary. Append-only: each update inserts revision N+1, so an older
+    job can never overwrite a newer summary (unique ticket_id + revision). The current summary is the
+    highest revision. The conversation itself stays the source of truth."""
+    __tablename__ = "ticket_summaries"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"), index=True)
+    revision: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String, default="ready")          # ready | stale | pending | failed
+    method: Mapped[str] = mapped_column(String, default="extractive")     # extractive | llm | llm_partial | unavailable
+    model_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    model_version: Mapped[str | None] = mapped_column(String, nullable=True)
+    source_key: Mapped[str] = mapped_column(String, default="")           # what the summary was built from
+    last_message_id: Mapped[int | None] = mapped_column(ForeignKey("messages.id"), nullable=True)
+    payload: Mapped[str] = mapped_column(Text, default="{}")              # JSON, see services/summarization.py
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+    __table_args__ = (UniqueConstraint("ticket_id", "revision", name="uq_ticket_summary_revision"),)
+
+
+class Handover(Base):
+    """Frozen context snapshot written when a ticket moves to another level or agent. Immutable: there
+    is no update path (an ORM guard refuses updates); a correction is a new row that supersedes it."""
+    __tablename__ = "handovers"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id"), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    from_agent_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    from_level: Mapped[str | None] = mapped_column(String, nullable=True)
+    to_agent_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    to_level: Mapped[str | None] = mapped_column(String, nullable=True)
+    trigger: Mapped[str] = mapped_column(String)          # escalation | reassignment | admin_override | reopen
+    reason: Mapped[str] = mapped_column(String(500), default="")
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)   # None = automatic
+    source_revision: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    snapshot: Mapped[str] = mapped_column(Text, default="{}")             # JSON, frozen at transfer time
+    snapshot_method: Mapped[str] = mapped_column(String, default="extractive")   # extractive | llm | fallback_raw
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
+    supersedes_id: Mapped[int | None] = mapped_column(ForeignKey("handovers.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+    __table_args__ = (UniqueConstraint("ticket_id", "sequence", name="uq_handover_sequence"),)

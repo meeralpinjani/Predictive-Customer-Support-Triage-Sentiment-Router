@@ -110,4 +110,4 @@ def retrain_apply(payload: RetrainApplyIn, _: User = Depends(require("admin")), 
     proposal = retrain.propose(db)
     if proposal["status"] != "ok":
         raise HTTPException(status.HTTP_409_CONFLICT, proposal["message"])
-    return retrain.apply(payload.level3_score, payload.frustration_senior)
+    return retrain.apply(db, payload.level3_score, payload.frustration_senior)

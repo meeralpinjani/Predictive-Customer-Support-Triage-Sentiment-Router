@@ -19,7 +19,7 @@ def rescore_open(db: Session, now: datetime | None = None, publish: bool = True)
     open_tickets = db.query(Ticket).filter(Ticket.status.in_(OPEN)).all()
     moved = []
     for t in open_tickets:
-        old = rescore_and_route(db, t, "Ageing upgrade", now=now)
+        old = rescore_and_route(db, t, "Waited too long", now=now)
         if old != t.route:
             moved.append((t, old))
     for level in ("level1", "level2", "level3"):

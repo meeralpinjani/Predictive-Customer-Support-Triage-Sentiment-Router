@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-do
 import clsx from "clsx";
 import {
   Activity, BarChart3, Bell, BookOpen, Boxes, HelpCircle, Inbox, LayoutDashboard, LifeBuoy, LogOut, Moon, PlusCircle,
-  MoreHorizontal, SlidersHorizontal, Snowflake, Sun, Users,
+  MoreHorizontal, ShieldCheck, SlidersHorizontal, Snowflake, Sun, Users,
 } from "lucide-react";
 import { api } from "../../api.js";
 import GlobalSearch from "./GlobalSearch.jsx";
@@ -24,13 +24,14 @@ const NAV = {
     { to: "/knowledge", label: "Knowledge base", icon: BookOpen },
   ],
   admin: [
-    { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
-    { to: "/admin/analytics", label: "Analytics", icon: Activity },
-    { to: "/admin/insights", label: "Insights", icon: BarChart3 },
-    { to: "/incidents", label: "Incidents", icon: Boxes },
-    { to: "/admin/users", label: "Users & workload", icon: Users },
-    { to: "/knowledge", label: "Knowledge base", icon: BookOpen },
-    { to: "/admin/tuning", label: "Tuning", icon: SlidersHorizontal },
+    { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true, group: "Daily work" },
+    { to: "/incidents", label: "Incidents", icon: Boxes, group: "Daily work" },
+    { to: "/admin/users", label: "Users & workload", icon: Users, group: "Daily work" },
+    { to: "/knowledge", label: "Knowledge base", icon: BookOpen, group: "Daily work" },
+    { to: "/admin/analytics", label: "Analytics", icon: Activity, group: "Reports" },
+    { to: "/admin/insights", label: "Insights", icon: BarChart3, group: "Reports" },
+    { to: "/admin/integrity", label: "Integrity", icon: ShieldCheck, group: "Tools & settings" },
+    { to: "/admin/tuning", label: "Tuning", icon: SlidersHorizontal, group: "Tools & settings" },
   ],
 };
 
@@ -71,6 +72,8 @@ function AvailabilitySwitch() {
 const navFor = (role) => (role === "customer" ? NAV.customer : role === "admin" ? NAV.admin : NAV.agent);
 
 /** Turn a live event into a notification for this user, or null. */
+const LIVE_LABEL = { connected: "Live", connecting: "Connecting…", reconnecting: "Reconnecting…", offline: "Offline", recovering: "Catching up…" };
+
 function describe(ev, user) {
   const id = ev.ticket_id;
   const mine = user.role === "customer";
@@ -91,6 +94,8 @@ function describe(ev, user) {
     return { text: `Callback requested on ticket #${id}`, href: toHref, alert: true, kind: "error" };
   if (ev.type === "callback.updated" && mine) return { text: `Your call on ticket #${id} was updated`, href: toHref, kind: "info" };
   if (ev.type === "ticket.resolved" && mine) return { text: `Ticket #${id} was resolved`, href: toHref, kind: "success" };
+  if (ev.type === "integrity.assessed" && user.role === "admin" && ev.review_state === "review_recommended")
+    return { text: `Ticket #${id}: manual integrity review suggested`, href: `/admin/integrity?a=${ev.assessment_id}`, kind: "info" };
   return null;
 }
 
@@ -166,7 +171,7 @@ function MobileNav({ nav }) {
 
 export default function AppShell() {
   const { user, logout } = useAuth();
-  const { connected } = useEvents();
+  const { status: liveStatus } = useEvents();
   const [theme, toggleTheme] = useTheme();
   const toast = useToast();
   const navigate = useNavigate();
@@ -198,12 +203,17 @@ export default function AppShell() {
           </span>
         </Link>
         <nav className="mt-8 space-y-1 overflow-y-auto scroll-thin" aria-label="Main">
-          {nav.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end}
-                     className={({ isActive }) => clsx("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
-                       isActive ? "bg-fjord text-white dark:bg-glacier dark:text-fjord" : "text-ink-2 hover:bg-sunken")}>
-              <item.icon className="w-4 h-4" aria-hidden /> {item.label}
-            </NavLink>
+          {nav.map((item, i) => (
+            <div key={item.to}>
+              {item.group && item.group !== nav[i - 1]?.group && (
+                <p className={clsx("eyebrow px-3 pb-1", i > 0 && "pt-4")}>{item.group}</p>
+              )}
+              <NavLink to={item.to} end={item.end}
+                       className={({ isActive }) => clsx("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+                         isActive ? "bg-fjord text-white dark:bg-glacier dark:text-fjord" : "text-ink-2 hover:bg-sunken")}>
+                <item.icon className="w-4 h-4" aria-hidden /> {item.label}
+              </NavLink>
+            </div>
           ))}
         </nav>
         <div className="mt-auto space-y-3">
@@ -216,8 +226,8 @@ export default function AppShell() {
           </div>
           <div className="flex items-center justify-between px-1 text-xs text-ink-3">
             <span className="flex items-center gap-1.5">
-              <span className={clsx("w-2 h-2 rounded-full", connected ? "bg-tier1" : "bg-ink-3")} aria-hidden />
-              {connected ? "Live" : "Reconnecting…"}
+              <span className={clsx("w-2 h-2 rounded-full", liveStatus === "connected" ? "bg-tier1" : liveStatus === "offline" ? "bg-senior" : "bg-tier2")} aria-hidden />
+              <span role="status">{LIVE_LABEL[liveStatus] ?? "Connecting…"}</span>
             </span>
             <div className="flex gap-1">
               <button onClick={toggleTheme} className="btn-ghost !p-2 !rounded-full" aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}>

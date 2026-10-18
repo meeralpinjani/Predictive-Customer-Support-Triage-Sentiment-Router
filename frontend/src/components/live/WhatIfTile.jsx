@@ -57,7 +57,7 @@ export default function WhatIfTile({ config, onPreview, ticketsVersion }) {
   }, [state, ticketsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!state) {
-    return <Tile eyebrow="What-if" title="Tune the router" icon={FlaskConical} className="lg:col-span-4"><p className="text-sm text-ink-3">Loading…</p></Tile>;
+    return <Tile eyebrow="Try other settings" title="Tune the router" icon={FlaskConical} className="lg:col-span-4"><p className="text-sm text-ink-3">Loading…</p></Tile>;
   }
 
   const total = COMPONENT_ORDER.reduce((s, k) => s + state.weights[k], 0) || 1;
@@ -65,7 +65,7 @@ export default function WhatIfTile({ config, onPreview, ticketsVersion }) {
 
   return (
     <Tile
-      eyebrow="What-if · preview only"
+      eyebrow="Try other settings · preview only"
       title="Tune the router live"
       icon={FlaskConical}
       className="lg:col-span-4"

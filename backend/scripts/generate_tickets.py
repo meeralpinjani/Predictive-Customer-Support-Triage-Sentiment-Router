@@ -1,4 +1,4 @@
-"""Generate the labelled evaluation sets (playbook 6.5-6.6).
+"""Generate the labelled evaluation sets.
 
 data/tickets_labelled.csv  - ~380 tickets labelled for urgency, frustration, intent, language
 data/kb_eval.csv           - routine questions with the article that should answer them,
@@ -8,7 +8,7 @@ Honest held-out split: whole *templates* go to train or test (70/30 per intent),
 and urgency phrases are split too, so test tickets use sentences and phrasings that the rules
 and thresholds were never tuned on.
 
-Labelling guide (playbook 6.6):
+Labelling guide:
 - urgency: critical issues are high; a template's base level is raised medium -> high when the
   ticket adds a deadline / money-lost / blocked phrase. Questions stay low.
 - frustration: polite or neutral tone = low, frustrated = medium, angry or sarcastic = high;
@@ -134,7 +134,7 @@ TEMPLATES: list[tuple[str, str, int, str, list[str]]] = [
         "Could you add a Hindi language option?",
         "I wish there was a way to tag tickets by colour.",
     ]),
-    # Hinglish (playbook 6.7 #8, 7.6)
+    # Hinglish
     ("billing_dispute", "medium", 0, "hi-en", [
         "Mera payment fail ho gaya par paisa kat gaya, refund chahiye.",
         "Is mahine paise do baar kat gaye hain.",

@@ -64,6 +64,25 @@ Tickets **move up live**. If a customer gets angrier in the chat, a ticket waits
   - Handle password-help requests.
 - **Knowledge-base editor:** write or edit articles and guides; it suggests **new topics** from questions nothing could answer.
 - **Tuning:** try other weights safely; **retrain** routing from agents' decisions once 30+ exist.
+- **Integrity** (optional, off by default): a review aid that points out tickets worth a human look. See below.
+
+### Summaries and handovers (everyone)
+- **View summary** on every ticket: a short digest built only from saved messages, where every quoted line shows which message it came from. It's marked *Up to date* or *Out of date*, and **View full conversation** is always one click away. **The conversation is the truth; the summary just makes it quicker to read.** Customers see a simpler version without internal notes.
+- **Handover:** when a ticket moves to another level or agent, the next agent sees a box above the reply field: why it moved, what was tried, what's confirmed, what's still to do and what was promised. It's frozen at that moment and can't be edited. "Built from raw messages" means the summary wasn't available, so read the conversation.
+- **Connection drops:** messages show *Sending… / Not sent – Retry*, never "saved" before the server confirms. A retry can't create a duplicate, unsent text survives a refresh, and an expired session brings you back to the same ticket after signing in.
+
+### Integrity review aid (admins only)
+**What it does.** After a customer creates a ticket, replies or uploads a PDF/DOCX, it quietly checks four things in the background:
+1. **Writing patterns:** does the text look AI-written? (a free, local detector model; English only)
+2. **Near-identical tickets:** the same text sent again, by the same or another customer.
+3. **Our own records:** e.g. "this is my first time contacting you" when ticket history shows earlier tickets; a plan named that differs from the plan on file. Payment claims can't be checked: we hold no payment records.
+4. **Clear warning signs:** repeated requests to skip checks or verification, or text giving instructions to an automated system.
+
+Clear signs suggest a **manual review**. AI-like writing **alone never does**, because using ChatGPT or a translator to write a complaint is legitimate.
+
+**What it can't prove.** It never decides fraud. The detector is wrong on formal, templated or non-native English, it can't read Hinglish, and its score is **not a probability**. A person must always check the evidence, and confirming a concern requires a written reason that is logged with the reviewer's name.
+
+**What it never does.** It never changes priority, reply-by times, levels, emergencies, the assigned agent or what customers see; it never slows down or blocks a customer; agents and customers can't see it at all.
 
 ---
 
@@ -76,10 +95,10 @@ Tickets **move up live**. If a customer gets angrier in the chat, a ticket waits
    Rule checks run alongside them:
    - **Critical words, with negation:** "we were *not* hacked" does **not** trigger a security alarm.
    - **Sarcasm:** "Great, just great. Thanks for nothing".
-   - **Shouting and threats to cancel.**
+   - **Exclamation marks (!!!, ??) and threats to cancel.** Capital letters are *not* counted: people type in capitals for many calm reasons, and the data showed no loss without them.
    - **Hinglish:** "Mera payment fail ho gaya".
-2. **Frustration score:** combines four signals (negative tone, anger/sarcasm, shouting, churn threats). The weights were **learned from labelled data**, not guessed.
-3. **Priority:** `30% frustration + 30% urgency + 25% customer value + 15% waiting time`, plus small boosts:
+2. **Frustration score:** combines four signals (negative tone, anger/sarcasm, exclamation marks, threats to leave). The weights were **learned from labelled data**, not guessed.
+3. **Priority:** `25% frustration + 25% urgency + 30% customer value + 20% waiting time` (tuned on training data in a simulated busy day, not guessed), plus small boosts:
    - **+15** for a third contact in a week.
    - **+10** when the renewal is near and the customer is unhappy.
    - **Up to +50** as a ticket approaches its SLA deadline, so **nobody is forgotten**.
@@ -100,7 +119,7 @@ Measured on **132 tickets the system never saw while being tuned**:
 
 | What | Target | Ours |
 |---|---|---|
-| Urgency classification (F1) | ≥ 0.75 | **0.84** |
+| Urgency classification (F1) | ≥ 0.75 | **0.86** |
 | Catches highly frustrated customers (recall) | ≥ 0.80 | **0.83** (precision 0.94) |
 | Tickets sent to experts that truly needed it | ≥ 0.80 | **0.97** |
 | Critical issues caught (security, legal, safety, outage) | n/a | **100%** |
@@ -108,9 +127,9 @@ Measured on **132 tickets the system never saw while being tuned**:
 | Speed per ticket | < 2 s | **~0.2 s** |
 
 **A simulated busy day** (120 tickets, 3 agents, demand ~30% above capacity), compared with first-come-first-served:
-- Urgent tickets wait **43% less**.
-- High-value customers wait **69% less**.
-- SLA breaches drop from **11 to 5**.
+- Urgent tickets wait **32% less**.
+- High-value customers wait **84% less**.
+- Late replies drop from **11 to 0**.
 
 **The honest trade-off:** routine tickets from free customers wait a bit longer, but within their 8-hour promise.
 
@@ -120,11 +139,11 @@ Measured on **132 tickets the system never saw while being tuned**:
 
 Open **Admin**, the **Level 3 agent** and a **customer** (private window).
 
-1. **Admin → Overview:** flip the queue to *Before · FCFS*, then *After · Priority*. "The angry enterprise outage jumps from #15 to the top."
+1. **Admin → Overview:** flip the queue to *Before · arrival order*, then *After · Priority*. "The angry enterprise outage jumps from #15 to the top."
 2. **Customer:** ask "How do I reset my password?". It's answered instantly: "96% of instant answers are correct."
 3. **Customer:** open a calm ticket, then reply angrily in the chat. **Watch it jump to Level 3 live**; the expert's window chimes.
 4. **Level 3:** open it, click **Suggest reply**, send; the customer **requests a call** and the expert schedules it.
-5. Show the **Hinglish**, **sarcasm** and **"not hacked"** examples (admin Overview → playbook example buttons).
+5. Show the **Hinglish**, **sarcasm** and **"not hacked"** examples (admin Overview → example buttons).
 6. **Admin → Analytics** and **Insights:** the numbers above.
 7. Close: *"The right person, for the right ticket, right now."*
 
@@ -148,12 +167,12 @@ Open **Admin**, the **Level 3 agent** and a **customer** (private window).
 
 | Part | Technology |
 |---|---|
-| Backend | Python, FastAPI, SQLite (SQLAlchemy) |
+| Backend | Python, FastAPI, PostgreSQL (SQLAlchemy) |
 | AI | Hugging Face models: RoBERTa sentiment and emotion, MiniLM embeddings; scikit-learn |
 | Frontend | React, Vite, Tailwind CSS (Nordic look, light/dark) |
 | Live updates | Server-sent events |
 | Sign-in | Email/password (scrypt), Google sign-in, recovery codes |
-| Tests | 112 automated tests (pytest) |
+| Tests | 188 automated tests (pytest) on PostgreSQL |
 
 **Folders:** `backend/` (API, AI, tests, evaluation), `frontend/` (the website), `docs/` (this guide and the run checklist), `start-demo.ps1` (one-command start).
 
@@ -161,7 +180,7 @@ Open **Admin**, the **Level 3 agent** and a **customer** (private window).
 
 ## 8. Known limits (say them before the judges do)
 
-- The evaluation tickets are **synthetic**, written by the team using the playbook's labelling rules. Real company data would need re-tuning.
+- The evaluation tickets are **synthetic**, written by the team using a written labelling guide. Real company data would need re-tuning.
 - Customer value uses **mock CRM data**.
 - No email (password recovery uses codes or admin links), no two-factor login, no encryption at rest.
 - Calls are **callback requests**, not in-browser voice.
@@ -171,4 +190,4 @@ Open **Admin**, the **Level 3 agent** and a **customer** (private window).
 
 ## 9. How to run it
 
-See **[HOW-TO-RUN-AND-TEST.md](HOW-TO-RUN-AND-TEST.md)**. Short version: `powershell -ExecutionPolicy Bypass -File .\start-demo.ps1 -Reset`, then open http://localhost:5173. Demo passwords are in `backend/demo_accounts.local.json` on the laptop that ran the setup.
+See **[HOW-TO-RUN-AND-TEST.md](HOW-TO-RUN-AND-TEST.md)**. Short version: `powershell -ExecutionPolicy Bypass -File .\start-demo.ps1 -Reset`, then open http://localhost:5173. Demo passwords are in `backend/demo_accounts.local.json` on the laptop that ran the setup. For every technical detail (sentiment analysis, scoring, suggested reply, security) see **[TECHNICAL-DEEP-DIVE.md](TECHNICAL-DEEP-DIVE.md)**.

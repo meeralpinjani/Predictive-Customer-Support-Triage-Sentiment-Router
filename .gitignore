@@ -7,8 +7,6 @@ backend/.venv*/
 
 # Secrets / local state
 .env
-*.db
-*.db-journal
 
 # Node
 node_modules/
@@ -25,6 +23,13 @@ frontend/dist/
 # Generated demo-account passwords (per install, never committed)
 backend/demo_accounts.local.json
 
-# Uploaded attachments (private)
-backend/uploads/
 backend/data/router_tuning.json
+
+# Local backup zips
+_backups/
+
+# Local editor/agent settings
+.claude/
+
+# Downloaded model weights (integrity detector)
+backend/models/

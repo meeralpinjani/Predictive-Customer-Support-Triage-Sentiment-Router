@@ -42,7 +42,7 @@ def test_ageing_increases_score_and_upgrades_route():
         assert ticket.priority > initial_score
         # Valuable, waiting ticket: ageing lifts it past the Level 3 score
         assert ticket.route == "level3"
-        assert ticket.route_reason.startswith("Ageing upgrade")
+        assert ticket.route_reason.startswith("Waited too long")
         assert ticket.assigned_agent_id is not None  # re-assigned to a Level 3 agent
 
         # Verify anti-starvation: running with past time never downgrades priority or route

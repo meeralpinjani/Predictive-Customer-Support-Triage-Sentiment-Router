@@ -1,8 +1,8 @@
 """Turns the four frustration signals into one score in 0..1.
 
-Default: the playbook blend 0.35*neg + 0.30*anger + 0.15*style + 0.20*churn.
+Default (only if the fitted weights are missing): 0.35*neg + 0.30*anger + 0.15*style + 0.20*churn.
 If eval/train_frustration.py has been run, a logistic regression fitted on the training
-split replaces it (playbook 9.5: "fit a logistic regression ... use its coefficients").
+split replaces it.
 The fitted coefficients live in frustration_weights.json, one set per NLP mode, so the
 score stays a transparent weighted sum passed through a sigmoid.
 """
@@ -17,7 +17,7 @@ SIGNALS = ("neg", "anger", "style", "churn")
 HF_SIGNALS = ("neg_model", "anger_model", "neg_rules", "anger_rules", "style", "churn")
 
 
-PLAYBOOK = {"neg": 0.35, "anger": 0.30, "style": 0.15, "churn": 0.20}
+DEFAULT_BLEND = {"neg": 0.35, "anger": 0.30, "style": 0.15, "churn": 0.20}
 WEIGHTS_PATH = Path(__file__).with_name("frustration_weights.json")
 
 
@@ -41,7 +41,7 @@ def describe(mode: str) -> dict:
     fit = _fitted().get(mode)
     if fit:
         return {"kind": "logistic", **fit}
-    return {"kind": "playbook_linear", "coef": PLAYBOOK, "intercept": 0.0}
+    return {"kind": "default_linear", "coef": DEFAULT_BLEND, "intercept": 0.0}
 
 
 def threshold(mode: str, default: float = 0.70) -> float:
@@ -52,6 +52,6 @@ def threshold(mode: str, default: float = 0.70) -> float:
 def score(signals: dict[str, float], mode: str) -> float:
     fit = _fitted().get(mode)
     if not fit:
-        return round(min(1.0, sum(PLAYBOOK[k] * signals.get(k, 0.0) for k in SIGNALS)), 3)
+        return round(min(1.0, sum(DEFAULT_BLEND[k] * signals.get(k, 0.0) for k in SIGNALS)), 3)
     z = fit["intercept"] + sum(c * signals.get(k, 0.0) for k, c in fit["coef"].items())
     return round(1.0 / (1.0 + math.exp(-z)), 3)

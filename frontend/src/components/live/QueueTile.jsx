@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
+import { SummaryButton } from "../Summary.jsx";
 import clsx from "clsx";
-import { AlertTriangle, ArrowDown, ArrowUp, Inbox, ListOrdered } from "lucide-react";
+import { AlertTriangle, Bot, ArrowDown, ArrowUp, Inbox, ListOrdered } from "lucide-react";
 import { OPEN_STATUSES, SEGMENT_LABEL, fmtWait, routeMeta } from "../../lib/meta.js";
 import { Empty, RouteBadge, Segmented, Skeleton, Tile } from "../ui.jsx";
 
@@ -19,7 +20,7 @@ function SlaBar({ wait, sla }) {
   const r = Math.min(wait / sla, 1.25) / 1.25;
   const color = wait >= sla ? "rgb(var(--senior))" : wait >= 0.75 * sla ? "rgb(var(--tier2))" : "rgb(var(--tier1))";
   return (
-    <div className="w-16 h-1 rounded-full bg-sunken overflow-hidden" title={`Waited ${fmtWait(wait)} of a ${fmtWait(sla)} SLA`}>
+    <div className="w-16 h-1 rounded-full bg-sunken overflow-hidden" title={`Waited ${fmtWait(wait)} of a ${fmtWait(sla)} reply-by time`}>
       <div className="h-full rounded-full" style={{ width: `${r * 100}%`, background: color }} />
     </div>
   );
@@ -60,7 +61,7 @@ export default function QueueTile({
   return (
     <Tile
       eyebrow={eyebrow}
-      title={preview ? `${title} · what-if preview` : title}
+      title={preview ? `${title} · preview with other settings` : title}
       icon={ListOrdered}
       className={className}
       action={
@@ -69,7 +70,7 @@ export default function QueueTile({
           value={order}
           onChange={setOrder}
           options={[
-            { value: "fcfs", label: "Before · FCFS" },
+            { value: "fcfs", label: "Before · arrival order" },
             { value: "priority", label: "After · Priority" },
           ]}
         />
@@ -92,13 +93,13 @@ export default function QueueTile({
           const p = preview?.get(t.id);
           const previewRoute = p && p.route !== t.route ? p.route : null;
           return (
-            <li key={t.id}>
+            <li key={t.id} className="flex items-center gap-1.5">
               <button
                 ref={(el) => (el ? refs.current.set(t.id, el) : refs.current.delete(t.id))}
                 onClick={() => onSelect(t.id)}
                 aria-current={selectedId === t.id}
                 className={clsx(
-                  "w-full text-left flex items-stretch gap-3 sm:gap-4 rounded-2xl border p-3 pr-4 transition",
+                  "flex-1 min-w-0 text-left flex items-stretch gap-3 sm:gap-4 rounded-2xl border p-3 pr-4 transition",
                   selectedId === t.id
                     ? "border-glacier bg-glacier-soft/60 ring-2 ring-glacier/15"
                     : "border-line hover:border-ink-3/40 hover:bg-sunken",
@@ -118,6 +119,14 @@ export default function QueueTile({
                     {showRoute && <RouteBadge route={t.route} />}
                     {t.status === "in_progress" && <span className="chip bg-glacier-soft text-glacier-text">{t.assigned_agent ? t.assigned_agent.name.split(" ")[0] : "in progress"}</span>}
                     {t.message_count > 0 && <span className="chip bg-sunken text-ink-2">{t.message_count} msg</span>}
+                    {t.integrity?.ai_like && (
+                      <span className="chip bg-sunken text-ink-2" title="The writing looks AI-generated. Not evidence on its own: people use AI and translators legitimately.">
+                        <Bot className="w-3 h-3" aria-hidden />AI-like writing
+                      </span>
+                    )}
+                    {t.integrity?.review_suggested && (
+                      <span className="chip bg-glacier-soft text-glacier-text" title="The integrity check suggests a manual review by an admin.">review suggested</span>
+                    )}
                     {t.open_callbacks > 0 && <span className="chip bg-senior-soft text-senior-text">call requested</span>}
                     {previewRoute && (
                       <span className="chip bg-sunken text-ink-2">→ <RouteBadge route={previewRoute} className="!px-1.5" /></span>
@@ -151,6 +160,7 @@ export default function QueueTile({
                   </span>
                 </div>
               </button>
+              <SummaryButton ticketId={t.id} staff compact />
             </li>
           );
         })}

@@ -1,4 +1,4 @@
-"""Classifier metrics on the held-out TEST split (playbook 13.1-13.2).
+"""Classifier metrics on the held-out TEST split.
 
     python -m eval.evaluate_nlp
 """

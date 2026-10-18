@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { AuthProvider, useAuth } from "./lib/auth.jsx";
 import { EventsProvider } from "./lib/events.jsx";
@@ -10,16 +10,18 @@ import { CustomerTicketPage, HelpCentrePage, NewTicketPage, SupportHome } from "
 import { AgentQueuePage, StaffTicketPage } from "./pages/agent/AgentPages.jsx";
 import { AdminInsights, AdminOverview, AdminTuning, NotFound } from "./pages/admin/AdminPages.jsx";
 import { AdminAnalytics, AdminUsers } from "./pages/admin/AdminExtras.jsx";
+import { AdminIntegrity } from "./pages/admin/IntegrityPage.jsx";
 import { AccountPage } from "./pages/auth/AccountPage.jsx";
 import { IncidentsPage, KnowledgePage, SearchPage } from "./pages/shared/SharedPages.jsx";
 
 /** Only lets through users whose role is allowed; everyone else goes to their own home. */
 function Guard({ allow, children }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
   if (loading) {
     return <div className="min-h-screen grid place-items-center text-ink-3"><Loader2 className="w-6 h-6 animate-spin" aria-label="Loading" /></div>;
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   if (!user.profile_complete) return <Navigate to="/welcome" replace />;
   if (allow && !allow(user)) return <Navigate to={homeFor(user)} replace />;
   return children;
@@ -75,6 +77,7 @@ export default function App() {
               <Route path="/admin/analytics" element={<Guard allow={isAdmin}><AdminAnalytics /></Guard>} />
               <Route path="/admin/users" element={<Guard allow={isAdmin}><AdminUsers /></Guard>} />
               <Route path="/admin/tuning" element={<Guard allow={isAdmin}><AdminTuning /></Guard>} />
+              <Route path="/admin/integrity" element={<Guard allow={isAdmin}><AdminIntegrity /></Guard>} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

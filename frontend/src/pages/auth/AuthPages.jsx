@@ -295,15 +295,23 @@ export function RecoveryCodeCard({ code, email, onDone, doneLabel = "Continue" }
 }
 
 // ------------------------------------------------------------------ pages
+/** Where to go after signing in: the page the session expired on (same-site paths only). */
+function nextPath(params) {
+  const next = params.get("next") || "";
+  return next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login") ? next : null;
+}
+
 export function LoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, expired } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = nextPath(params);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  if (user) return <Navigate to={homeFor(user)} replace />;
+  if (user) return <Navigate to={next || homeFor(user)} replace />;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -311,7 +319,7 @@ export function LoginPage() {
     setError("");
     try {
       await login(email, password, remember);
-      navigate("/", { replace: true });
+      navigate(next || "/", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -323,6 +331,11 @@ export function LoginPage() {
     <AuthLayout>
       <Heading title="Welcome back" subtitle="Sign in to your account" />
       <form onSubmit={submit} className="space-y-3">
+        {(expired || next) && !error && (
+          <Alert kind="info" title={expired ? "Your session expired" : "Sign in to continue"}>
+            Sign in and you'll go straight back to where you were. Nothing you sent has been lost.
+          </Alert>
+        )}
         {error && (
           <Alert title={error.startsWith("Wrong") ? "We couldn't sign you in" : "Something went wrong"}>
             {error.startsWith("Wrong") ? "That email and password don't match an account. Check them and try again." : error}

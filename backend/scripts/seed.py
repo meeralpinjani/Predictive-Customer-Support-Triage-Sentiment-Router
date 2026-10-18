@@ -5,8 +5,9 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from app.auth import hash_password
+from app.auth import hash_password, verify_password
 from app.config import settings
+from app.schema_upgrade import create_and_upgrade
 from app.db import Base, SessionLocal, engine
 from app.models import Customer, KbArticle, Ticket, User
 from app.nlp.kb import reset_kb
@@ -36,7 +37,11 @@ CUSTOMER_FIELDS = ("name", "segment", "plan", "sla_minutes", "renewal_days", "lt
 
 
 def demo_passwords() -> dict[str, str]:
-    """Load the generated demo passwords, creating them once if missing."""
+    """Demo passwords: from DEMO_PASSWORD / DEMO_ADMIN_PASSWORD when set (hosted), otherwise
+    generated once and kept in the git-ignored local file."""
+    if settings.demo_password:
+        admin = settings.demo_admin_password or settings.demo_password
+        return {a["email"]: admin if a["role"] == "admin" else settings.demo_password for a in DEMO_ACCOUNTS}
     try:
         saved = json.loads(ACCOUNTS_FILE.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -59,13 +64,15 @@ def seed_accounts(db) -> int:
             user = User(email=acc["email"], name=acc["name"], role=acc["role"], max_open=12,
                         customer_id=acc.get("customer_id"), password_hash=hash_password(passwords[acc["email"]]))
             db.add(user)
+        elif settings.demo_password and not verify_password(passwords[acc["email"]], user.password_hash or ""):
+            user.password_hash = hash_password(passwords[acc["email"]])   # env password changed: follow it
     db.commit()
     return db.query(User).count()
 
 
 def seed_database(with_tickets: bool = True) -> dict[str, int]:
     """Idempotent: upserts customers/KB, adds demo accounts once, scores seed tickets if none exist."""
-    Base.metadata.create_all(bind=engine)
+    create_and_upgrade(engine)
     db = SessionLocal()
     try:
         for c in json.loads((DATA_DIR / "customers.json").read_text(encoding="utf-8")):
@@ -112,10 +119,20 @@ def seed_database(with_tickets: bool = True) -> dict[str, int]:
         db.close()
 
 
+def _needs_tickets() -> bool:
+    create_and_upgrade(engine)
+    with SessionLocal() as db:
+        return db.query(Ticket).count() == 0
+
+
 if __name__ == "__main__":
+    if settings.nlp_mode == "hf" and _needs_tickets():
+        from app.nlp import hf
+        hf.warmup(background=False)  # first start: score the demo tickets with the models, not the fallback
     results = seed_database()
     print("Database seeding completed.")
     for entity, count in results.items():
         print(f"  - {entity}: {count}")
     if settings.seed_demo_accounts:
-        print(f"Demo account passwords: {ACCOUNTS_FILE}")
+        print("Demo account passwords: from DEMO_PASSWORD / DEMO_ADMIN_PASSWORD" if settings.demo_password
+              else f"Demo account passwords: {ACCOUNTS_FILE}")

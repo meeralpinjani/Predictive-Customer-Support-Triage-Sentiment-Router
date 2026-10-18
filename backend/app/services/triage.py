@@ -114,7 +114,7 @@ def open_load(db: Session, agent_id: int) -> int:
 
 
 def pick_agent(db: Session, level: str) -> int | None:
-    """Least-loaded *available* agent at the level with spare capacity (playbook 10.3).
+    """Least-loaded *available* agent at the level with spare capacity.
     None when nobody is free: the ticket waits in the level queue and is assigned by rebalance()."""
     pool = db.query(User).filter(User.role == level, User.active.is_(True), User.availability == "available").all()
     free = [(open_load(db, a.id), a.id) for a in pool]
@@ -139,13 +139,20 @@ def rebalance(db: Session, level: str) -> list[Ticket]:
 
 
 def release_agent(db: Session, agent: User) -> list[Ticket]:
-    """Agent went busy/offline: hand their not-yet-started tickets to colleagues (or back to the queue)."""
+    """Agent went busy/offline: hand their not-yet-started tickets to colleagues (or back to the queue).
+    Tickets that already had a support reply get a handover snapshot for whoever picks them up."""
     moved = db.query(Ticket).filter(Ticket.assigned_agent_id == agent.id, Ticket.status == "queued").all()
     for t in moved:
         t.assigned_agent_id = None
     db.flush()
     if agent.role in LEVEL:
         rebalance(db, agent.role)
+    from app.services import handover
+    for t in moved:
+        if t.first_response_at is not None:
+            handover.create(db, t, "reassignment", from_agent_id=agent.id, from_level=t.route,
+                            to_agent_id=t.assigned_agent_id, to_level=t.route,
+                            reason=f"{agent.name} became {agent.availability}", actor_id=agent.id)
     return moved
 
 
@@ -172,9 +179,12 @@ def add_system_message(db: Session, t: Ticket, text: str) -> None:
     db.add(Message(ticket_id=t.id, author_role="system", kind="system", body=text))
 
 
-def route_ticket(db: Session, t: Ticket, d: Decision, note: bool = True) -> str:
-    """Apply a routing decision. Returns the previous route."""
+def route_ticket(db: Session, t: Ticket, d: Decision, note: bool = True, trigger: str = "escalation",
+                 actor_id: int | None = None, reason: str | None = None) -> str:
+    """Apply a routing decision. Returns the previous route. A move between support levels also
+    records a handover snapshot in the same transaction (services/handover.py)."""
     old = t.route
+    old_agent = t.assigned_agent_id
     t.route, t.route_reason = d.route, d.reason
     t.updated_at = utcnow()
     if d.route in LEVEL:
@@ -189,6 +199,9 @@ def route_ticket(db: Session, t: Ticket, d: Decision, note: bool = True) -> str:
     if t.id and old in LEVEL and d.route != old:
         db.flush()
         rebalance(db, old)  # the previous level's agent has a free slot now
+        from app.services import handover
+        handover.create(db, t, trigger, from_agent_id=old_agent, from_level=old, to_agent_id=t.assigned_agent_id,
+                        to_level=d.route, reason=reason if reason is not None else d.reason, actor_id=actor_id)
     return old
 
 
@@ -313,7 +326,8 @@ def escalate_manually(db: Session, t: Ticket, actor: User, reason: str) -> str:
     target = NEXT_LEVEL.get(t.route)
     if not target:
         raise ValueError("Already at the highest level")
-    return route_ticket(db, t, Decision(target, f"Escalated by {actor.name}: {reason}", t.kb_action))
+    return route_ticket(db, t, Decision(target, f"Escalated by {actor.name}: {reason}", t.kb_action),
+                        actor_id=actor.id, reason=reason)
 
 
 def customer_reply(db: Session, t: Ticket, user: User, body: str) -> tuple[Message, str]:
@@ -377,6 +391,19 @@ def _kb_out(db: Session, t: Ticket) -> tuple[KbOut, str | None]:
     return kb, auto_reply
 
 
+def integrity_flag(db: Session, ticket_id: int) -> dict | None:
+    """What agents may see of the integrity review aid: two yes/no hints from the latest finished
+    assessment. Scores, evidence and review actions stay admin-only."""
+    from app.models import IntegrityAssessment
+    a = (db.query(IntegrityAssessment)
+         .filter(IntegrityAssessment.ticket_id == ticket_id, IntegrityAssessment.status == "complete")
+         .order_by(IntegrityAssessment.id.desc()).first())
+    if a is None:
+        return None
+    ai_like = a.ai_status == "assessed" and (a.ai_score or 0) >= settings.ai_integrity_review_threshold
+    return {"ai_like": ai_like, "review_suggested": a.review_state in ("review_recommended", "under_review")}
+
+
 def serialise(ticket: Ticket, db: Session) -> TicketOut:
     """Full view for agents and admins."""
     now = utcnow()
@@ -435,6 +462,7 @@ def serialise(ticket: Ticket, db: Session) -> TicketOut:
         attachments=_attachments(db, ticket.id, None),
         incident=({"id": inc.id, "title": inc.title, "status": inc.status}
                   if ticket.incident_id and (inc := db.get(Incident, ticket.incident_id)) else None),
+        integrity=integrity_flag(db, ticket.id),
     )
 
 

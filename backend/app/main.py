@@ -8,13 +8,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import events
 from app.api.auth import admin_router as users_router
 from app.api.auth import router as auth_router
+from app.api.conversation import router as conversation_router
+from app.api.integrity import router as integrity_router
 from app.api.knowledge import router as knowledge_router
 from app.api.misc import router as misc_router
 from app.api.operations import router as operations_router
 from app.api.tickets import router as tickets_router
 from app.config import settings
+from app.schema_upgrade import create_and_upgrade
 from app.db import Base, SessionLocal, engine
-from app.services import retrain
+from app.services import integrity, retrain, summarization
 from app.services.rescore import rescore_open
 
 log = logging.getLogger("app.main")
@@ -26,6 +29,28 @@ def _rescore_once() -> None:
         rescore_open(db)
     finally:
         db.close()
+
+
+def _reconcile_summaries() -> None:
+    db = SessionLocal()
+    try:
+        summarization.reconcile(db)
+    finally:
+        db.close()
+
+
+async def summary_reconcile_worker() -> None:
+    """Start-up and periodic check of summaries against the full history (catches anything missed)."""
+    while True:
+        try:
+            if settings.ticket_summary_enabled:
+                await asyncio.to_thread(_reconcile_summaries)
+            await asyncio.sleep(max(settings.ticket_summary_reconcile_interval_minutes, 1) * 60)
+        except asyncio.CancelledError:
+            break
+        except Exception as exc:
+            log.warning("Summary reconcile error: %s", exc)
+            await asyncio.sleep(60)
 
 
 async def background_rescore_worker() -> None:
@@ -41,21 +66,26 @@ async def background_rescore_worker() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    Base.metadata.create_all(bind=engine)
-    retrain.load_tuning()
+    create_and_upgrade(engine)
+    with SessionLocal() as db:
+        retrain.load_tuning(db)
     events.bind_loop(asyncio.get_running_loop())
     if settings.nlp_mode == "hf":
         from app.nlp import hf
         hf.warmup(background=True)   # API serves with rules until the models are loaded
     worker_task = asyncio.create_task(background_rescore_worker())
+    summary_task = asyncio.create_task(summary_reconcile_worker())
+    integrity.startup()   # no-op unless AI_INTEGRITY_ENABLED
     try:
         yield
     finally:
         worker_task.cancel()
+        summary_task.cancel()
         try:
             await worker_task
         except asyncio.CancelledError:
             pass
+        integrity.shutdown()
 
 
 app = FastAPI(
@@ -82,6 +112,10 @@ app.include_router(misc_router)
 app.include_router(tickets_router)
 app.include_router(knowledge_router)
 app.include_router(operations_router)
+app.include_router(integrity_router)
+app.include_router(conversation_router)
+
+summarization.install(SessionLocal)   # summaries follow every committed change
 
 
 @app.get("/", tags=["system"])

@@ -22,3 +22,22 @@ c1,12,outage,Production dashboard down,Our production dashboard has been DOWN fo
 c14,7,billing,Still charged twice,"This is the third time I am writing about the duplicate charge. Nobody has replied."
 c13,3,bug,Charger,The charger you shipped started smoking under my desk.
 c4,2,performance,Slow dashboard,The dashboard is very slow today and reports keep timing out.
+c17,240,integrations,SSO broken,Our SAML single sign-on stopped working after your update. 400 staff cannot sign in and our clinics are blocked.
+c5,228,howto,Export to Excel,How can I export my project list to Excel?
+c3,215,performance,Slow uploads,Uploading images takes minutes since Monday. Can you look into it?
+c10,198,account,Two-factor login,How do I turn on two-factor login for my account?
+c8,185,integrations,Slack alerts,Slack notifications stopped arriving in our channel since this morning.
+c7,172,integrations,Slack webhook,"Our Slack webhooks stopped arriving since this morning, nothing posts to the channel."
+c13,166,integrations,Slack integration,The Slack integration is not posting messages to our channel anymore.
+c6,160,billing,Price increase,"Seriously? You raised the price again without telling us. If this is not fixed we are switching to a competitor."
+c12,148,feedback,Calendar view,"Please add a calendar view for tasks, it would be great."
+c11,136,plans,Plan comparison,What is the difference between the Pro and Enterprise plans?
+c2,122,data,Missing records,"About 2,000 customer records disappeared after last night's sync. We need them restored urgently, our month-end run is today."
+c19,110,bug,Blank screen,"App bilkul nahi chal raha, login ke baad blank screen aata hai. Jaldi fix karo please."
+c20,95,account,Change email,How do I change the email address on my account?
+c18,80,outage,Checkout down,Our checkout is down and customers cannot pay. We are losing sales every minute!!
+c15,70,account,Suspicious email,I got an email asking for my password that looks like it came from you. Is this phishing?
+c4,52,bug,API errors,Our API calls return 500 errors for about 10% of requests since the last release.
+c9,40,billing,Charged after cancelling,"Oh wonderful, charged again after I cancelled. Thanks a lot."
+c16,22,billing,Invoice download,Invoice kaise download karein? GST number bhi update karna hai.
+c1,5,data,Audit log export,Could you send the full audit log export for last quarter? Our auditors need it by Friday.

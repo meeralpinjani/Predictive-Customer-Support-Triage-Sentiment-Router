@@ -180,6 +180,20 @@ export function useTheme() {
 }
 
 /** One consistent page header: back link, title with badges right beside it, subtitle, actions on the right. */
+/** A titled, collapsible group of tiles on a page (nothing is hidden for good: click to open). */
+export function Section({ title, hint, defaultOpen = true, children }) {
+  return (
+    <details open={defaultOpen} className="lg:col-span-12 group">
+      <summary className="flex items-center gap-2 cursor-pointer list-none select-none py-1 [&::-webkit-details-marker]:hidden">
+        <span className="text-ink-3 transition group-open:rotate-90" aria-hidden>▸</span>
+        <span className="text-sm font-bold">{title}</span>
+        {hint && <span className="text-xs text-ink-3">{hint}</span>}
+      </summary>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3">{children}</div>
+    </details>
+  );
+}
+
 export function PageHeader({ title, subtitle, badges, actions, back }) {
   return (
     <div className="lg:col-span-12 flex flex-wrap items-end justify-between gap-3 pt-1">

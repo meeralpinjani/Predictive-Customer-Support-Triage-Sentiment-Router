@@ -120,7 +120,7 @@ export default function TicketExplain({ ticket, onChanged, admin = false, classN
           {open && (
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="font-medium text-ink-2">Waiting vs SLA</span>
+                <span className="font-medium text-ink-2">Waiting vs reply-by time</span>
                 <span className="font-semibold num">{fmtWait(t.wait_minutes)} / {fmtWait(t.sla_minutes)}</span>
               </div>
               <div className="h-2 rounded-full bg-sunken overflow-hidden">
@@ -128,7 +128,7 @@ export default function TicketExplain({ ticket, onChanged, admin = false, classN
                      style={{ width: `${Math.min(slaRatio, 1) * 100}%`,
                               background: slaRatio >= 1 ? "rgb(var(--senior))" : slaRatio >= 0.75 ? "rgb(var(--tier2))" : "rgb(var(--tier1))" }} />
               </div>
-              <p className="mt-1 text-[11px] text-ink-3">From 75% of the SLA the ticket gains up to +50 points so it is served before it breaches.</p>
+              <p className="mt-1 text-[11px] text-ink-3">From 75% of its reply-by time the ticket gains up to +50 points, so it is answered before it's late.</p>
             </div>
           )}
         </div>
@@ -139,7 +139,7 @@ export default function TicketExplain({ ticket, onChanged, admin = false, classN
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <RouteBadge route={t.route} />
               <div className="flex gap-1.5">
-                {t.route_locked && <span className="chip bg-sunken text-ink-2" title="Admin override; ageing will not move it"><Lock className="w-3 h-3" aria-hidden /> locked</span>}
+                {t.route_locked && <span className="chip bg-sunken text-ink-2" title="Changed by an admin; waiting time will not move it"><Lock className="w-3 h-3" aria-hidden /> locked</span>}
                 {t.manager_flag && <span className="chip bg-senior-soft text-senior-text"><Gavel className="w-3 h-3" aria-hidden /> manager notified</span>}
               </div>
             </div>
@@ -160,7 +160,7 @@ export default function TicketExplain({ ticket, onChanged, admin = false, classN
           <Card title={`How the ${t.analysis.mode === "hf" ? "AI models" : "rules"} read it`} icon={Brain}>
             <div className="flex flex-wrap gap-1.5 mb-3">
               <span className="chip bg-sunken text-ink-2">{INTENT_LABEL[t.analysis.intent] ?? t.analysis.intent}</span>
-              <span className="chip bg-sunken text-ink-2">confidence {pct(t.analysis.confidence)}</span>
+              <span className="chip bg-sunken text-ink-2">how sure {pct(t.analysis.confidence)}</span>
               {t.analysis.critical_flags.map((f) => (
                 <span key={f} className="chip bg-senior-soft text-senior-text"><AlertTriangle className="w-3 h-3" aria-hidden /> {f}</span>
               ))}
@@ -209,10 +209,10 @@ export default function TicketExplain({ ticket, onChanged, admin = false, classN
                   route: route || null,
                   priority: priority === "" ? null : Number(priority),
                   reason: reason.trim(),
-                }), "Override saved and logged as feedback");
+                }), "Change saved and logged as feedback");
               }}
             >
-              <p className="eyebrow">Admin override</p>
+              <p className="eyebrow">Manual change</p>
               <div className="grid grid-cols-2 gap-2">
                 <select className="field" value={route} onChange={(e) => setRoute(e.target.value)} aria-label="New level">
                   <option value="">Keep level</option>
@@ -228,7 +228,7 @@ export default function TicketExplain({ ticket, onChanged, admin = false, classN
               <div className="flex gap-2">
                 <button type="submit" className="btn-primary flex-1" disabled={!overrideValid || !!busy}>
                   {busy === "override" && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Override
+                  Save change
                 </button>
                 <button type="button" className="btn-ghost" disabled={!!busy}
                         onClick={() => run("resolve", () => api.resolve(t.id), `Ticket #${t.id} resolved`)}>

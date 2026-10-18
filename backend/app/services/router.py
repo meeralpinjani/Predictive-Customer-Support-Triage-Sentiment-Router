@@ -42,7 +42,7 @@ def decide(
     mode: str | None = None,
     category: str | None = None,
 ) -> Decision:
-    """Routing ladder (playbook 10.1 adapted to three support levels), checked in order.
+    """Routing rules for the three support levels, checked in order.
 
     Level 3 (Expert Escalation) is reached only by escalation. The customer's category sets
     the starting level (1 or 2); the AI can raise it but never lower it.
@@ -57,7 +57,7 @@ def decide(
 
     # 1. Critical flags always go to Level 3, whatever the score, plan or category.
     if flags:
-        reason = f"Critical rule: {', '.join(flags)}"
+        reason = f"Emergency: {', '.join(flags)}"
         if "legal" in flags:
             reason += " · manager notified"
         return Decision("level3", reason, "none")

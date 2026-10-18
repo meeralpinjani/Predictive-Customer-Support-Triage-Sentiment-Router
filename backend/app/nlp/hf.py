@@ -1,4 +1,4 @@
-"""Pretrained transformer models (playbook Part 7, "Path A: local models").
+"""Pretrained transformer models, run locally.
 
 - cardiffnlp/twitter-roberta-base-sentiment-latest -> negative-sentiment probability
 - j-hartmann/emotion-english-distilroberta-base    -> anger + disgust + 0.5 * sadness
@@ -20,7 +20,7 @@ EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 _state = {"status": "idle", "error": ""}   # idle | loading | ready | failed
 _lock = threading.Lock()
 
-# Issue types for model-based urgency (playbook 7.3/7.4: embedding approach instead of a
+# Issue types for model-based urgency (embedding approach instead of a
 # heavy zero-shot model). Each type has a base urgency and a few prototype sentences.
 ISSUES: dict[str, tuple[float, list[str]]] = {
     "outage": (0.95, ["service outage, the system is down", "the website is down for all users",
@@ -112,7 +112,7 @@ def model_signals(text: str) -> dict[str, float]:
 
 
 def issue_scores(text: str) -> tuple[str, float, float]:
-    """Returns (top issue, its probability, model base urgency) - playbook 7.3 formula."""
+    """Returns (top issue, its probability, model base urgency)."""
     import torch
     from sentence_transformers import util
 

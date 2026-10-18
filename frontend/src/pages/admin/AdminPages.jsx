@@ -12,7 +12,7 @@ import { AblationTile, ModelTile, ResultsTile, ScorecardTile } from "../../compo
 import {
   FormulaTile, KbTesterTile, MethodTile, RouteMixTile, SegmentWaitTile, TrustTile,
 } from "../../components/insights/Operations.jsx";
-import { Empty, PageHeader } from "../../components/ui.jsx";
+import { Empty, PageHeader, Section } from "../../components/ui.jsx";
 import { RetrainTile } from "./AdminExtras.jsx";
 
 function useStatic(loader) {
@@ -38,23 +38,25 @@ export function AdminOverview() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
-      <PageHeader title="Overview" subtitle="Every queue, live. Submit a test ticket as any CRM customer, inspect a score, or try other weights." />
+      <PageHeader title="Overview" subtitle="Every queue, live. Click a ticket to see why it got its score and level." />
       <LiveQueueHero tickets={list} loading={!tickets} />
       <DeflectionTile stats={stats} />
       <WaitTile stats={stats} />
 
-      <SubmitTile customers={customers ?? []} categories={cats?.categories ?? []}
-                  onSubmitted={async (t) => { setSelectedId(t.id); await reload(); }} onOpen={setSelectedId} />
       <QueueTile tickets={list} loading={!tickets} selectedId={selectedId} onSelect={setSelectedId} preview={preview}
                  eyebrow="All levels" title="Live queue" />
-
       <TicketExplain ticket={selected} onChanged={reload} admin
                      action={selected && (
                        <button className="btn-ghost !p-2 !rounded-full" onClick={() => navigate(`/tickets/${selected.id}`)} aria-label="Open full ticket">
                          <ExternalLink className="w-4 h-4" />
                        </button>
                      )} />
-      <WhatIfTile config={config} onPreview={setPreview} ticketsVersion={list.length} />
+
+      <Section title="Demo & testing tools" hint="send a test ticket as any customer, or preview other settings" defaultOpen={false}>
+        <SubmitTile customers={customers ?? []} categories={cats?.categories ?? []}
+                    onSubmitted={async (t) => { setSelectedId(t.id); await reload(); }} onOpen={setSelectedId} />
+        <WhatIfTile config={config} onPreview={setPreview} ticketsVersion={list.length} />
+      </Section>
     </div>
   );
 }
@@ -66,16 +68,20 @@ export function AdminInsights() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
       <PageHeader title="Insights & proof" subtitle="How well the AI performs on unseen tickets, and what the router changes on a busy day." />
-      <ResultsTile report={report} error={error} />
-      <ScorecardTile report={report} error={error} />
-      <AblationTile report={report} />
-      <ModelTile report={report} />
-      <FormulaTile config={config} />
-      <div className="lg:col-span-4 grid gap-4 content-start">
-        <RouteMixTile stats={stats} />
-        <SegmentWaitTile stats={stats} />
-      </div>
-      <div className="lg:col-span-8"><MethodTile report={report} /></div>
+      <Section title="Results">
+        <ResultsTile report={report} error={error} />
+        <ScorecardTile report={report} error={error} />
+        <div className="lg:col-span-12 grid gap-4 lg:grid-cols-2">
+          <RouteMixTile stats={stats} />
+          <SegmentWaitTile stats={stats} />
+        </div>
+      </Section>
+      <Section title="Technical details" hint="what each part adds, the trained model, the formula and how it was measured" defaultOpen={false}>
+        <AblationTile report={report} />
+        <ModelTile report={report} />
+        <FormulaTile config={config} />
+        <div className="lg:col-span-8"><MethodTile report={report} /></div>
+      </Section>
     </div>
   );
 }
@@ -88,14 +94,20 @@ export function AdminTuning() {
   const { data: tickets } = useLiveData(() => api.tickets(), { match: () => true });
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-2">
-      <PageHeader title="Tuning" subtitle="Try other weights safely, test knowledge-base matching, and retrain routing from your agents' decisions." />
-      <WhatIfTile config={config} onPreview={setPreview} ticketsVersion={tickets?.length ?? 0} />
-      <QueueTile tickets={tickets ?? []} loading={!tickets} onSelect={() => {}} preview={preview}
-                 eyebrow="Preview" title="Queue under these settings" />
-      <FormulaTile config={config} />
-      <KbTesterTile />
-      <TrustTile stats={stats} health={health} onRescore={async () => { await api.rescore(); await reload(); }} />
-      <RetrainTile className="lg:col-span-8" />
+      <PageHeader title="Tuning" subtitle="Try other weights safely, check system status, and retrain routing from your agents' decisions." />
+      <Section title="Try other settings" hint="preview only, nothing is saved">
+        <WhatIfTile config={config} onPreview={setPreview} ticketsVersion={tickets?.length ?? 0} />
+        <QueueTile tickets={tickets ?? []} loading={!tickets} onSelect={() => {}} preview={preview}
+                   eyebrow="Preview" title="Queue under these settings" />
+      </Section>
+      <Section title="Status & learning">
+        <TrustTile stats={stats} health={health} onRescore={async () => { await api.rescore(); await reload(); }} />
+        <RetrainTile className="lg:col-span-8" />
+      </Section>
+      <Section title="Technical details" hint="the formula and the help-article match tester" defaultOpen={false}>
+        <FormulaTile config={config} />
+        <KbTesterTile />
+      </Section>
     </div>
   );
 }

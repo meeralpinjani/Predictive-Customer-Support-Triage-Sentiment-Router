@@ -1,4 +1,4 @@
-"""Queue simulation and ablation: FCFS vs the router (playbook 13.3-13.5).
+"""Queue simulation and ablation: FCFS vs the router.
 
     python -m eval.simulate
 

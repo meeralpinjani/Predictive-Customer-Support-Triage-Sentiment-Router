@@ -1,4 +1,4 @@
-"""Suggested agent reply (playbook "Could have"): greeting + empathy matched to the customer's
+"""Suggested agent reply: greeting + empathy matched to the customer's
 frustration + the knowledge-base answer or a sensible next step + a concrete follow-up promise.
 A draft only: the agent edits it before sending."""
 from sqlalchemy.orm import Session

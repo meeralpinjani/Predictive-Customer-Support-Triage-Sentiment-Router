@@ -1,28 +1,28 @@
 {
   "rules": {
-    "threshold": 0.41,
+    "threshold": 0.4,
     "cv_f2": 1.0,
-    "intercept": -2.5081,
+    "intercept": -2.5279,
     "coef": {
-      "neg": 0.8713,
-      "anger": 5.6286,
-      "style": 1.4097,
-      "churn": 3.4991
+      "neg": 0.7793,
+      "anger": 5.5806,
+      "style": 1.6123,
+      "churn": 3.5277
     },
     "train_size": 252,
     "train_accuracy": 1.0
   },
   "hf": {
-    "threshold": 0.42,
+    "threshold": 0.41,
     "cv_f2": 1.0,
-    "intercept": -2.8681,
+    "intercept": -2.8853,
     "coef": {
-      "neg_model": 0.5818,
-      "anger_model": 0.1124,
-      "neg_rules": 0.6044,
-      "anger_rules": 5.6705,
-      "style": 1.3603,
-      "churn": 3.3789
+      "neg_model": 0.5643,
+      "anger_model": 0.1554,
+      "neg_rules": 0.5019,
+      "anger_rules": 5.6197,
+      "style": 1.5864,
+      "churn": 3.4052
     },
     "train_size": 252,
     "train_accuracy": 1.0

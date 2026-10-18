@@ -46,7 +46,7 @@ export function FormulaTile({ config }) {
   const shades = ["rgb(var(--glacier))", "rgb(var(--glacier) / .7)", "rgb(var(--glacier) / .45)", "rgb(var(--glacier) / .25)"];
   const ladder = [
     { cond: "Critical flag: security, legal, safety or outage (negation-aware)", route: "level3" },
-    { cond: `Confident KB match ≥ ${config.kb_auto_threshold}, routine question, calm, score < ${config.auto_max_score}`, route: "auto_kb" },
+    { cond: `Confident help-article match ≥ ${config.kb_auto_threshold}, routine question, calm, score < ${config.auto_max_score}`, route: "auto_kb" },
     { cond: `Frustration ≥ ${config.frustration_senior.toFixed(2)}`, route: "level3" },
     { cond: `High-value customer (value ≥ ${config.vip_value}) and score ≥ ${config.vip_score}`, route: "level3" },
     { cond: `Score ≥ ${config.level3_score}`, route: "level3" },
@@ -54,7 +54,7 @@ export function FormulaTile({ config }) {
     { cond: "Everything else (general categories)", route: "level1" },
   ];
   return (
-    <Tile eyebrow="How scoring works · playbook 9 & 10" title="One transparent score, one routing ladder" icon={Sigma} className="lg:col-span-8">
+    <Tile eyebrow="How scoring works" title="One transparent score, clear routing rules" icon={Sigma} className="lg:col-span-8">
       <div className="grid gap-5 md:grid-cols-2">
         <div>
           <p className="font-mono text-sm rounded-2xl bg-fjord text-slate-100 p-4 leading-relaxed">
@@ -77,7 +77,7 @@ export function FormulaTile({ config }) {
           <ul className="mt-3 space-y-1 text-xs text-ink-2">
             <li><b className="num">+{config.boosts.repeat_contact}</b> third contact in 7 days</li>
             <li><b className="num">+{config.boosts.renewal_risk}</b> renewal in under 14 days and a negative tone</li>
-            <li><b className="num">up to +{config.boosts.sla_risk_max}</b> from {pct(config.boosts.sla_risk_start)} of the SLA (queue order only)</li>
+            <li><b className="num">up to +{config.boosts.sla_risk_max}</b> from {pct(config.boosts.sla_risk_start)} of the reply-by time (queue order only)</li>
           </ul>
         </div>
         <ol className="space-y-1.5">
@@ -163,14 +163,14 @@ export function TrustTile({ stats, health, onRescore }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const rows = [
-    { label: "Agent override rate", value: stats?.override_rate, hint: "Share of human-routed tickets agents re-routed" },
+    { label: "Manual re-routing rate", value: stats?.override_rate, hint: "Share of human-routed tickets agents re-routed" },
     { label: "KB answer acceptance", value: stats?.suggestion_acceptance_rate, hint: `${stats?.kb_ratings ?? 0} customer ratings so far` },
     { label: "KB abstention", value: stats?.abstention_rate, hint: "Tickets where the bot stayed quiet" },
   ];
   const models = health?.models;
   return (
     <Tile
-      eyebrow="Trust & health"
+      eyebrow="System status"
       icon={ShieldCheck}
       className="lg:col-span-4"
       action={
@@ -186,7 +186,7 @@ export function TrustTile({ stats, health, onRescore }) {
                     setBusy(false);
                   }
                 }}>
-          <RefreshCw className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} /> Rescore now
+          <RefreshCw className={`w-3.5 h-3.5 ${busy ? "animate-spin" : ""}`} /> Update priorities now
         </button>
       }
     >
@@ -223,10 +223,10 @@ export function MethodTile({ report }) {
     <Tile eyebrow="How we measured" title="Honest numbers" icon={FileSearch} className="lg:col-span-4">
       {!d ? <SkeletonLines rows={5} /> : (
         <ul className="space-y-2 text-xs text-ink-2 leading-relaxed list-disc pl-4">
-          <li>{d.tickets} labelled tickets (polite, angry, sarcastic, {d.hinglish} Hinglish) following the playbook's labelling guide.</li>
+          <li>{d.tickets} labelled tickets (polite, angry, sarcastic, {d.hinglish} Hinglish) labelled with a written guide.</li>
           <li>Split by template: the {d.test} test tickets use sentences and tone phrases never seen while tuning.</li>
-          <li>Frustration weights and KB thresholds fitted on train/validation only.</li>
-          <li>Synthetic data written by the team: real tickets would need re-tuning (playbook 16).</li>
+          <li>Frustration weights and help-article cut-offs set on training and validation tickets only.</li>
+          <li>Synthetic data written by the team: real tickets would need re-tuning.</li>
           <li>Reproduce: <code className="font-mono">python -m eval.run_all</code>, generated {report.generated_at.slice(0, 10)}.</li>
         </ul>
       )}

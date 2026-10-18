@@ -1,4 +1,4 @@
-"""The playbook's demo tickets (section 6.7) end to end, adapted to the three support levels."""
+"""The demo tickets end to end, across the three support levels."""
 from app.config import settings
 from app.nlp import frustration_model
 
@@ -13,8 +13,8 @@ def test_1_enterprise_outage_goes_to_experts_with_high_score(client):
     t = post(client, "c1", "outage", "Production DOWN for an hour. Cancelling if not fixed ASAP!!")
     assert t["route"] == "level3"
     assert "outage" in t["analysis"]["critical_flags"]
-    assert t["priority"] >= settings.level3_score   # playbook illustrates "70+"
-    assert "Critical rule" in t["route_reason"]
+    assert t["priority"] >= settings.level3_score
+    assert "Emergency" in t["route_reason"]
 
 
 def test_2_free_password_reset_is_answered_automatically(client):

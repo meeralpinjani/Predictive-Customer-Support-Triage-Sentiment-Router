@@ -3,5 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .env
-*.db
 eval/nlp_mistakes*.csv
+demo_accounts.local.json
+data/router_tuning.json
+models/

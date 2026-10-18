@@ -5,9 +5,11 @@
 - admins see everything and can override routing or priority.
 """
 from datetime import datetime, timezone
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import events
@@ -16,10 +18,11 @@ from app.categories import CATEGORY_BY_ID
 from app.db import get_db
 from app.models import Attachment, CallbackRequest, Customer, Feedback, Message, Ticket, User
 from app.schemas import (
-    CallbackIn, CallbackOut, CallbackPatch, CustomerTicketOut, EscalateIn, FeedbackIn, MessageIn, MessageOut,
+    CLIENT_ID_PATTERN, CallbackIn, CallbackOut, CallbackPatch, CustomerTicketOut, EscalateIn, FeedbackIn, MessageIn, MessageOut,
     OverrideIn, TicketIn, TicketOut,
 )
-from app.services.files import attachment_out, path_for, save_uploads
+from app.services import handover, integrity
+from app.services.files import attachment_out, read_content, save_uploads
 from app.services.knowledge import guides_for_ticket
 from app.services.replies import suggested_reply
 from app.services.router import LEVEL, Decision
@@ -95,6 +98,7 @@ def submit_ticket(payload: TicketIn, user: User = Depends(require("customer", "a
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown customer '{payload.customer_id}'")
     t = process_ticket(db, payload, customer, created_by=user)
     _publish("ticket.created", t)
+    integrity.schedule(t.id, "ticket_created", f"ticket:{t.id}:created")   # after commit; never blocks
     return serialise_for_customer(t, db) if user.role == "customer" else serialise(t, db)
 
 
@@ -148,8 +152,12 @@ def claim(ticket_id: int, user: User = Depends(require(*AGENT_ROLES)), db: Sessi
     t = _workable(db, ticket_id, user)
     if t.status not in OPEN:
         raise _conflict(f"Ticket is {t.status}")
+    previous = t.assigned_agent_id
     t.status, t.assigned_agent_id = "in_progress", user.id
     add_system_message(db, t, f"{user.name} is working on this ticket.")
+    if previous not in (None, user.id) and t.first_response_at is not None:   # taking over someone's started ticket
+        handover.create(db, t, "reassignment", from_agent_id=previous, from_level=t.route, to_agent_id=user.id,
+                        to_level=t.route, reason=f"Claimed by {user.name}", actor_id=user.id)
     db.commit()
     _publish("ticket.updated", t)
     return serialise(t, db)
@@ -182,7 +190,8 @@ def override_ticket(ticket_id: int, payload: OverrideIn, user: User = Depends(re
         raise HTTPException(422, "Give a new level, a new priority, or both")
     old = t.route
     if payload.route:
-        route_ticket(db, t, Decision(payload.route, f"Admin override: {payload.reason}", t.kb_action))
+        route_ticket(db, t, Decision(payload.route, f"Admin override: {payload.reason}", t.kb_action),
+                     trigger="admin_override", actor_id=user.id, reason=payload.reason)
         t.route_locked = True
     if payload.priority is not None:
         t.priority, t.priority_locked = payload.priority, True
@@ -243,16 +252,43 @@ def submit_feedback(ticket_id: int, payload: FeedbackIn, user: User = Depends(re
 
 # ---------------------------------------------------------------- conversation (live chat)
 @router.get("/tickets/{ticket_id}/messages", response_model=list[MessageOut])
-def list_messages(ticket_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)) -> list[MessageOut]:
+def list_messages(ticket_id: int, cursor: int | None = Query(None, ge=1, description="Return messages after this id"),
+                  limit: int | None = Query(None, ge=1, le=200), user: User = Depends(current_user),
+                  db: Session = Depends(get_db)) -> list[MessageOut]:
+    """Full history, oldest first. With cursor/limit: one page after the given message id."""
+    from app.api.conversation import _after
     t = _viewable(db, ticket_id, user)
-    rows = db.query(Message).filter(Message.ticket_id == t.id).order_by(Message.created_at, Message.id).all()
-    return [serialise_message(m, db, user) for m in rows]
+    return [serialise_message(m, db, user) for m in _after(db, t, cursor, limit)]
+
+
+def _existing_message(db: Session, t: Ticket, user: User, client_id: str | None) -> Message | None:
+    if not client_id:
+        return None
+    return (db.query(Message).filter(Message.ticket_id == t.id, Message.author_id == user.id,
+                                     Message.client_message_id == client_id).first())
+
+
+def _commit_message(db: Session, t: Ticket, user: User, msg: Message, client_id: str | None) -> Message | None:
+    """Commit; if a simultaneous retry already saved this client id, return that message instead."""
+    msg.client_message_id = client_id
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        dup = _existing_message(db, t, user, client_id)
+        if dup is None:
+            raise
+        return dup
+    return None
 
 
 @router.post("/tickets/{ticket_id}/messages", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
-def post_message(ticket_id: int, payload: MessageIn, user: User = Depends(current_user),
+def post_message(ticket_id: int, payload: MessageIn, response: Response, user: User = Depends(current_user),
                  db: Session = Depends(get_db)) -> MessageOut:
     t = _viewable(db, ticket_id, user)
+    if (dup := _existing_message(db, t, user, payload.client_message_id)) is not None:
+        response.status_code = status.HTTP_200_OK        # a retry: already saved, nothing new created
+        return serialise_message(dup, db, user)
     body = payload.body.strip()
     if user.role == "customer":
         msg, old = customer_reply(db, t, user, body)
@@ -260,8 +296,12 @@ def post_message(ticket_id: int, payload: MessageIn, user: User = Depends(curren
         if not can_work(user, t) and t.assigned_agent_id != user.id:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "This ticket is not at your level")
         msg, old = agent_reply(db, t, user, body), t.route
-    db.commit()
+    if (dup := _commit_message(db, t, user, msg, payload.client_message_id)) is not None:
+        response.status_code = status.HTTP_200_OK
+        return serialise_message(dup, db, user)
     db.refresh(msg)
+    if user.role == "customer":
+        integrity.schedule(t.id, "customer_reply", f"message:{msg.id}")
     out = serialise_message(msg, db, user)
     events.publish({**events.ticket_event("message.created", t), "actor_id": user.id,
                     "author_role": user.role, "preview": body[:120]})
@@ -339,26 +379,37 @@ async def upload_ticket_files(ticket_id: int, files: list[UploadFile] = File(...
         raise HTTPException(status.HTTP_403_FORBIDDEN, "This ticket is not at your level")
     saved = await save_uploads(db, files, t.id, user.id)
     db.commit()
+    if user.role == "customer":
+        integrity.schedule(t.id, "attachments", "attachments:" + ",".join(str(a.id) for a in saved))
     _publish("ticket.updated", t)
     return [attachment_out(a) for a in saved]
 
 
 @router.post("/tickets/{ticket_id}/messages/upload", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
-async def post_message_with_files(ticket_id: int, files: list[UploadFile] = File(...), body: str = Form(""),
+async def post_message_with_files(ticket_id: int, response: Response, files: list[UploadFile] = File(...),
+                                  body: str = Form(""), client_message_id: str | None = Form(None, pattern=CLIENT_ID_PATTERN),
                                   user: User = Depends(current_user), db: Session = Depends(get_db)) -> MessageOut:
     """A chat message with screenshots / PDFs (the text is optional)."""
     t = _viewable(db, ticket_id, user)
     if not _can_post(user, t):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "This ticket is not at your level")
+    if (dup := _existing_message(db, t, user, client_message_id)) is not None:
+        response.status_code = status.HTTP_200_OK
+        return serialise_message(dup, db, user)
     text = body.strip()[:4000] or f"Sent {len(files)} file{'s' if len(files) != 1 else ''}"
     if user.role == "customer":
         msg, old = customer_reply(db, t, user, text)
     else:
         msg, old = agent_reply(db, t, user, text), t.route
+    msg.client_message_id = client_message_id
     db.flush()
     await save_uploads(db, files, t.id, user.id, message_id=msg.id)
-    db.commit()
+    if (dup := _commit_message(db, t, user, msg, client_message_id)) is not None:
+        response.status_code = status.HTTP_200_OK
+        return serialise_message(dup, db, user)
     db.refresh(msg)
+    if user.role == "customer":
+        integrity.schedule(t.id, "customer_reply", f"message:{msg.id}")
     events.publish({**events.ticket_event("message.created", t), "actor_id": user.id,
                     "author_role": user.role, "preview": text[:120]})
     _publish_route_change(t, old)
@@ -371,12 +422,10 @@ def download_attachment(attachment_id: int, user: User = Depends(current_user), 
     if not att:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
     _viewable(db, att.ticket_id, user)   # same rule as the ticket: 404 if you can't see it
-    path = path_for(att)
-    if not path.exists():
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "File not found")
-    return FileResponse(path, media_type=att.content_type, filename=att.filename,
-                        content_disposition_type="inline" if att.content_type.startswith("image/") else "attachment",
-                        headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "private, max-age=3600"})
+    disposition = "inline" if att.content_type.startswith("image/") else "attachment"
+    return Response(read_content(att), media_type=att.content_type,
+                    headers={"Content-Disposition": f"{disposition}; filename*=UTF-8''{quote(att.filename)}",
+                             "X-Content-Type-Options": "nosniff", "Cache-Control": "private, max-age=3600"})
 
 
 # ---------------------------------------------------------------- agent helpers

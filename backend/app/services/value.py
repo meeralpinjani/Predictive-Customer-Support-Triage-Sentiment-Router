@@ -1,4 +1,4 @@
-"""Customer value model - playbook Part 8.
+"""Customer value model.
 
 value = 0.40*plan + 0.30*ltv + 0.20*churn_risk + 0.10*renewal_soon, each in 0..1.
 Churn risk is the CRM figure or recent ticket volume (tickets in 30 days / 5), whichever is higher.

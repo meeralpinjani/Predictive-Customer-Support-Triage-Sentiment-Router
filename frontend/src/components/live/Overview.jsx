@@ -26,7 +26,7 @@ export function LiveQueueHero({ tickets, loading }) {
             <dd className="text-2xl font-bold text-rose-300 num">{loading ? "–" : critical}</dd>
           </div>
           <div>
-            <dt className="text-xs text-slate-400">near / past SLA</dt>
+            <dt className="text-xs text-slate-400">near / past reply-by time</dt>
             <dd className="text-2xl font-bold text-amber-300 num">{loading ? "–" : atRisk}</dd>
           </div>
         </dl>
@@ -56,7 +56,7 @@ export function DeflectionTile({ stats }) {
   const rate = stats?.deflection_rate ?? 0;
   const auto = stats?.counts_by_route?.auto_kb ?? 0;
   return (
-    <Tile eyebrow="Deflection" icon={Sparkles} className="lg:col-span-3">
+    <Tile eyebrow="Solved by help articles" icon={Sparkles} className="lg:col-span-3">
       {stats ? <p className="text-5xl font-extrabold num">{pct(rate)}</p> : <Skeleton className="h-12 w-24" />}
       <p className="mt-2 text-sm text-ink-3">
         {stats ? `${auto} of ${stats.total_tickets}` : "–"} tickets answered by the knowledge base, no agent needed
@@ -81,11 +81,11 @@ export function WaitTile({ stats }) {
       </div>
       <dl className="mt-auto pt-4 grid grid-cols-2 gap-2">
         <div className="rounded-2xl bg-sunken px-3 py-2">
-          <dt className="text-[11px] text-ink-3">95th percentile</dt>
+          <dt className="text-[11px] text-ink-3">Longest waits (worst 5%)</dt>
           <dd className="text-sm font-bold num">{fmtWait(stats?.p95_wait_minutes)}</dd>
         </div>
         <div className="rounded-2xl bg-sunken px-3 py-2">
-          <dt className="text-[11px] text-ink-3">past SLA</dt>
+          <dt className="text-[11px] text-ink-3">past reply-by time</dt>
           <dd className="text-sm font-bold num">{stats?.sla_breached_open ?? "–"}</dd>
         </div>
       </dl>

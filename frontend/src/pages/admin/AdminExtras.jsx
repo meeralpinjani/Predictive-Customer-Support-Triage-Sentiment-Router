@@ -100,7 +100,7 @@ export function AdminAnalytics() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
-                {["Day", "Created", "Auto-answered", "Deflection", "Escalations", "Resolved", "Avg first response", "Avg resolution"].map((h) => <th key={h} className="py-2 pr-3 font-semibold">{h}</th>)}
+                {["Day", "Created", "Auto-answered", "Solved by help articles", "Escalations", "Resolved", "Avg first response", "Avg resolution"].map((h) => <th key={h} className="py-2 pr-3 font-semibold">{h}</th>)}
               </tr></thead>
               <tbody className="divide-y divide-line">
                 {data.daily.map((d) => (
@@ -133,7 +133,7 @@ export function AdminAnalytics() {
           </Tile>
           {[
             ["Tickets created", "created", (v) => v],
-            ["Deflection (answered automatically)", "deflection_rate", (v) => pct(v), "rgb(var(--auto))"],
+            ["Solved by help articles", "deflection_rate", (v) => pct(v), "rgb(var(--auto))"],
             ["Escalations", "escalations", (v) => v, "rgb(var(--senior))"],
             ["Resolved", "resolved", (v) => v, "rgb(var(--tier1))"],
             ["Avg first response", "avg_first_response_min", fmtWait, "rgb(var(--tier2))", "No agent replies yet"],
@@ -339,7 +339,7 @@ export function RetrainTile({ className = "lg:col-span-4" }) {
   return (
     <Tile className={className} eyebrow="Learn from agents" title="Retrain routing" icon={BrainCircuit}
           action={<button className="btn-ghost !py-1 !px-2.5 !text-xs" onClick={check} disabled={busy}>{busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Re-check"}</button>}>
-      <p className="text-xs text-ink-3 mb-3">Every time an agent escalates or an admin re-routes a ticket, that decision is saved. Retraining finds the thresholds that agree with your agents most often.</p>
+      <p className="text-xs text-ink-3 mb-3">Every time an agent escalates or an admin re-routes a ticket, that decision is saved. Retraining finds the cut-offs that agree with your agents most often.</p>
       {!res ? <SkeletonLines rows={3} /> : res.status === "insufficient" ? (
         <>
           <div className="flex justify-between text-xs mb-1"><span className="text-ink-2 font-medium">Agent decisions collected</span><span className="font-semibold num">{res.decisions}/{res.needed}</span></div>
@@ -352,9 +352,9 @@ export function RetrainTile({ className = "lg:col-span-4" }) {
             <div className="rounded-xl bg-sunken p-3"><dt className="text-[11px] text-ink-3">Agreement now</dt><dd className="text-xl font-bold num">{pct(res.agreement_before)}</dd></div>
             <div className="rounded-xl bg-sunken p-3"><dt className="text-[11px] text-ink-3">After retraining</dt><dd className="text-xl font-bold num text-tier1-text">{pct(res.agreement_after)}</dd></div>
           </dl>
-          <p className="mt-3 text-xs text-ink-2">Level 3 from score {res.current.level3_score} → <b>{res.proposed.level3_score}</b> · frustration threshold {res.current.frustration_senior} → <b>{res.proposed.frustration_senior}</b></p>
+          <p className="mt-3 text-xs text-ink-2">Level 3 from score {res.current.level3_score} → <b>{res.proposed.level3_score}</b> · frustration cut-off {res.current.frustration_senior} → <b>{res.proposed.frustration_senior}</b></p>
           <button className="btn-primary mt-3" disabled={busy || res.agreement_after <= res.agreement_before}
-                  onClick={async () => { await api.retrainApply(res.proposed); toast("New thresholds applied", "success"); check(); }}>Apply</button>
+                  onClick={async () => { await api.retrainApply(res.proposed); toast("New cut-offs applied", "success"); check(); }}>Apply</button>
         </>
       )}
     </Tile>

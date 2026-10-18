@@ -7,7 +7,7 @@ KB = (0.43, 0.66)
 def test_critical_flag_goes_to_level3_regardless_of_score_or_category():
     d = decide(score=20, frustration=0.1, intent="security", flags=["security"], kb_conf=0.9, kb_thresholds=KB,
                category="feedback")
-    assert d.route == "level3" and "Critical rule" in d.reason and d.kb_action == "none"
+    assert d.route == "level3" and "Emergency" in d.reason and d.kb_action == "none"
 
 
 def test_legal_flag_notifies_manager():

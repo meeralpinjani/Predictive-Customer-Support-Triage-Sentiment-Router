@@ -1,18 +1,36 @@
-# One command for judges:  docker compose up --build
+# One command:  docker compose up --build
 # Dashboard: http://localhost:5173   API docs: http://localhost:8000/docs
-# Demo account passwords are generated on first start: docker compose exec backend cat demo_accounts.local.json
+# Demo account passwords: set DEMO_PASSWORD / DEMO_ADMIN_PASSWORD, or read the generated ones:
+#   docker compose exec backend cat demo_accounts.local.json
 services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: triage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-triage-local}
+      POSTGRES_DB: triage
+    volumes:
+      - triage-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triage -d triage"]
+      interval: 5s
+      retries: 10
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
+      DATABASE_URL: postgresql://triage:${POSTGRES_PASSWORD:-triage-local}@db:5432/triage
       CORS_ORIGINS: http://localhost:5173
       SECRET_KEY: ${SECRET_KEY:-change-me-for-anything-public}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
-    volumes:
-      - triage-data:/data
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
@@ -22,4 +40,4 @@ services:
       - backend
 
 volumes:
-  triage-data:
+  triage-pg:

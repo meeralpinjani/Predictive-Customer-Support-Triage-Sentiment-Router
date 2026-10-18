@@ -36,11 +36,11 @@ export const STATUS_LABEL = {
   new: "New",
 };
 export const SEGMENT_LABEL = { enterprise: "Enterprise", pro: "Pro", basic: "Basic", free: "Free", unknown: "Unknown" };
-export const COMPONENT_LABEL = { frustration: "Frustration", urgency: "Urgency", value: "Customer value", age: "Wait vs SLA" };
+export const COMPONENT_LABEL = { frustration: "Frustration", urgency: "Urgency", value: "Customer value", age: "Wait vs reply-by time" };
 export const COMPONENT_ORDER = ["frustration", "urgency", "value", "age"];
-export const BOOST_LABEL = { repeat_contact: "Repeat contact", renewal_risk: "Renewal at risk", sla_risk: "SLA at risk" };
-export const SIGNAL_LABEL = { neg: "Negative tone", anger: "Anger / sarcasm", style: "Shouting (CAPS, !!!)", churn: "Churn threat" };
-export const VALUE_LABEL = { plan: "Plan tier", ltv: "Lifetime value", churn: "Churn risk", renewal: "Renewal soon" };
+export const BOOST_LABEL = { repeat_contact: "Contacted 3+ times this week", renewal_risk: "Renewing soon and unhappy", sla_risk: "Close to its reply-by time" };
+export const SIGNAL_LABEL = { neg: "Negative tone", anger: "Anger / sarcasm", style: "Exclamation marks (!!!, ??)", churn: "Threat to leave" };
+export const VALUE_LABEL = { plan: "Plan", ltv: "Total spent", churn: "Risk of leaving", renewal: "Renewal soon" };
 export const INTENT_LABEL = {
   billing_dispute: "Billing dispute", access: "Login / access", performance: "Performance", integration: "Integration", cancellation: "Cancellation", password_reset: "Password reset",
   invoice: "Invoice", bug: "Bug", complaint: "Complaint", how_to: "How-to", feature_request: "Feature request",
@@ -59,7 +59,7 @@ export function fmtWait(min) {
 }
 export const pct = (x, digits = 0) => (x == null ? "–" : `${(x * 100).toFixed(digits)}%`);
 
-// Demo tickets from the playbook's seed set (section 6.7).
+// Example tickets for the admin's test form.
 export const EXAMPLES = [
   { label: "Outage", customer_id: "c1", category: "outage", body: "Production DOWN for an hour. Cancelling if not fixed ASAP!!" },
   { label: "Password", customer_id: "c15", category: "account", body: "How do I reset my password?" },

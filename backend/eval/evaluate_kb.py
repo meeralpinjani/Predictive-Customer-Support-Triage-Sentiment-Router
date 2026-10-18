@@ -1,4 +1,4 @@
-"""Knowledge-base threshold tuning (VALIDATION split) and accuracy (TEST split) - playbook 7.5, 13.1.
+"""Knowledge-base threshold tuning (VALIDATION split) and accuracy (TEST split).
 
     python -m eval.evaluate_kb
 

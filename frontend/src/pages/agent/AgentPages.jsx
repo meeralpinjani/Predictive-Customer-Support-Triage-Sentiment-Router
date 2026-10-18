@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { HandoverPanel, SummaryButton } from "../../components/Summary.jsx";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Activity, ArrowLeft, ArrowUpCircle, Boxes, CheckCircle2, ChevronDown, Compass, Hand, Loader2, Lock, Paperclip, Radio, UserRound,
@@ -69,7 +70,7 @@ export function AgentQueuePage() {
             <p className="mt-2 text-sm text-slate-400">open tickets at your level</p>
           </div>
           <dl className="flex gap-6 text-right">
-            {[["waiting", waiting, "text-sky-300"], ["yours", mine, "text-teal-300"], ["near SLA", atRisk, "text-amber-300"]].map(([k, v, c]) => (
+            {[["waiting", waiting, "text-sky-300"], ["yours", mine, "text-teal-300"], ["near reply-by", atRisk, "text-amber-300"]].map(([k, v, c]) => (
               <div key={k}><dt className="text-xs text-slate-400">{k}</dt><dd className={`text-2xl font-bold num ${c}`}>{tickets ? v : "–"}</dd></div>
             ))}
           </dl>
@@ -169,12 +170,16 @@ export function StaffTicketPage() {
           <RouteBadge route={t.route} />
           <span className="chip bg-sunken text-ink-2">{STATUS_LABEL[t.status] ?? t.status}</span>
           {t.incident && <Link to="/incidents" className="chip bg-tier2-soft text-tier2-text"><Boxes className="w-3 h-3" aria-hidden />Incident #{t.incident.id}</Link>}
+          {t.integrity?.ai_like && <span className="chip bg-sunken text-ink-2" title="The writing looks AI-generated. Not evidence on its own.">AI-like writing</span>}
+          {t.integrity?.review_suggested && <span className="chip bg-glacier-soft text-glacier-text" title="The integrity check suggests a manual review by an admin.">Integrity review suggested</span>}
         </>}
         subtitle={`#${t.id} · ${t.category_label} · ${t.customer ? `${t.customer.name} (${SEGMENT_LABEL[t.customer.segment] ?? t.customer.segment})` : "Unknown customer"} · opened ${timeAgo(t.created_at)} · priority ${t.priority}`}
         back={<Link to={backTo} className="text-sm text-ink-3 hover:text-ink inline-flex items-center gap-1"><ArrowLeft className="w-4 h-4" /> Back to queue</Link>}
+        actions={<SummaryButton ticketId={t.id} staff />}
       />
 
       <div className="lg:col-span-8 grid gap-4 content-start">
+        <HandoverPanel ticketId={t.id} />
         <Conversation ticketId={t.id} live={t.route === "level3" && open} suggest tall
                       canReply={atMyLevel || t.assigned_agent?.id === user.id}
                       placeholder={t.route === "level3" ? "Chat live with the customer…" : "Reply to the customer…"} />

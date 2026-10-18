@@ -16,7 +16,7 @@ export function validateFiles(current, incoming) {
   const errors = [];
   const ok = [];
   for (const f of incoming) {
-    if (!OK_TYPES.includes(f.type)) errors.push(`${f.name}: only PNG, JPG or PDF`);
+    if (!OK_TYPES.includes(f.type)) errors.push(`${f.name}: only PNG, JPG, PDF or DOCX`);
     else if (f.size > MAX_MB * 1024 * 1024) errors.push(`${f.name}: larger than ${MAX_MB} MB`);
     else ok.push(f);
   }
@@ -32,7 +32,7 @@ export function PendingFiles({ files, onRemove }) {
     <ul className="flex flex-wrap gap-2">
       {files.map((f, i) => (
         <li key={`${f.name}-${i}`} className="chip bg-sunken text-ink-2 !py-1 !pl-2 !pr-1">
-          {f.type === "application/pdf" ? <FileText className="w-3.5 h-3.5" aria-hidden /> : <ImageIcon className="w-3.5 h-3.5" aria-hidden />}
+          {f.type === "application/pdf" || f.type.includes("wordprocessingml") ? <FileText className="w-3.5 h-3.5" aria-hidden /> : <ImageIcon className="w-3.5 h-3.5" aria-hidden />}
           <span className="max-w-[140px] truncate">{f.name}</span>
           <span className="text-ink-3 font-normal">{fmtSize(f.size)}</span>
           <button type="button" onClick={() => onRemove(i)} className="rounded-full p-0.5 hover:bg-line" aria-label={`Remove ${f.name}`}>
@@ -57,7 +57,7 @@ export function AttachButton({ files, setFiles, onError, disabled }) {
                e.target.value = "";
              }} />
       <button type="button" className="btn-ghost !px-3 h-[44px]" disabled={disabled || files.length >= MAX_FILES}
-              onClick={() => input.current.click()} aria-label="Attach files" title={`Attach PNG, JPG or PDF (max ${MAX_FILES}, ${MAX_MB} MB each)`}>
+              onClick={() => input.current.click()} aria-label="Attach files" title={`Attach PNG, JPG, PDF or DOCX (max ${MAX_FILES}, ${MAX_MB} MB each)`}>
         <Paperclip className="w-4 h-4" />
       </button>
     </>
@@ -82,7 +82,7 @@ export function DropZone({ files, setFiles, onError }) {
                 over ? "border-glacier bg-glacier-soft/50" : "border-line hover:border-ink-3/40")}>
         <UploadCloud className="w-5 h-5 mx-auto text-ink-3" aria-hidden />
         <p className="mt-1 text-sm font-semibold">Add screenshots or files</p>
-        <p className="text-xs text-ink-3">PNG, JPG or PDF · up to {MAX_FILES} files · {MAX_MB} MB each</p>
+        <p className="text-xs text-ink-3">PNG, JPG, PDF or DOCX · up to {MAX_FILES} files · {MAX_MB} MB each</p>
       </button>
       <input ref={input} type="file" accept={ACCEPT} multiple className="hidden"
              onChange={(e) => { add(e.target.files); e.target.value = ""; }} />

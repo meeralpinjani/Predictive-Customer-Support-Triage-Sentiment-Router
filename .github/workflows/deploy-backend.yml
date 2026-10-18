@@ -1,0 +1,28 @@
+# Pushes the backend/ folder to the Hugging Face Space on every push to main.
+# Setup (once, in GitHub → Settings → Secrets and variables → Actions):
+#   secret   HF_TOKEN  = a Hugging Face access token with write permission
+#   variable HF_SPACE  = <hf-username>/<space-name>, e.g. meeralpinjani/triage-router
+# Without them the job is skipped.
+name: Deploy backend to Hugging Face
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", ".github/workflows/deploy-backend.yml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: ${{ vars.HF_SPACE != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Push backend/ to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          git push --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" \
+            "$(git subtree split --prefix backend HEAD):refs/heads/main"

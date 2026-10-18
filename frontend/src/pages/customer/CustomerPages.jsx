@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SummaryButton } from "../../components/Summary.jsx";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
 import {
@@ -84,8 +85,8 @@ export function SupportHome() {
             {tickets.map((t) => {
               const Icon = LEVEL_ICON[t.route] ?? LifeBuoy;
               return (
-                <li key={t.id}>
-                  <Link to={`/support/tickets/${t.id}`} className="flex items-center gap-4 py-3 px-2 -mx-2 rounded-xl hover:bg-sunken">
+                <li key={t.id} className="flex items-center gap-1">
+                  <Link to={`/support/tickets/${t.id}`} className="flex-1 min-w-0 flex items-center gap-4 py-3 px-2 -mx-2 rounded-xl hover:bg-sunken">
                     <span className={clsx("w-10 h-10 rounded-2xl grid place-items-center shrink-0", routeMeta(t.route).badge)}><Icon className="w-4 h-4" aria-hidden /></span>
                     <span className="min-w-0 flex-1">
                       <span className="block font-semibold text-sm truncate">{t.subject || t.body}</span>
@@ -94,6 +95,7 @@ export function SupportHome() {
                     <StatusPill t={t} />
                     <ChevronRight className="w-4 h-4 text-ink-3 shrink-0" aria-hidden />
                   </Link>
+                  <SummaryButton ticketId={t.id} compact />
                 </li>
               );
             })}
@@ -290,11 +292,14 @@ export function CustomerTicketPage() {
       <PageHeader title={t.subject || `Ticket #${t.id}`} badges={<StatusPill t={t} />}
                   subtitle={`#${t.id} · ${t.category_label} · opened ${timeAgo(t.created_at)}`}
                   back={<Link to="/support" className="text-sm text-ink-3 hover:text-ink inline-flex items-center gap-1"><ArrowLeft className="w-4 h-4" />My tickets</Link>}
-                  actions={!resolved && (
-                    <button className="btn-ghost" disabled={!!busy} onClick={() => act("resolve", () => api.resolve(t.id), "Ticket closed")}>
-                      <CheckCircle2 className="w-4 h-4" /> My problem is solved
-                    </button>
-                  )} />
+                  actions={<>
+                    <SummaryButton ticketId={t.id} />
+                    {!resolved && (
+                      <button className="btn-ghost" disabled={!!busy} onClick={() => act("resolve", () => api.resolve(t.id), "Ticket closed")}>
+                        <CheckCircle2 className="w-4 h-4" /> My problem is solved
+                      </button>
+                    )}
+                  </>} />
 
       <div className="lg:col-span-8 grid gap-4 content-start">
         {t.route === "auto_kb" && t.auto_reply && (

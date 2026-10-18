@@ -9,7 +9,7 @@ const ROUTER = "rgb(var(--tier1))";
 
 const SIM_METRICS = [
   { key: "urgent_avg", label: "Urgent · avg wait" },
-  { key: "urgent_p95", label: "Urgent · 95th pct" },
+  { key: "urgent_p95", label: "Urgent · longest waits (worst 5%)" },
   { key: "high_value_avg", label: "High-value · avg wait" },
   { key: "non_urgent_avg", label: "Low-priority · avg wait" },
   { key: "max_wait_overall", label: "Longest wait" },
@@ -21,7 +21,7 @@ function change(a, b) {
   return `${d > 0 ? "+" : "−"}${Math.abs(Math.round(d * 100))}%`;
 }
 
-/** Playbook 13.3-13.4: FCFS vs the router on the same simulated day. */
+/** Arrival order vs the router on the same simulated day. */
 export function ResultsTile({ report, error }) {
   const [view, setView] = useState("chart");
   const sim = report?.simulation;
@@ -32,7 +32,7 @@ export function ResultsTile({ report, error }) {
 
   return (
     <Tile
-      eyebrow="Proof of impact · playbook 13.4"
+      eyebrow="Proof of impact"
       title="A busy day: first-come-first-served vs the router"
       icon={BarChart3}
       className="lg:col-span-8"
@@ -45,7 +45,7 @@ export function ResultsTile({ report, error }) {
             {[
               ["Urgent wait", change(f.urgent_avg, r.urgent_avg)],
               ["High-value wait", change(f.high_value_avg, r.high_value_avg)],
-              ["SLA breaches", `${f.sla_breaches} → ${r.sla_breaches}`],
+              ["Late replies", `${f.sla_breaches} → ${r.sla_breaches}`],
             ].map(([k, v]) => (
               <div key={k} className="rounded-2xl bg-sunken px-3 py-2.5">
                 <p className="text-[11px] text-ink-3">{k}</p>
@@ -57,15 +57,15 @@ export function ResultsTile({ report, error }) {
           {view === "chart" ? (
             <>
               <div className="flex flex-wrap gap-4 mb-3 text-xs" aria-hidden>
-                <span className="flex items-center gap-1.5 text-ink-2 font-medium"><span className="w-3 h-3 rounded-sm" style={{ background: FCFS }} />FCFS (before)</span>
+                <span className="flex items-center gap-1.5 text-ink-2 font-medium"><span className="w-3 h-3 rounded-sm" style={{ background: FCFS }} />Arrival order (before)</span>
                 <span className="flex items-center gap-1.5 text-ink-2 font-medium"><span className="w-3 h-3 rounded-sm" style={{ background: ROUTER }} />Router (after)</span>
               </div>
-              <div className="space-y-3.5" role="img" aria-label="Average waits in minutes, FCFS versus router; see the table view for values">
+              <div className="space-y-3.5" role="img" aria-label="Average waits in minutes, arrival order versus router; see the table view for values">
                 {SIM_METRICS.map((m) => (
                   <div key={m.key} className="grid grid-cols-[minmax(0,8.5rem)_1fr] sm:grid-cols-[10.5rem_1fr] items-center gap-3">
                     <span className="text-xs font-medium text-ink-2">{m.label}</span>
                     <div className="space-y-[2px]">
-                      {[["FCFS", f, FCFS], ["Router", r, ROUTER]].map(([name, d, color]) => (
+                      {[["Arrival order", f, FCFS], ["Router", r, ROUTER]].map(([name, d, color]) => (
                         <div key={name} className="flex items-center gap-2 group" title={`${name} · ${m.label}: ${d[m.key]} min`}>
                           <div className="flex-1 h-3.5">
                             <div className="h-full rounded-r transition-[width] duration-700 group-hover:brightness-110"
@@ -84,7 +84,7 @@ export function ResultsTile({ report, error }) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[11px] uppercase tracking-wider text-ink-3">
-                    <th className="py-2 font-semibold">Metric</th><th className="py-2 font-semibold text-right">FCFS</th>
+                    <th className="py-2 font-semibold">Metric</th><th className="py-2 font-semibold text-right">Arrival order</th>
                     <th className="py-2 font-semibold text-right">Router</th><th className="py-2 font-semibold text-right">Change</th>
                   </tr>
                 </thead>
@@ -97,7 +97,7 @@ export function ResultsTile({ report, error }) {
                       <td className="py-2 text-right num">{change(f[m.key], r[m.key])}</td>
                     </tr>
                   ))}
-                  <tr><td className="py-2 text-ink-2">SLA breaches</td><td className="py-2 text-right num">{f.sla_breaches}</td>
+                  <tr><td className="py-2 text-ink-2">Late replies</td><td className="py-2 text-right num">{f.sla_breaches}</td>
                     <td className="py-2 text-right num font-semibold">{r.sla_breaches}</td><td className="py-2 text-right num">{change(f.sla_breaches, r.sla_breaches)}</td></tr>
                   <tr><td className="py-2 text-ink-2">Tickets needing a human</td><td className="py-2 text-right num">100%</td>
                     <td className="py-2 text-right num font-semibold">{pct(1 - (deflection ?? 0))}</td><td className="py-2 text-right num">−{pct(deflection ?? 0)}</td></tr>
@@ -107,8 +107,8 @@ export function ResultsTile({ report, error }) {
           )}
           <p className="mt-4 text-[11px] text-ink-3 leading-relaxed">
             {sim.setup.tickets} labelled tickets, {sim.setup.agents} agents, {sim.setup.window_min / 60}h window, handling {sim.setup.service_min.join("–")} min,
-            demand ≈ {Math.round(sim.setup.load * 100)}% of capacity, SLA per customer ({sim.setup.sla}), seed {sim.setup.seed}.
-            Trade-off: urgent tickets from free-tier customers (8h SLA) can wait longer than under FCFS, but within their SLA.
+            demand ≈ {Math.round(sim.setup.load * 100)}% of capacity, reply-by time per customer ({sim.setup.sla}), seed {sim.setup.seed}.
+            Trade-off: urgent tickets from free-plan customers (8h reply-by time) can wait longer than in arrival order, but still within their reply-by time.
             Source <code className="font-mono">eval/simulate.py</code>.
           </p>
         </>
@@ -118,15 +118,15 @@ export function ResultsTile({ report, error }) {
 }
 
 const TARGETS = [
-  { key: "urgency", label: "Urgency F1 (3 classes)", get: (n) => n.urgency.macro_f1, target: 0.75 },
-  { key: "fr_r", label: "Frustration recall", get: (n) => n.frustration.recall, target: 0.80 },
-  { key: "fr_p", label: "Frustration precision", get: (n) => n.frustration.precision, target: 0.80 },
-  { key: "esc", label: "Escalation precision", get: (n) => n.escalation.precision, target: 0.80 },
-  { key: "crit", label: "Critical-issue recall", get: (n) => n.critical.recall, target: 0.90 },
+  { key: "urgency", label: "Urgency accuracy score", get: (n) => n.urgency.macro_f1, target: 0.75 },
+  { key: "fr_r", label: "Angry customers caught", get: (n) => n.frustration.recall, target: 0.80 },
+  { key: "fr_p", label: "Frustration alarms that were right", get: (n) => n.frustration.precision, target: 0.80 },
+  { key: "esc", label: "Expert escalations that were right", get: (n) => n.escalation.precision, target: 0.80 },
+  { key: "crit", label: "Emergencies caught", get: (n) => n.critical.recall, target: 0.90 },
   { key: "safe", label: "Safe auto-answers", get: (n) => n.auto_answer.safe_precision, target: 0.90 },
 ];
 
-/** Classifier metrics on held-out tickets, against the playbook's targets (13.1). */
+/** Classifier metrics on held-out tickets, against our targets. */
 export function ScorecardTile({ report, error }) {
   const [mode, setMode] = useState(null);
   const active = mode ?? report?.primary_mode ?? "hf";
@@ -171,7 +171,7 @@ export function ScorecardTile({ report, error }) {
             </li>
           </ul>
           <p className="mt-auto pt-3 text-[11px] text-ink-3">
-            {n.n} unseen tickets ({report.dataset.hinglish} Hinglish in the full set). Thresholds were fitted on train/validation only.
+            {n.n} unseen tickets ({report.dataset.hinglish} Hinglish in the full set). Cut-offs were set on training and validation tickets only.
           </p>
         </>
       )}
@@ -179,17 +179,17 @@ export function ScorecardTile({ report, error }) {
   );
 }
 
-/** Playbook 13.5: what each signal adds. */
+/** What each signal adds. */
 export function AblationTile({ report }) {
   const sim = report?.simulation;
   const order = ["fcfs", "sentiment_only", "plus_urgency", "plus_value", "router"];
   const metrics = [
     { key: "urgent_avg", label: "Urgent avg wait", fmt: fmtWait },
     { key: "high_value_avg", label: "High-value avg wait", fmt: fmtWait },
-    { key: "sla_breaches", label: "SLA breaches", fmt: (v) => v },
+    { key: "sla_breaches", label: "Late replies", fmt: (v) => v },
   ];
   return (
-    <Tile eyebrow="Ablation · playbook 13.5" title="Why every signal is needed" icon={Layers} className="lg:col-span-8">
+    <Tile eyebrow="What each part adds" title="Why every signal is needed" icon={Layers} className="lg:col-span-8">
       {!sim ? <SkeletonLines rows={5} /> : (
         <>
           <div className="grid gap-5 sm:grid-cols-3">
@@ -220,9 +220,9 @@ export function AblationTile({ report }) {
             })}
           </div>
           <p className="mt-4 text-xs text-ink-2 leading-relaxed">
-            Sentiment alone barely speeds up urgent tickets and multiplies SLA breaches. Adding urgency makes urgent tickets
-            fastest, but valuable accounts then wait longer than under FCFS and SLAs break. Adding customer value helps those
-            accounts. The full router with SLA ageing gives up a little urgent speed to get the fewest SLA breaches and the
+            Tone alone barely speeds up urgent tickets and causes many more late replies. Adding urgency makes urgent tickets
+            fastest, but valuable accounts then wait longer than in arrival order and replies come late. Adding customer value helps those
+            accounts. The full router, where priority grows while a ticket waits, gives up a little urgent speed to get the fewest late replies and the
             fastest high-value service.
           </p>
         </>
@@ -232,7 +232,7 @@ export function AblationTile({ report }) {
 }
 
 const SIGNAL_NAMES = {
-  neg: "Negative tone", anger: "Anger / sarcasm", style: "Shouting", churn: "Churn threat",
+  neg: "Negative tone", anger: "Anger / sarcasm", style: "Exclamation marks", churn: "Threat to leave",
   neg_model: "Negative tone (RoBERTa)", anger_model: "Anger (emotion model)", neg_rules: "Negative words",
   anger_rules: "Anger & sarcasm cues",
 };
@@ -262,8 +262,8 @@ export function ModelTile({ report }) {
             ))}
           </ul>
           <p className="mt-auto pt-3 text-[11px] text-ink-3 leading-relaxed">
-            Logistic regression fitted on {fm.train_size} training tickets (playbook 9.5). "High frustration" from probability{" "}
-            {fm.threshold}, chosen by cross-validation to favour recall: missing an angry customer costs more than a false alarm.
+            Logistic regression fitted on {fm.train_size} training tickets. "High frustration" from probability{" "}
+            {fm.threshold}, chosen by cross-validation to catch as many angry customers as possible: missing one costs more than a false alarm.
           </p>
         </>
       )}

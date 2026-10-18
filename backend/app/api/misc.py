@@ -148,7 +148,7 @@ def get_stats(_: User = Depends(require(*STAFF)), db: Session = Depends(get_db))
         abstention_rate=round(sum(1 for t in all_tickets if t.kb_action == "none") / total, 3) if total else 0.0,
         kb_ratings=helpful + unhelpful,
         escalations=sum(1 for f in feedback if f.kind == "escalate")
-        + sum(1 for t in all_tickets if "Ageing upgrade" in t.route_reason or "Customer reply" in t.route_reason
+        + sum(1 for t in all_tickets if "Waited too long" in t.route_reason or "Customer reply" in t.route_reason
               or "did not help" in t.route_reason),
         agents_online={lvl: sum(1 for a in agents if a.role == lvl) for lvl in AGENT_ROLES},
     )

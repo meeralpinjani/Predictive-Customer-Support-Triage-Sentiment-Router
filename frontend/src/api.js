@@ -2,6 +2,12 @@
 // so the HttpOnly session cookie just works. VITE_API_URL can point elsewhere if needed.
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
+/** A random id for one message send (kept for retries of that same message). */
+export function newClientId() {
+  const c = globalThis.crypto;
+  return c?.randomUUID ? c.randomUUID().replaceAll("-", "") : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export class ApiError extends Error {
   constructor(message, status) {
     super(message);
@@ -19,6 +25,9 @@ async function request(path, options = {}) {
     });
   } catch {
     throw new ApiError("Cannot reach the server. Is the backend running?", 0);
+  }
+  if (res.status === 401 && !path.startsWith("/api/auth/")) {
+    window.dispatchEvent(new CustomEvent("session-expired"));
   }
   if (!res.ok) {
     let detail = `${res.status} ${res.statusText}`;
@@ -65,7 +74,7 @@ async function upload(path, files, fields = {}) {
 
 export const MAX_FILES = 5;
 export const MAX_MB = 5;
-export const ACCEPT = "image/png,image/jpeg,application/pdf";
+export const ACCEPT = "image/png,image/jpeg,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export const eventsUrl = `${BASE}/api/events`;
 
@@ -119,8 +128,15 @@ export const api = {
 
   // conversation & calls
   messages: (id) => request(`/api/tickets/${id}/messages`),
-  sendMessage: (id, body) => post(`/api/tickets/${id}/messages`, { body }),
-  sendMessageWithFiles: (id, body, files) => upload(`/api/tickets/${id}/messages/upload`, files, { body }),
+  // clientId makes a retry safe: the server returns the already-saved message instead of a duplicate.
+  sendMessage: (id, body, clientId) => post(`/api/tickets/${id}/messages`, { body, client_message_id: clientId }),
+  sendMessageWithFiles: (id, body, files, clientId) =>
+    upload(`/api/tickets/${id}/messages/upload`, files, { body, ...(clientId ? { client_message_id: clientId } : {}) }),
+  messagesSince: (id, lastId) => request(`/api/tickets/${id}/messages/since/${lastId}`),
+  resume: (id) => post(`/api/tickets/${id}/resume`),
+  summary: (id) => request(`/api/tickets/${id}/summary`),
+  summaryRefresh: (id) => post(`/api/tickets/${id}/summary/refresh`),
+  handovers: (id) => request(`/api/tickets/${id}/handovers`),
   uploadTicketFiles: (id, files) => upload(`/api/tickets/${id}/attachments`, files),
   suggestedReply: (id) => request(`/api/tickets/${id}/suggested-reply`),
   guides: (id) => request(`/api/tickets/${id}/guides`),
@@ -138,10 +154,21 @@ export const api = {
 
   // admin tools
   analytics: (days = 7) => request(`/api/admin/analytics?days=${days}`),
-  outbox: () => request("/api/admin/outbox"),
   retrain: () => request("/api/admin/retrain"),
   retrainApply: (payload) => post("/api/admin/retrain/apply", payload),
   kbMatch: (text) => post("/api/kb/test-match", { text }),
   whatIf: (payload) => post("/api/whatif", payload),
   rescore: () => post("/api/admin/rescore"),
+
+  // integrity review aid (admins only)
+  integrityStatus: () => request("/api/integrity/status"),
+  integrityList: (params = {}) => {
+    const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== "" && v != null)).toString();
+    return request(`/api/integrity/assessments${qs ? `?${qs}` : ""}`);
+  },
+  integrityDetail: (id) => request(`/api/integrity/assessments/${id}`),
+  integrityRelated: (id) => request(`/api/integrity/assessments/${id}/related`),
+  integrityHistory: (id) => request(`/api/integrity/assessments/${id}/history`),
+  integrityReview: (id, action, reason = "") => post(`/api/integrity/assessments/${id}/review`, { action, reason }),
+  integrityReassess: (ticketId) => post(`/api/integrity/tickets/${ticketId}/reassess`),
 };

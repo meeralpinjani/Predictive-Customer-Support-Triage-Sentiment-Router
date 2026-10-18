@@ -17,12 +17,12 @@ LABEL: dict[str, str] = {
     "urgency": "Time-critical issue",
     "frustration": "High frustration",
     "value": "High-value customer",
-    "age": "Waiting close to SLA",
+    "age": "Waiting close to its reply-by time",
 }
 BOOST_LABEL: dict[str, str] = {
-    "repeat_contact": "Repeat contact",
-    "renewal_risk": "Renewal at risk",
-    "sla_risk": "SLA at risk",
+    "repeat_contact": "Contacted 3+ times this week",
+    "renewal_risk": "Renewing soon and unhappy",
+    "sla_risk": "Close to its reply-by time",
 }
 
 
@@ -35,7 +35,7 @@ def compute_priority(
     boosts: dict[str, float] | None = None,
     weights: dict[str, float] | None = None,
 ) -> PriorityResult:
-    """Priority = 100 x (0.30 F + 0.30 U + 0.25 V + 0.15 Age) + rule boosts (playbook 9.1, 9.4).
+    """Priority = 100 x (0.30 F + 0.30 U + 0.25 V + 0.15 Age) + rule boosts.
 
     Age = wait / SLA, capped at 1. From 75% of the SLA a ticket also ramps towards
     +SLA_RISK_POINTS (full at 125%), so it is served before it breaches: nobody starves.

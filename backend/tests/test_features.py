@@ -235,3 +235,64 @@ def test_remember_me_controls_cookie_lifetime(anon):
 def test_password_policy(anon):
     weak = anon.post("/api/auth/signup", json={"name": "W", "email": "weak@example.com", "password": "alllowercase1"})
     assert weak.status_code == 422
+
+
+# ---------------------------------------------------------------- hosted deployment
+def test_hosted_database_urls_name_the_driver():
+    from app.db import database_url
+    assert database_url("postgres://u:p@host/db") == "postgresql+psycopg://u:p@host/db"
+    assert database_url("postgresql://u:p@host/db?sslmode=require") == "postgresql+psycopg://u:p@host/db?sslmode=require"
+
+
+def test_attachments_live_in_the_database(login):
+    from app.db import SessionLocal
+    from app.models import Attachment
+    priya = login("priya")
+    t = new_ticket(priya, "bug", "The import page crashes.")
+    att = priya.post(f"/api/tickets/{t['id']}/attachments", files=[("files", ("s.png", PNG, "image/png"))]).json()[0]
+    with SessionLocal() as db:
+        assert db.get(Attachment, att["id"]).content == PNG   # nothing on disk, so it survives a wiped server
+    assert priya.get(att["url"]).content == PNG
+
+
+def test_accepted_tuning_survives_a_restart():
+    from app.config import settings
+    from app.db import SessionLocal
+    from app.services import retrain
+    before = (settings.level3_score, settings.frustration_senior)
+    try:
+        with SessionLocal() as db:
+            retrain.apply(db, 70, 0.5)
+        settings.level3_score, settings.frustration_senior = 65, None      # "restart"
+        with SessionLocal() as db:
+            retrain.load_tuning(db)
+        assert (settings.level3_score, settings.frustration_senior) == (70, 0.5)
+    finally:
+        from app.models import AppSetting
+        with SessionLocal() as db:
+            db.query(AppSetting).delete()
+            db.commit()
+        settings.level3_score, settings.frustration_senior = before
+
+
+def test_demo_passwords_from_environment(anon, monkeypatch):
+    import scripts.seed as seed
+    from app.config import settings
+    from app.db import SessionLocal
+    monkeypatch.setattr(settings, "demo_password", "Hosted-Demo-1")
+    monkeypatch.setattr(settings, "demo_admin_password", "Hosted-Admin-1")
+    with SessionLocal() as db:
+        seed.seed_accounts(db)
+    try:
+        ok = anon.post("/api/auth/login", json={"email": "level2@triage.demo", "password": "Hosted-Demo-1"})
+        assert ok.status_code == 200
+        assert anon.post("/api/auth/login", json={"email": "admin@triage.demo", "password": "Hosted-Demo-1"}).status_code == 401
+    finally:
+        monkeypatch.setattr(settings, "demo_password", "")
+        from app.auth import hash_password
+        from app.models import User
+        local = seed.demo_passwords()
+        with SessionLocal() as db:   # put the generated passwords back for the other tests
+            for u in db.query(User).filter(User.email.in_(list(local))).all():
+                u.password_hash = hash_password(local[u.email])
+            db.commit()

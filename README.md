@@ -4,7 +4,7 @@
 
 Support queues answer tickets first come, first served, so a furious enterprise customer whose production is down waits behind someone asking how to download an invoice. This system reads every ticket, measures **frustration**, **urgency** and **customer value**, merges them into **one explainable 0-100 priority score**, and routes the ticket: an instant knowledge-base answer, **Level 1 · General Support**, **Level 2 · Technical Support**, or **Level 3 · Expert Escalation** with live chat and callbacks. Tickets escalate in real time, and waiting time raises priority, so nobody is left behind.
 
-> **New to the project?** Read [docs/TEAM-GUIDE.md](docs/TEAM-GUIDE.md) (plain-language overview) and [docs/HOW-TO-RUN-AND-TEST.md](docs/HOW-TO-RUN-AND-TEST.md) (step-by-step checklist).
+> **New to the project?** Read [docs/TEAM-GUIDE.md](docs/TEAM-GUIDE.md) (plain-language overview) and [docs/HOW-TO-RUN-AND-TEST.md](docs/HOW-TO-RUN-AND-TEST.md) (step-by-step checklist). For judge questions, [docs/TECHNICAL-DEEP-DIVE.md](docs/TECHNICAL-DEEP-DIVE.md) explains every part in detail. To put it online for free, follow [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (Hugging Face Spaces + Neon PostgreSQL + Vercel). The optional admin **Integrity** review aid is documented in [docs/integrity/](docs/integrity/DECISIONS.md). Ticket summaries, handovers and recovery: [docs/summaries/](docs/summaries/README.md).
 
 ## Roles and views
 
@@ -58,9 +58,9 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 
 ## Results (held-out test set, `python -m eval.run_all`)
 
-| Metric | Target (playbook 13.1) | AI models (default) | Rules fallback |
+| Metric | Target | AI models (default) | Rules fallback |
 |---|---|---|---|
-| Urgency F1, 3 classes | ≥ 0.75 | **0.84** | 0.78 |
+| Urgency F1, 3 classes | ≥ 0.75 | **0.86** | 0.96 |
 | Frustration recall / precision | recall ≥ 0.80 | **0.83 / 0.94** | 0.83 / 0.94 |
 | Escalation precision (sent to Senior that should be) | ≥ 0.80 | **0.97** | 0.97 |
 | Critical-issue recall (security, legal, safety, outage) | n/a | **1.00** | 1.00 |
@@ -72,10 +72,10 @@ Support queues answer tickets first come, first served, so a furious enterprise 
 
 | | FCFS | Router | Change |
 |---|---|---|---|
-| Urgent tickets, avg wait | 62.5 min | **35.5 min** | −43% |
-| High-value customers, avg wait | 55.3 min | **16.9 min** | −69% |
-| SLA breaches | 11 | **5** | −55% |
-| Low-priority tickets, avg wait | 63.8 min | 89.3 min | +40% (within SLA) |
+| Urgent tickets, avg wait | 62.5 min | **42.3 min** | −32% |
+| High-value customers, avg wait | 55.3 min | **8.8 min** | −84% |
+| Late replies (past reply-by time) | 11 | **0** | −100% |
+| Low-priority tickets, avg wait | 63.8 min | 78.0 min | +22% (within reply-by time) |
 | Tickets needing a human | 100% | **86%** | −14% deflected |
 
 The ablation (Insights tab) shows why every signal is needed: sorting by urgency alone is fastest for urgent tickets but starves high-value accounts and breaks SLAs. The full router gives up some urgent speed to keep breaches lowest. Trade-off stated honestly: urgent tickets from free-tier customers (8 h SLA) can wait longer than under FCFS, but within their SLA.
@@ -97,12 +97,12 @@ The ablation (Insights tab) shows why every signal is needed: sorting by urgency
                          live events (SSE) ──► customer · Level 1-3 agents · admin dashboards
 ```
 
-**Priority** (playbook 9.1) = 100 × (0.30 frustration + 0.30 urgency + 0.25 value + 0.15 wait/SLA), plus rule boosts (playbook 9.4):
+**Priority** = 100 × (0.25 frustration + 0.25 urgency + 0.30 value + 0.20 wait/reply-by time), plus rule boosts. The weights and the urgency of each problem type were tuned on training data (`python -m eval.tune_weights`), not copied:
 - **+15** for a third contact within 7 days.
 - **+10** when renewal is under 14 days and the tone is negative.
 - **Up to +50** from 75% of the SLA onward, applied to queue order only, so tickets are served before they breach.
 
-**Routing ladder** (playbook 10.1, adapted to three levels):
+**Routing rules** (three levels):
 1. Critical flag → Level 3 (legal also notifies a manager).
 2. Confident KB match on a calm, routine question → auto-answer.
 3. High frustration → Level 3.
@@ -113,9 +113,11 @@ The ablation (Insights tab) shows why every signal is needed: sorting by urgency
 
 Afterwards a ticket only moves **up**: through ageing, customer replies, "didn't help" feedback, or an agent's **Escalate**.
 
-**Frustration** combines four interpretable signals: negative tone, anger and sarcasm, shouting, and churn threats. A logistic regression fitted on the training split weights them (playbook 9.5), and the "high frustration" cut-off is picked by cross-validation to favour recall. If the models are missing, slow (> 3 s) or still loading, every request falls back to the rules engine automatically.
+**Frustration** combines four interpretable signals: negative tone, anger and sarcasm, exclamation marks, and threats to leave (capital letters are deliberately not counted: tested, no accuracy loss). A logistic regression fitted on the training split weights them, and the "high frustration" cut-off is picked by cross-validation to favour recall. If the models are missing, slow (> 3 s) or still loading, every request falls back to the rules engine automatically.
 
 ## Run it
+
+**You need PostgreSQL** (the only database, locally and online): create a `triage` user and database and put its address in `backend/.env` as `DATABASE_URL` (step-by-step in [docs/HOW-TO-RUN-AND-TEST.md](docs/HOW-TO-RUN-AND-TEST.md)).
 
 **Windows, one command:**
 ```powershell
@@ -123,7 +125,7 @@ powershell -ExecutionPolicy Bypass -File .\start-demo.ps1
 ```
 The first run creates the environment and downloads the AI models (about 1-2 GB). Add `-Reset` to reseed the demo data.
 
-**Docker:** `docker compose up --build`, then open http://localhost:5173 (API docs at http://localhost:8000/docs). The image bakes in the models, so it runs offline.
+**Docker:** `docker compose up --build` (starts its own PostgreSQL too), then open http://localhost:5173 (API docs at http://localhost:8000/docs). The image bakes in the models, so it runs offline.
 
 **Manual:**
 ```bash
@@ -131,9 +133,9 @@ cd backend
 python -m venv .venv && .venv/Scripts/activate          # macOS/Linux: source .venv/bin/activate
 pip install -r requirements-dev.txt
 pip install -r requirements-ml.txt --extra-index-url https://download.pytorch.org/whl/cpu
-cp .env.example .env
-python -m scripts.reset_demo        # fresh demo database (23 realistic tickets + demo accounts)
-uvicorn app.main:app --port 8000
+cp .env.example .env                  # then set DATABASE_URL to your PostgreSQL database
+python -m scripts.reset_demo        # fresh demo database (42 realistic tickets + demo accounts)
+uvicorn app.main:app --port 8000 --timeout-graceful-shutdown 3
 
 cd ../frontend && npm ci && npm run dev    # http://localhost:5173
 ```
@@ -164,23 +166,23 @@ The "Continue with Google" button appears on the login and sign-up pages. New Go
 **Tests and evaluation:**
 ```bash
 cd backend
-pytest                        # 112 tests, isolated temp database and uploads (never touches triage.db)
+pytest                        # 188 tests in a throwaway PostgreSQL schema (never touches your data)
 python -m eval.run_all        # refit, re-tune, re-evaluate, write eval/report.json
 ```
 
-## Demo script (4 minutes, playbook 15.1)
+## Demo script (4 minutes)
 
 Use two browser windows, one normal and one private, so two people are signed in at once: the customer, and the agent or admin.
 
 | Time | Do | Say |
 |---|---|---|
-| 0:00 | **Admin → Overview**, flip the queue to **Before · FCFS** | "This angry enterprise customer is #15 in line behind password resets." |
+| 0:00 | **Admin → Overview**, flip the queue to **Before · arrival order** | "This angry enterprise customer is #15 in line behind password resets." |
 | 0:30 | Flip to **After · Priority**; submit the **Outage** example | "Frustration, urgency and value become one score: straight to Level 3 experts." |
 | 1:00 | Customer window: **New ticket → How-to**, "How do I reset my password?" | "Routine questions get an instant answer: 96% correct on unseen questions." |
 | 1:30 | Customer: new **How-to** ticket, then reply angrily in the chat | Show the toast, the chime in the Level 3 window, and the ticket jumping from Level 1 to Level 3 live. |
 | 2:15 | Level 3 window: open it, reply in **live chat**; the customer requests a **call**; mark it scheduled | "Experts can talk to the customer in real time." |
 | 2:45 | Admin → **Tuning**: drag the sliders | "Change the weights and watch the queue re-rank live. Nothing is saved." |
-| 3:15 | Admin → **Insights** | "On a busy day: urgent waits −43%, high-value −69%, SLA breaches 11 → 5. The ablation shows why every signal matters." |
+| 3:15 | Admin → **Insights** | "On a busy day: urgent waits −32%, high-value −84%, late replies 11 → 0. The ablation shows why every signal matters." |
 | 3:45 | Close | "The right person, for the right ticket, right now." |
 
 Before demo day:
@@ -232,9 +234,9 @@ frontend/src/           components (Nordic bento tiles, live chat, queue), lib (
 ```
 
 ## Honest limitations
-- **The evaluation data is synthetic** and written by the team, following the playbook's labelling guide.
-  - The test split holds out whole templates and tone phrases, but real tickets would need re-tuning (playbook 16).
-  - On this data the transformer models mainly improve **urgency** (F1 0.78 → 0.84) and KB coverage (auto-answers 44% → 78% of routine questions). Frustration is driven mostly by the anger and sarcasm cues, which the fitted weights show openly.
+- **The evaluation data is synthetic** and written by the team, following a written labelling guide.
+  - The test split holds out whole templates and tone phrases, but real tickets would need re-tuning.
+  - On this data the transformer models mainly improve **urgency** on harder wording (F1 0.86 AI vs 0.96 rules on our synthetic test set, where the tuned rules fit the templates well) and KB coverage (auto-answers 44% → 78% of routine questions). Frustration is driven mostly by the anger and sarcasm cues, which the fitted weights show openly.
 - **Customer value uses mock CRM data.**
 - **Accounts are hackathon-grade:**
   - **In place:** hashed passwords, signed HttpOnly cookies, failed-login throttling, role checks, and password reset by recovery code or admin link.
@@ -242,7 +244,7 @@ frontend/src/           components (Nordic bento tiles, live chat, queue), lib (
 - **Live chat and events run in one API process.** Several API servers would need a shared message bus such as Redis.
 - **Calls are callback requests, not in-browser voice.**
 - **No email of any kind, two-factor login or encryption at rest** (decided out of scope). Attachments are stored on local disk.
-- **Out of scope:** real CRM integration and production scaling (playbook "will not do"; see roadmap).
+- **Out of scope:** real CRM integration and production scaling (see roadmap).
 
 ## Roadmap
 - **Next 2 weeks:**

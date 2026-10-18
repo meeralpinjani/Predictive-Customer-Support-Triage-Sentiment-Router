@@ -1,4 +1,4 @@
-"""Fit the frustration weights on the TRAIN split (playbook 9.5) and save them.
+"""Fit the frustration weights on the TRAIN split and save them.
 
     python -m eval.train_frustration
 

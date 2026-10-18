@@ -59,7 +59,7 @@ export default function SubmitTile({ customers, categories = [], onSubmitted, on
           </select>
           {selected && (
             <span className="mt-1 block text-[11px] text-ink-3">
-              SLA {selected.sla_minutes}m · LTV ${Math.round(selected.ltv).toLocaleString()} · churn risk {Math.round(selected.churn_risk * 100)}%
+              Reply-by {selected.sla_minutes}m · Total spent ${Math.round(selected.ltv).toLocaleString()} · Risk of leaving {Math.round(selected.churn_risk * 100)}%
               {selected.renewal_days != null && ` · renews in ${selected.renewal_days}d`}
             </span>
           )}
@@ -92,7 +92,7 @@ export default function SubmitTile({ customers, categories = [], onSubmitted, on
         </label>
 
         <div>
-          <span className="eyebrow">Try a playbook example</span>
+          <span className="eyebrow">Try an example</span>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {EXAMPLES.map((ex) => (
               <button

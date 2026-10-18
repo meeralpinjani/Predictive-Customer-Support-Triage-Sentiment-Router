@@ -76,6 +76,8 @@ def test_safety_hazard_ticket():
     res = analyse_rules("The backup battery is smoking and overheating, which is an unsafe hazard")
     assert res.intent == "safety"
     assert res.urgency == 1.0
+    assert critical_flags("My charger sparked and there is a burning smell.") == ["safety"]
+    assert critical_flags("The power cable melted.") == ["safety"]
 
 
 def test_negation_and_false_friends_do_not_trigger_critical_flags():
@@ -94,9 +96,12 @@ def test_hinglish_is_detected_and_understood():
     assert detect_language("How do I reset my password?") == "en"
 
 
-def test_shouting_ignores_acronyms():
+def test_capitals_are_not_frustration():
     calm = analyse_rules("How do I configure SAML SSO with our IdP and the API?")
     assert calm.signals["style"] == 0.0
+    caps = analyse_rules("HELLO, I CANNOT FIND THE INVOICE FOR MARCH. COULD YOU SEND IT PLEASE? THANK YOU.")
+    assert caps.signals["style"] == 0.0 and caps.frustration < HIGH     # typing in capitals isn't anger
+    assert analyse_rules("Why is this still broken!!! ??").signals["style"] == 0.8   # 3 of 5 "!" + 0.2 for "??"
 
 
 def test_analyzer_wrapper_rules_mode():

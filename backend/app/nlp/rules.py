@@ -33,7 +33,8 @@ CRITICAL: dict[str, re.Pattern[str]] = {
         re.I,
     ),
     "safety": re.compile(
-        r"\b(injur(y|ed|ies)|smok(e|ing)|overheat(s|ed|ing)?|electric(al)? shock|unsafe|hazard(ous)?|fire|sparks?|explod(e|ed|ing))\b",
+        r"\b(injur(y|ed|ies)|smok(e|ing)|overheat(s|ed|ing)?|electric(al)? shock|unsafe|hazard(ous)?|fire|spark(s|ed|ing)?|"
+        r"burning smell|smells? of burning|melted|explod(e|ed|ing))\b",
         re.I,
     ),
     "security": re.compile(
@@ -95,27 +96,28 @@ def detect_language(text: str) -> str:
 
 # ---------------------------------------------------------------- intent & urgency
 # (intent, regex, base_urgency, routine, skill) - first match wins.
+# Base urgencies fitted on the TRAIN split by eval/tune_weights.py (emergencies below stay fixed).
 INTENTS: list[tuple[str, str, float, bool, str]] = [
     ("billing_dispute", r"charged twice|double[- ]charge|duplicate (payment|charge)|wrong(ly)? charge|overcharg|refund|"
                         r"billed (after|twice|again)|charged (me )?(after|for|\$)|payment (fail|did not|didn'?t)|"
-                        r"paisa (kat|wapas)|paise (kat|wapas)|money (was )?deducted|deducted twice", 0.55, False, "billing"),
+                        r"paisa (kat|wapas)|paise (kat|wapas)|money (was )?deducted|deducted twice", 0.6, False, "billing"),
     ("access", r"locked out|can'?t (log|sign) ?in|cannot (log|sign) ?in|unable to (log|sign) ?in|"
                r"login (is )?(not working|fails?|failing|broken|error)|account (is )?(locked|disabled|suspended)|"
-               r"login nahi", 0.55, False, "account"),
+               r"login nahi", 0.6, False, "account"),
     ("cancellation", r"\bcancel|close my account|switch(ing)? to|terminate (my|our)? ?(subscription|contract|plan)|"
-                     r"not renew|won'?t renew|downgrade", 0.45, False, "retention"),
-    ("password_reset", r"password|forgot|reset (my|the)? ?(login|account|credentials)|bhool gaya", 0.15, True, "account"),
-    ("invoice", r"invoice|receipt|billing history|tax (details|invoice)|\bgst\b|billing address", 0.10, True, "billing"),
+                     r"not renew|won'?t renew|downgrade", 0.5, False, "retention"),
+    ("password_reset", r"password|forgot|reset (my|the)? ?(login|account|credentials)|bhool gaya", 0.05, True, "account"),
+    ("invoice", r"invoice|receipt|billing history|tax (details|invoice)|\bgst\b|billing address", 0.1, True, "billing"),
     ("bug", r"\bbug\b|\berrors?\b|crash|not working|doesn'?t work|nothing works|broken|stopped working|"
-            r"fails? to|glitch|won'?t load|not loading|freez|nahi chal|kaam nahi|nahi ho raha", 0.45, False, "technical"),
+            r"fails? to|glitch|won'?t load|not loading|freez|nahi chal|kaam nahi|nahi ho raha", 0.55, False, "technical"),
     ("performance", r"\b(very |so |really |extremely )?slow\b|slowness|takes (forever|ages|minutes)|\blag(gy|ging)?\b|"
-                    r"latency|time[sd]? ?out|loading forever|keeps loading", 0.40, False, "technical"),
+                    r"latency|time[sd]? ?out|loading forever|keeps loading", 0.4, False, "technical"),
     ("complaint", r"nobody (has )?(answered|replied|replies|responds|responded|helped)|no ?(one|body) (has )?(answered|replied|responded)|"
                   r"waiting for (days|weeks|a week|\d+ (days|hours))|terrible service|worst (service|support)|"
-                  r"(third|3rd|fourth|fifth) time|how many times|still (no|waiting|not)", 0.35, False, "general"),
+                  r"(third|3rd|fourth|fifth) time|how many times|still (no|waiting|not)", 0.55, False, "general"),
     ("how_to", r"\bhow (do|can|to|should|would)\b|where (can|do|is|are)\b|\bkaise\b|\bkahan\b|is it possible|"
                r"\bcan i\b|steps to|\b2fa\b|two[- ]factor|export|change my|update my|how (many|much|long)|"
-               r"is there (a|an|any)\b|do you (have|offer|support)|what (is|are) (the|your)", 0.10, True, "general"),
+               r"is there (a|an|any)\b|do you (have|offer|support)|what (is|are) (the|your)", 0.1, True, "general"),
     ("feature_request", r"would be nice|feature request|please add|suggestion|would be great|wish (you|there|it)|"
                         r"could you add|roadmap|it'?d be great", 0.05, True, "general"),
 ]
@@ -128,7 +130,7 @@ INTENT_META.update({
     "legal": {"routine": False, "skill": "legal", "base": 0.9},
     "safety": {"routine": False, "skill": "senior", "base": 1.0},
     "outage": {"routine": False, "skill": "technical", "base": 0.95},
-    "other": {"routine": False, "skill": "general", "base": 0.30},
+    "other": {"routine": False, "skill": "general", "base": 0.55},
 })
 
 BOOST: dict[str, float] = {
@@ -199,8 +201,6 @@ CHURN_WORDS: list[str] = [
     "close my account", "moving to", "not renewing", "won't renew", "done with you", "last chance",
     "one star", "1 star", "social media", "twitter", "bad review", "public review", "unsubscribe",
 ]
-ACRONYMS = {"API", "SSO", "SAML", "CSV", "PDF", "GST", "VAT", "SLA", "URL", "FAQ", "USB", "HDMI", "IT", "CEO",
-            "CTO", "CRM", "UI", "OTP", "EOD", "USD", "INR", "EUR", "SMS", "MFA", "VPN", "AWS", "DNS", "HTTP", "SQL"}
 
 
 def _lex_score(lex: dict[str, float], t: str) -> float:
@@ -208,16 +208,15 @@ def _lex_score(lex: dict[str, float], t: str) -> float:
 
 
 def style_signal(text: str) -> float:
-    words = re.findall(r"\b[A-Z]{3,}\b", text)
-    shouted = sum(1 for w in words if w not in ACRONYMS)
-    # Acronyms and short tokens (API, IdP, I) are not shouting: leave them out of the caps ratio.
-    letters = "".join(w for w in re.findall(r"[A-Za-z]+", text) if len(w) > 3 and w not in ACRONYMS)
-    caps_ratio = sum(c.isupper() for c in letters) / max(len(letters), 1)
-    # Sentence-initial capitals are normal; only ratios above ~10% read as shouting.
-    shout = max(min(shouted / 3, 1.0), min(max(caps_ratio - 0.1, 0.0) / 0.3, 1.0) if len(letters) > 20 else 0.0)
+    """Emphatic punctuation: exclamation marks (up to 5) and "??".
+
+    CAPITAL LETTERS are deliberately NOT counted. Tested in eval/shouting_ablation.py: without
+    them the AI-mode results on the held-out tickets are identical, and calm customers who simply
+    type in capitals (older users, caps lock, accessibility) are no longer scored as frustrated.
+    """
     excl = min(text.count("!"), 5) / 5
     qq = 0.2 if "??" in text else 0.0
-    return round(min(1.0, 0.6 * shout + 0.4 * excl + qq), 3)
+    return round(min(1.0, excl + qq), 3)
 
 
 def churn_signal(text: str) -> float:
